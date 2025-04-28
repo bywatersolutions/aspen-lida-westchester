@@ -385,7 +385,7 @@ export async function freezeHold(cancelId, recordId, source, url, patronId, sele
 
      const api = create({
           baseURL: url + '/API',
-          timeout: GLOBALS.timeoutFast,
+          timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(true),
           auth: createAuthTokens(),
           params: {

@@ -35,6 +35,7 @@ export const SelectExistingHoldSubLocation = (props) => {
                }
                const validSublocationSize = validSublocations.length;
                if (validSublocationSize > 0) {
+                    validSublocations.sort((a, b) => a.subLocationWeight - b.subLocationWeight);
                     if (activeSublocationNeedsToChange){
                          //todo set the sublocation to change to
                          setActiveSublocation(validSublocations[0].id);

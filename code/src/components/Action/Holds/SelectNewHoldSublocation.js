@@ -15,6 +15,7 @@ export const SelectNewHoldSublocation = (props) => {
 
                     const sublocationValues = Object.values(sublocations);
                     let activeSublocationNeedsToChange = true;
+                    console.log("Active sublocation is " + activeSublocation);
                     for (index in sublocationValues) {
                          let sublocation = sublocationValues[index];
                          if (sublocation.locationCode == location) {
@@ -25,14 +26,17 @@ export const SelectNewHoldSublocation = (props) => {
                          }
                     }
 
-                    //console.log("Valid sublocations");
-                    //console.log(validSublocations);
+                    console.log("Valid sublocations");
+                    console.log(validSublocations);
                     const validSublocationSize = validSublocations.length;
                     if (validSublocationSize > 0) {
+                         validSublocations.sort((a, b) => a.subLocationWeight - b.subLocationWeight);
                          if (activeSublocationNeedsToChange){
                               setActiveSublocation(validSublocations[0].id);
                          }
+
                     }
+
                     //sublocations need to convert from an object to an array!
                     if (validSublocationSize > 1) {
                          //console.log("Displaying sublocations, got " + validSublocationSize);
