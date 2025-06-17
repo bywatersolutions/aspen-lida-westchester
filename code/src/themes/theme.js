@@ -13,6 +13,8 @@ import { createAuthTokens, getHeaders } from '../util/apiAuth';
 import { GLOBALS } from '../util/globals';
 import { getAppSettings, LIBRARY } from '../util/loadLibrary';
 
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
+
 export const BackIcon = (props) => {
      const { theme } = React.useContext(ThemeContext);
      return <ChevronLeftIcon size="md" ml={1} {...props} color={theme['colors']['primary']['baseContrast']} />;
@@ -65,29 +67,23 @@ const getThemeId = () => {
                setValue(themeId);
           })
           .catch((err) => {
-               console.log(err);
+               logErrorMessage(err);
           });
 
      return value;
 };
 
 export async function getThemeInfo(url = null) {
-     //console.log("Library Url " + LIBRARY.url);
-     //console.log("Globals URL " + GLOBALS.url);
      let libraryUrl = LIBRARY.url ?? GLOBALS.url;
      if (url !== null && url !== '') {
-          //console.log("url passed to getThemeInfo is " + url);
           libraryUrl = url;
      }
      if (libraryUrl === '') {
-          console.log("No library URL provided, returning backup theme ");
+          logWarnMessage("No library URL provided, returning backup theme ");
           const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
           const palettes = COLOR_SCHEMES.map(generateSwatches);
-          //console.log('Backup theme loaded.');
-          //console.log(response);
           return palettes;
      }
-     //console.log("Getting App settings from " + libraryUrl + GLOBALS.slug);
      await getAppSettings(libraryUrl, 10000, GLOBALS.slug);
      const api = create({
           baseURL: GLOBALS.url + '/API',
@@ -95,7 +91,6 @@ export async function getThemeInfo(url = null) {
           headers: getHeaders(),
           auth: createAuthTokens(),
      });
-     //console.log("Getting Theme info");
      const response = await api.get('/SystemAPI?method=getThemeInfo', {
           id: GLOBALS.themeId ?? 1,
      });
@@ -104,20 +99,18 @@ export async function getThemeInfo(url = null) {
           if (typeof result !== 'undefined') {
                const COLOR_SCHEMES = [result.primaryBackgroundColor, result.secondaryBackgroundColor, result.tertiaryBackgroundColor];
                const palettes = COLOR_SCHEMES.map(generateSwatches);
-               console.log('Theme downloaded and swatches generated.');
+               logDebugMessage('Theme downloaded and swatches generated.');
                return palettes;
           } else {
                const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
                const palettes = COLOR_SCHEMES.map(generateSwatches);
-               console.log('Backup theme loaded.');
-               //console.log(response);
+               logInfoMessage('Backup theme loaded.');
                return palettes;
           }
      } else {
           const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
           const palettes = COLOR_SCHEMES.map(generateSwatches);
-          console.log('Backup theme loaded.');
-          //console.log(response);
+          logInfoMessage('Backup theme loaded.');
           return palettes;
      }
 }
@@ -189,9 +182,7 @@ function generateSwatches(swatch) {
 }
 
 export async function createTheme(colorMode) {
-     //console.log("Getting Theme Information");
      const response = await getThemeInfo();
-     //console.log("Extending Theme");
      const theme = extendTheme({
           colors: {
                primary: response[0],
@@ -207,12 +198,11 @@ export async function createTheme(colorMode) {
                },
           },
      });
-     console.log('Theme created and saved.');
+     logDebugMessage('Theme created and saved.');
      return theme;
 }
 
 export async function createGlueTheme(url) {
-     //console.log("Creating Glue Theme");
      const response = await getThemeInfo(url);
      const theme = extendTheme({
           colors: {
@@ -221,7 +211,6 @@ export async function createGlueTheme(url) {
                tertiary: response[2],
           },
      });
-     //console.log('Glue theme created and saved.');
      return theme;
 }
 
@@ -233,15 +222,15 @@ export async function saveTheme(response) {
 
           try {
                await AsyncStorage.multiSet([primaryColors, secondaryColors, tertiaryColors]).then((r) => {
-                    console.log('Essential colors stored in async storage in theme.js');
+                    logDebugMessage('Essential colors stored in async storage in theme.js');
                });
           } catch (e) {
                //save error
-               console.log('Unable to save essential colors to async storage in theme.js');
-               console.log(e);
+               logErrorMessage('Unable to save essential colors to async storage in theme.js');
+               logErrorMessage(e);
           }
      }else{
-          console.log("No response provided for saving theme");
+          logErrorMessage("No response provided for saving theme");
      }
 }
 
@@ -251,12 +240,11 @@ export async function fetchTheme() {
           colors = await AsyncStorage.multiGet(['primaryColors', 'secondaryColors', 'tertiaryColors']);
           const jsonValue = await AsyncStorage.getItem('primaryColors');
           const parsedJson = JSON.parse(jsonValue);
-          //console.log(parsedJson);
-          console.log('Essential colors fetched from async storage.');
+          logDebugMessage('Essential colors fetched from async storage.');
           return colors;
      } catch (e) {
-          console.log('Unable to fetch essential colors from async storage.');
-          console.log(e);
+          logErrorMessage('Unable to fetch essential colors from async storage.');
+          logErrorMessage(e);
      }
 }
 
@@ -273,7 +261,7 @@ export function UseColorMode(props) {
 
      const switchColorMode = async () => {
           toggleColorMode();
-          console.log('Set colorMode to: ' + colorMode);
+          logDebugMessage('Set colorMode to: ' + colorMode);
 
           if (colorMode === 'light') {
                updateTextColor(darkText);
@@ -284,7 +272,6 @@ export function UseColorMode(props) {
           }
 
           updateColorMode(colorMode);
-          //console.log('Set Glue colorMode to: ' + colorModeForGlue);
           await AsyncStorage.setItem('@colorMode', colorMode);
      };
 

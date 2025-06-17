@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { getTermFromDictionary } from '../translations/TranslationService';
 import { BRANCH, formatDiscoveryVersion } from '../util/loadLibrary';
 import { PATRON } from '../util/loadPatron';
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
 
 export const ThemeContext = React.createContext({
      theme: [],
@@ -159,7 +160,7 @@ export const ThemeProvider = ({ children }) => {
 
      const updateColorMode = (data) => {
           setColorMode(data);
-          console.log('Updated color mode in context');
+          logDebugMessage('Updated color mode in context');
           if (textColor === '') {
                if (data === 'light') {
                     updateTextColor(darkText);
@@ -173,7 +174,7 @@ export const ThemeProvider = ({ children }) => {
 
      const updateTextColor = (data) => {
           setTextColor(data);
-          console.log('Updated text color in context');
+          logDebugMessage('Updated text color in context');
      };
 
      const resetTheme = () => {
@@ -234,15 +235,15 @@ export const LibrarySystemProvider = ({ children }) => {
           if (!_.isUndefined(data.discoveryVersion)) {
                const discovery = formatDiscoveryVersion(data.discoveryVersion);
                setVersion(discovery);
-               console.log('updated version in LibrarySystemContext');
+               logDebugMessage('updated version in LibrarySystemContext');
           }
 
           if (!_.isUndefined(data.baseUrl)) {
                setUrl(data.baseUrl);
-               console.log('updated url in LibrarySystemContext');
+               logDebugMessage('updated url in LibrarySystemContext');
           }
           setLibrary(data);
-          console.log('updated LibrarySystemContext');
+          logDebugMessage('updated LibrarySystemContext');
      };
 
      const resetLibrary = () => {
@@ -252,27 +253,27 @@ export const LibrarySystemProvider = ({ children }) => {
           setMenu({});
           setCatalogStatus(0);
           setCatalogStatusMessage('');
-          console.log('reset LibrarySystemContext');
+          logDebugMessage('reset LibrarySystemContext');
      };
 
      const updateMenu = (data) => {
           setMenu(data);
-          console.log('updated menu in LibrarySystemContext');
+          logDebugMessage('updated menu in LibrarySystemContext');
      };
 
      const updateCatalogStatus = (data) => {
-          console.log(data);
+          logDebugMessage(data);
 
           if (data.status) {
                setCatalogStatus(data.status);
-               console.log('updated catalog status');
+               logDebugMessage('updated catalog status');
           } else {
                setCatalogStatus(0);
           }
 
           if (data.message) {
                setCatalogStatusMessage(data.message);
-               console.log('updated catalog status message');
+               logDebugMessage('updated catalog status message');
           } else {
                setCatalogStatusMessage('');
           }
@@ -315,33 +316,33 @@ export const LibraryBranchProvider = ({ children }) => {
                BRANCH.vdxLocation = data.vdxLocation;
           }
 
-          console.log('updated LibraryBranchContext');
+          logDebugMessage('updated LibraryBranchContext');
      };
 
      const updateScope = (data) => {
           setScope(data);
-          console.log('updated scope in LibraryBranchContext');
+          logDebugMessage('updated scope in LibraryBranchContext');
      };
 
      const resetLocation = () => {
           setLocation({});
           setScope({});
-          console.log('reset LibraryBranchContext');
+          logDebugMessage('reset LibraryBranchContext');
      };
 
      const updateEnableSelfCheck = (status) => {
           setEnableSelfCheck(status);
-          console.log('updated self check in LibraryBranchContext');
+          logDebugMessage('updated self check in LibraryBranchContext');
      };
 
      const updateSelfCheckSettings = (data) => {
           setSelfCheckSettings(data);
-          console.log('updated self check settings in LibraryBranchContext');
+          logDebugMessage('updated self check settings in LibraryBranchContext');
      };
 
      const updateLocations = (data) => {
           setLocations(data);
-          console.log('updated locations in LibraryBranchContext');
+          logDebugMessage('updated locations in LibraryBranchContext');
      };
 
      return (
@@ -410,9 +411,9 @@ export const UserProvider = ({ children }) => {
                     updateUserCheckoutSortMethod(data.checkoutSort);
                }
 
-               if (__DEV__) { console.log('updated UserContext'); }
+               logDebugMessage('updated UserContext');
           } else {
-               console.log("User data hasn't changed");
+               logDebugMessage("User data hasn't changed");
           }
      };
 
@@ -421,64 +422,64 @@ export const UserProvider = ({ children }) => {
           setLists({});
           setLinkedAccounts({});
           setLanguage({});
-          console.log('reset UserContext');
+          logDebugMessage('reset UserContext');
      };
 
      const updateLists = (data) => {
           setLists(data);
-          console.log('updated lists in UserContext');
+          logDebugMessage('updated lists in UserContext');
      };
 
      const updateLinkedAccounts = (data) => {
           setLinkedAccounts(data);
-          console.log('updated linked accounts in UserContext');
+          logDebugMessage('updated linked accounts in UserContext');
      };
 
      const updateLinkedViewerAccounts = (data) => {
           setLinkedViewerAccounts(data);
-          console.log('updated linked viewer accounts in UserContext');
+          logDebugMessage('updated linked viewer accounts in UserContext');
      };
 
      const updateLanguage = (data) => {
           setLanguage(data);
-          console.log('updated language in UserContext');
+          logDebugMessage('updated language in UserContext');
      };
 
      const updateLanguageDisplayName = (data) => {
           setLanguageDisplayName(data);
-          console.log('updated language display in UserContext');
+          logDebugMessage('updated language display in UserContext');
      };
 
      const updatePickupLocations = (data) => {
           setPickupLocations(data);
-          console.log('updated pickup locations in UserContext');
+          logDebugMessage('updated pickup locations in UserContext');
      };
 
      const updateSublocations = (data) => {
           setSublocations(data);
-          console.log('updated sublocations in UserContext');
+          logDebugMessage('updated sublocations in UserContext');
      };
 
      const updateReadingHistory = (data) => {
           setReadingHistory(data);
-          console.log('updated reading history in UserContext');
+          logDebugMessage('updated reading history in UserContext');
      };
 
      const updateSavedEvents = (data) => {
           setSavedEvents(data);
-          console.log('updated saved events in UserContext');
+          logDebugMessage('updated saved events in UserContext');
      };
 
      const updateLibraryCards = (data) => {
           setCards(data);
-          console.log('updated library cards in UserContext');
+          logDebugMessage('updated library cards in UserContext');
      };
 
      const updateNotificationSettings = async (data, language, userOnboardStatus) => {
           if (!_.isEmpty(data)) {
                const device = Device.modelName;
                if (_.find(data, _.matchesProperty('device', device))) {
-                    console.log('Found settings for this device model');
+                    logDebugMessage('Found settings for this device model');
                     const deviceSettings = _.filter(data, { device: device });
                     const savedSearches = await getTermFromDictionary(language, 'saved_searches');
                     const alertsFromLibrary = await getTermFromDictionary(language, 'alerts_from_library');
@@ -523,7 +524,7 @@ export const UserProvider = ({ children }) => {
                          setNotificationOnboard(0);
                     }
                } else {
-                    console.log('No settings found for this device model yet');
+                    logDebugMessage('No settings found for this device model yet');
                     setExpoToken(false);
                     setAspenToken(false);
 
@@ -531,7 +532,7 @@ export const UserProvider = ({ children }) => {
                     if (deviceSettings && _.isObject(deviceSettings)) {
                          if (_.isObject(deviceSettings[0])) {
                               const settings = deviceSettings[0];
-                              console.log(settings);
+                              logDebugMessage(settings);
                               if (!_.isUndefined(settings.onboardStatus)) {
                                    setNotificationOnboard(settings.onboardStatus);
                               }
@@ -582,12 +583,12 @@ export const UserProvider = ({ children }) => {
           }
 
           //maybe set allowNotifications at this point for initial load?
-          console.log('updated notification settings in UserContext');
+          logDebugMessage('updated notification settings in UserContext');
      };
 
      const updateSeenNotificationOnboardPrompt = (data) => {
           setSeenNotificationOnboardPrompt(data);
-          console.log('updated seenNotificationOnboardPrompt UserContext');
+          logDebugMessage('updated seenNotificationOnboardPrompt UserContext');
      };
 
      const updateAppPreferences = (data) => {
@@ -597,42 +598,42 @@ export const UserProvider = ({ children }) => {
 
      const updateExpoToken = (data) => {
           setExpoToken(data);
-          console.log('updated expo token UserContext');
+          logDebugMessage('updated expo token UserContext');
      };
 
      const updateAspenToken = (data) => {
           setAspenToken(data);
-          console.log('updated aspen token UserContext');
+          logDebugMessage('updated aspen token UserContext');
      };
 
      const updateNotificationOnboard = (data) => {
           setNotificationOnboard(data);
-          console.log('updated notification onboard status in UserContext');
+          logDebugMessage('updated notification onboard status in UserContext');
      };
 
      const updateNotificationHistory = (data) => {
           setNotificationHistory(data);
-          console.log('updated notification history in UserContext');
+          logDebugMessage('updated notification history in UserContext');
      };
 
      const updateInbox = (data) => {
           setInbox(data);
-          console.log('updated notification inbox in UserContext');
+          logDebugMessage('updated notification inbox in UserContext');
      };
 
      const updateUserCheckoutSortMethod = (data) => {
           setUserCheckoutSortMethod(data);
-          if (__DEV__) { console.log('Updated user checkout sort to ' + data); }
+          logDebugMessage('Updated user checkout sort to ' + data);
      };
 
      const updateUserHoldReadySortMethod = (data) => {
           setUserHoldReadySortMethod(data);
-          if (__DEV__) { console.log('Updated user checkout sort to ' + data); }
+          logDebugMessage('Updated user checkout sort to ' + data);
      };
 
      const updateUserHoldPendingSortMethod = (data) => {
           setUserHoldPendingSortMethod(data);
-          if (__DEV__) { console.log('Updated user checkout sort to ' + data); }
+          logDebugMessage('Updated user checkout sort to ' + data);
      };
 
      return (
@@ -696,23 +697,23 @@ export const BrowseCategoryProvider = ({ children }) => {
 
      const updateBrowseCategories = (data) => {
           setCategories(data);
-          console.log('updated BrowseCategoryContext');
+          logDebugMessage('updated BrowseCategoryContext');
      };
 
      const updateBrowseCategoryList = (data) => {
           setCategoryList(data);
-          console.log('updated list in BrowseCategoryContext');
+          logDebugMessage('updated list in BrowseCategoryContext');
      };
 
      const updateMaxCategories = (data) => {
           setMaxCategories(data);
-          console.log('updated max categories in BrowseCategoryContext');
+          logDebugMessage('updated max categories in BrowseCategoryContext');
      };
 
      const resetBrowseCategories = () => {
           setCategories({});
           setCategoryList({});
-          console.log('reset BrowseCategoryContext');
+          logDebugMessage('reset BrowseCategoryContext');
      };
 
      return (
@@ -736,12 +737,12 @@ export const CheckoutsProvider = ({ children }) => {
 
      const updateCheckouts = (data) => {
           setCheckouts(data);
-          console.log('updated CheckoutsContext');
+          logDebugMessage('updated CheckoutsContext');
      };
 
      const resetCheckouts = () => {
           setCheckouts({});
-          console.log('reset CheckoutsContext');
+          logDebugMessage('reset CheckoutsContext');
      };
 
      return (
@@ -761,12 +762,12 @@ export const HoldsProvider = ({ children }) => {
 
      const updateHolds = (data) => {
           setHolds(data);
-          console.log('updated HoldsContext');
+          logDebugMessage('updated HoldsContext');
      };
 
      const resetHolds = () => {
           setHolds({});
-          console.log('reset HoldsContext');
+          logDebugMessage('reset HoldsContext');
      };
 
      return (
@@ -788,29 +789,29 @@ export const GroupedWorkProvider = ({ children }) => {
 
      const updateGroupedWork = (data) => {
           setGroupedWork(data);
-          console.log('updated GroupedWorkContext');
+          logDebugMessage('updated GroupedWorkContext');
 
           const keys = _.keys(data.formats);
           setFormat(_.first(keys));
-          console.log('updated format in GroupedWorkContext');
+          logDebugMessage('updated format in GroupedWorkContext');
 
           setLanguage(data.language);
-          console.log('updated language in GroupedWorkContext');
+          logDebugMessage('updated language in GroupedWorkContext');
      };
 
      const updateFormat = (data) => {
           setFormat(data);
-          console.log('updated format in GroupedWorkContext');
+          logDebugMessage('updated format in GroupedWorkContext');
      };
 
      const updateLanguage = (data) => {
           setLanguage(data);
-          console.log('updated language in GroupedWorkContext');
+          logDebugMessage('updated language in GroupedWorkContext');
      };
 
      const resetGroupedWork = () => {
           setGroupedWork([]);
-          console.log('reset GroupedWorkContext');
+          logDebugMessage('reset GroupedWorkContext');
      };
 
      return <GroupedWorkContext.Provider value={{ groupedWork, format, language, updateGroupedWork, updateFormat, updateLanguage, resetGroupedWork }}>{children}</GroupedWorkContext.Provider>;
@@ -823,23 +824,23 @@ export const LanguageProvider = ({ children }) => {
      const [languageDisplayName, setLanguageDisplayName] = useState();
 
      const updateLanguage = (data) => {
-          console.log('updated language to ' + data + ' in LanguageContext');
+          logDebugMessage('updated language to ' + data + ' in LanguageContext');
           PATRON.language = data;
           setLanguage(data);
      };
 
      const updateLanguages = (data) => {
-          console.log('updated available library languages in LanguageContext');
+          logDebugMessage('updated available library languages in LanguageContext');
           setLanguages(data);
      };
 
      const updateDictionary = (data) => {
-          console.log('updated dictionary in LanguageContext');
+          logDebugMessage('updated dictionary in LanguageContext');
           setDictionary(data);
      };
 
      const updateLanguageDisplayName = (data) => {
-          console.log('updated language display name in LanguageContext');
+          logDebugMessage('updated language display name in LanguageContext');
           setLanguageDisplayName(data);
      };
 
@@ -865,12 +866,12 @@ export const SystemMessagesProvider = ({ children }) => {
 
      const updateSystemMessages = (data) => {
           setSystemMessages(data);
-          console.log('updated SystemMessagesContext');
+          logDebugMessage('updated SystemMessagesContext');
      };
 
      const resetSystemMessages = () => {
           setSystemMessages({});
-          console.log('reset SystemMessagesContext');
+          logDebugMessage('reset SystemMessagesContext');
      };
 
      return (
@@ -896,37 +897,37 @@ export const SearchProvider = ({ children }) => {
 
      const updateCurrentIndex = (data) => {
           setCurrentIndex(data);
-          console.log('updated currentIndex in SearchContext');
+          logDebugMessage('updated currentIndex in SearchContext');
      };
 
      const updateCurrentSource = (data) => {
           setCurrentSource(data);
-          console.log('updated currentSource in SearchContext');
+          logDebugMessage('updated currentSource in SearchContext');
      };
 
      const updateIndexes = (data) => {
           setIndexes(data);
-          console.log('updated indexes in SearchContext');
+          logDebugMessage('updated indexes in SearchContext');
      };
 
      const updateSources = (data) => {
           setSources(data);
-          console.log('updated sources in SearchContext');
+          logDebugMessage('updated sources in SearchContext');
      };
 
      const updateFacets = (data) => {
           setFacets(data);
-          console.log('updated facets in SearchContext');
+          logDebugMessage('updated facets in SearchContext');
      };
 
      const updateSort = (data) => {
           setSort(data);
-          console.log('updated sort in SearchContext');
+          logDebugMessage('updated sort in SearchContext');
      };
 
      const updateQuery = (data) => {
           setQuery(data);
-          console.log('updated query in SearchContext');
+          logDebugMessage('updated query in SearchContext');
      };
 
      const resetSearch = () => {
@@ -937,7 +938,7 @@ export const SearchProvider = ({ children }) => {
           setQuery('');
           setFacets({});
           setSort('relevance');
-          console.log('reset SearchContext');
+          logDebugMessage('reset SearchContext');
      };
 
      return (

@@ -160,6 +160,7 @@ const app_config = {
           iosStoreUrl: 'itms-apps://apps.apple.com/id/app/' + app['slug'] + '/id' + app['ascAppId'],
           androidStoreUrl: 'market://details?id=' + app['reverseDns'],
           patch: version['patch'],
+          logLevel: app['logLevel'],
      },
      plugins: [
           'expo-secure-store',

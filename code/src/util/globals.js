@@ -36,6 +36,7 @@ export const GLOBALS = {
      privacyPolicy: 'https://bywatersolutions.com/lida-app-privacy-policy',
      iosStoreUrl: Constants.expoConfig.extra.iosStoreUrl,
      androidStoreUrl: Constants.expoConfig.extra.androidStoreUrl,
+     logLevel: !Constants.expoConfig.extra.logLevel ? 0 : parseInt(Constants.expoConfig.extra.logLevel)
 };
 
 export const LOGIN_DATA = {
