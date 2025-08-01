@@ -300,7 +300,7 @@ export const MyReadingHistory = () => {
                                    value={filter}
                                    placeholder={getTermFromDictionary(language, 'search')}
                                    onSubmitEditing={search}
-                                   size="lg"
+                                   size="$lg"
                                    color={textColor} />
                          </Input>
                          <ScrollView horizontal>

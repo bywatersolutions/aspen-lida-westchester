@@ -10,6 +10,8 @@ import { saveLanguage } from '../util/api/user';
 import { createAuthTokens, decodeHTML, getHeaders } from '../util/apiAuth';
 import { GLOBALS } from '../util/globals';
 
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
+
 /** *******************************************************************
  * General
  ******************************************************************* **/
@@ -28,7 +30,7 @@ export const LanguageSwitcher = () => {
                          updateDictionary(translationsLibrary);
                     });
                } else {
-                    console.log('there was an error updating the language...');
+                    logErrorMessage('there was an error updating the language...');
                }
           });
      };
@@ -85,7 +87,8 @@ export async function getTranslation(term, language, url) {
      if (response.ok) {
           if (response.data?.success) {
                if (response?.data?.result[language][term]) {
-                    console.log(response?.data?.result[language][term]);
+                    logDebugMessage("Got translation for term: " + term + " in language: " + language);
+                    logDebugMessage(response?.data?.result[language][term]);
                     return Object.values(response?.data?.result[language][term]);
                }
           }
@@ -115,7 +118,8 @@ export async function getTranslations(terms, language, url) {
      if (response.ok) {
           return response.data.result.translations;
      } else {
-          console.log(response);
+          logWarnMessage("getTranslations failed");
+          logWarnMessage(response);
           // no data yet
      }
 }
@@ -245,11 +249,11 @@ async function getTranslatedTermWithValues(terms, language, url) {
  * @param {string} url
  **/
 export async function getTranslatedTermsForUserPreferredLanguage(language, url) {
-     console.log('Getting translations for ' + language + '...');
+     logDebugMessage('Getting translations for ' + language + '...');
 
      await getTranslatedTerm(language, url);
 
-     console.log('getTranslatedTermsForUserPreferredLanguage:' + translationsLibrary.lastUpdated);
+     logDebugMessage('getTranslatedTermsForUserPreferredLanguage:' + translationsLibrary.lastUpdated);
 
 //     const titlesOnHold = [
 //          {
@@ -406,7 +410,7 @@ export async function getTranslatedTermsForAllLanguages(languages, url) {
           languagesArray.push(value.code);
      });
      _.map(languagesArray, async function (language) {
-          console.log('Getting translations for ' + language + '...');
+          logDebugMessage('Getting translations for ' + language + '...');
           await getTranslatedTerm(language, url);
 
           const titlesOnHold = [
@@ -600,7 +604,8 @@ export const getVariableTermFromDictionary = async (language, key, url) => {
           if (tmpDictionary[language]) {
                const thisDictionary = tmpDictionary[language];
                if (thisDictionary[key]) {
-                    console.log(Object.values(tmpDictionary[language][key]));
+                    logDebugMessage("Got variable term from dictionary");
+                    logDebugMessage(Object.values(tmpDictionary[language][key]));
                     return Object.values(tmpDictionary[language][key]);
                } else {
                     // fetch translated term from Discovery and add to dictionary for later
@@ -620,37 +625,3 @@ export const getVariableTermFromDictionary = async (language, key, url) => {
      }
      return key;
 };
-
-/*
- export async function getTranslatedTerm_Original(language, url) {
- // Load in the terms used for Aspen LiDA
- let defaults = require('../translations/defaults.json');
- return Promise.all (
- _.map(defaults, async function (terms, index, array) {
- const api = create({
- baseURL: url + "/API",
- timeout: GLOBALS.timeoutFast,
- headers: getHeaders(true),
- auth: createAuthTokens(),
- });
- const response = await api.get("/SystemAPI?method=getTranslation", {
- terms: _.toArray(terms),
- language
- });
- if(response.ok) {
- const translation = response?.data?.result?.translations ?? terms;
- if(_.isObject(translation)) {
- const obj = {
- [language]: {
- [index]: translation,
- }
- }
- translationsLibrary = _.merge(translationsLibrary, obj);
- }
- } else {
- console.log(response);
- }
- })
- )
- }
- */

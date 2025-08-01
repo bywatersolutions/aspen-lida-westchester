@@ -114,33 +114,3 @@ export function popAlert(title, description, status) {
           text2: description,
      });
 }
-
-/*export function popAlert(title, description, status) {
-	return (
-		Toast.show({
-			duration: 5000,
-			render: () => {
-				return (
-					<ScrollView px="30" my="15">
-						<Alert w="100%" colorScheme={status} status={status} variant="left-accent">
-							<VStack space={2} flexShrink={1} w="100%">
-								<HStack flexShrink={1} space={2} alignItems="center" justifyContent="space-between">
-									<HStack space={2} flexShrink={1} alignItems="center">
-										<Alert.Icon/>
-										<Text bold>
-											{title}
-										</Text>
-									</HStack>
-								</HStack>
-								<Text>
-									{description}
-								</Text>
-							</VStack>
-						</Alert>
-					</ScrollView>
-				)
-			},
-		})
-	);
-}
-*/

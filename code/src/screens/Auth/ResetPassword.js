@@ -257,7 +257,7 @@ const AspenResetPassword = (props) => {
                          </FormControlLabel>
                     </FormControl>
                     <Input>
-                         <InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} />
+                         <InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} />
                     </Input>
                </ModalBody>
                <ModalFooter>
@@ -376,13 +376,13 @@ const KohaResetPassword = (props) => {
                          <FormControlLabel>
                               <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" returnKeyType="next" enterKeyHint="next" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => fieldRef.current.focus()} blurOnSubmit={false} textContentType="username" color={textColor}/></Input>
+                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="next" enterKeyHint="next" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => fieldRef.current.focus()} blurOnSubmit={false} textContentType="username" color={textColor}/></Input>
                     </FormControl>
                     <FormControl mb="$2">
                          <FormControlLabel>
                               <FormControlLabelText fontSize="sm" color={textColor}>{getTermFromDictionary('en', 'patron_email')}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField id="email" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" enterKeyHint="done" returnKeyType="done" onChangeText={(text) => setEmail(text)} textContentType="emailAddress" ref={fieldRef} onSubmitEditing={() => initiateResetPassword()} color={textColor} /></Input>
+                         <Input><InputField id="email" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" enterKeyHint="done" returnKeyType="done" onChangeText={(text) => setEmail(text)} textContentType="emailAddress" ref={fieldRef} onSubmitEditing={() => initiateResetPassword()} color={textColor} /></Input>
                     </FormControl>
                </ModalBody>
                <ModalFooter>
@@ -487,7 +487,7 @@ const SirsiResetPassword = (props) => {
                          <FormControlLabel>
                               <FormControlLabelText color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} /></Input>
+                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} /></Input>
                     </FormControl>
                </ModalBody>
                <ModalFooter>
@@ -607,13 +607,13 @@ const EvergreenResetPassword = (props) => {
                          <FormControlLabel>
                               <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" returnKeyType="next" enterKeyHint="next" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => fieldRef.current.focus()} blurOnSubmit={false} textContentType="username" color={textColor}/></Input>
+                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="next" enterKeyHint="next" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => fieldRef.current.focus()} blurOnSubmit={false} textContentType="username" color={textColor}/></Input>
                     </FormControl>
                     <FormControl>
                          <FormControlLabel>
                               <FormControlLabelText fontSize="sm" color={textColor}>{getTermFromDictionary('en', 'patron_email')}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField  id="email" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" enterKeyHint="done" returnKeyType="done" onChangeText={(text) => setEmail(text)} textContentType="emailAddress" ref={fieldRef} onSubmitEditing={() => initiateResetPassword()} color={textColor}/></Input>
+                         <Input><InputField  id="email" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" enterKeyHint="done" returnKeyType="done" onChangeText={(text) => setEmail(text)} textContentType="emailAddress" ref={fieldRef} onSubmitEditing={() => initiateResetPassword()} color={textColor}/></Input>
                     </FormControl>
                </ModalBody>
                <ModalFooter>
@@ -718,7 +718,7 @@ const SymphonyResetPassword = (props) => {
                          <FormControlLabel>
                               <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} /></Input>
+                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} /></Input>
                     </FormControl>
                </ModalBody>
                <ModalFooter>
@@ -792,7 +792,7 @@ const MillenniumResetPassword = (props) => {
                          <FormControlLabel>
                               <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
-                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username"color={textColor}/></Input>
+                         <Input><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username"color={textColor}/></Input>
                     </FormControl>
                </ModalBody>
                <ModalFooter>

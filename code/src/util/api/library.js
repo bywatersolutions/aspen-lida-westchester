@@ -5,6 +5,8 @@ import { createAuthTokens, getHeaders, postData, stripHTML } from '../apiAuth';
 import { GLOBALS } from '../globals';
 import { LIBRARY } from '../loadLibrary';
 
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../logging.js';
+
 /**
  * Fetch library login labels
  **/
@@ -44,7 +46,8 @@ export async function getLibraryInfo(url = null, id = null) {
      try {
           libraryId = await AsyncStorage.getItem('@libraryId');
      } catch (e) {
-          console.log(e);
+          logErrorMessage("Error loading library info");
+          logErrorMessage(e);
      }
 
      if (id) {
@@ -54,7 +57,7 @@ export async function getLibraryInfo(url = null, id = null) {
 	 {
 		//strip quotes from libraryId
 		libraryId = libraryId.replace(/['"]+/g, '');
-		//then convert it into an int 
+		//then convert it into an int
 		libraryId = parseInt(libraryId);
 	 }
 
@@ -114,12 +117,13 @@ export async function getLibraryLanguages(url = null) {
      if (response.ok) {
           let languages = [];
           if (response?.data?.result) {
-               console.log('Library languages saved at Loading');
+               logDebugMessage('Library languages saved at Loading');
                return _.sortBy(response.data.result.languages, 'weight', 'displayName');
           }
           return languages;
      } else {
-          console.log(response);
+          logWarnMessage("Error loading library languages");
+          logWarnMessage(response);
      }
      return [];
 }
@@ -154,12 +158,13 @@ export async function getSystemMessages(libraryId = null, locationId = null, url
 			 4 => 'Fines Page',
 			 5 => 'Contact Information Page'
 			 */
-               console.log('System messages fetched and stored');
+               logDebugMessage('System messages fetched and stored');
                return _.castArray(response.data.result.systemMessages);
           }
           return messages;
      } else {
-          console.log(response);
+          logWarnMessage("Error loading system messages");
+          logWarnMessage(response);
      }
      return [];
 }
@@ -186,7 +191,8 @@ export async function dismissSystemMessage(systemMessageId, url) {
                return response.data.result;
           }
      } else {
-          console.log(response);
+          logWarnMessage("Error dismissing system message");
+          logWarnMessage(response);
      }
      return [];
 }
@@ -216,7 +222,8 @@ export async function getCatalogStatus(url = null) {
                };
           }
      } else {
-          console.log(response);
+          logWarnMessage("Error getting catalog status");
+          logWarnMessage(response);
      }
      return {
           status: 0,
@@ -246,7 +253,8 @@ export async function getSelfRegistrationForm(url = '') {
                return fields;
           }
      } else {
-          console.log(response);
+          logWarnMessage("Error getting self registration form");
+          logWarnMessage(response);
      }
      return [];
 }

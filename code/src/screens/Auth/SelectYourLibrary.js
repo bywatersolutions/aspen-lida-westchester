@@ -99,7 +99,7 @@ export const SelectYourLibrary = (payload) => {
                          <Box bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} p="$2" pb={query ? 0 : 5}>
                               <Input>
                                    <InputField variant="filled"
-                                               size="lg"
+                                               size="$lg"
                                                autoCorrect={false}
                                                status="info"
                                                placeholder={getTermFromDictionary('en', 'search')}

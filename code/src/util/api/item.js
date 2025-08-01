@@ -4,6 +4,7 @@ import axios from 'axios';
 import { create } from 'apisauce';
 import _ from 'lodash';
 import { getVariableTermFromDictionary } from '../../translations/TranslationService';
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../logging.js';
 
 /** *******************************************************************
  * General
@@ -44,7 +45,8 @@ export async function getManifestation(itemId, format, language, url) {
  * @param {array} variation
  **/
 export async function getVariations(itemId, format, language, url, variation) {
-     console.log(variation);
+     //logDebugMessage("Getting variations itemId " + itemId + " format " + format + " language " + language + " url " + url);
+     //logDebugMessage(variation);
      let recordId = null;
      if (variation.recordId) {
           recordId = variation.recordId;
@@ -63,8 +65,8 @@ export async function getVariations(itemId, format, language, url, variation) {
           },
      });
 
-     //console.log("Response from get variations");
-     //console.log(data);
+     //logDebugMessage("Response from get variations");
+     //logDebugMessage(data);
 
      return {
           id: data.id ?? itemId,
@@ -102,8 +104,8 @@ export async function getRecords(itemId, format, source, language, url) {
           },
      });
 
-     //console.log("getRecords response");
-     //console.log(data);
+     logDebugMessage("getRecords response");
+     logDebugMessage(data);
 
      return {
           id: data.id ?? itemId,
@@ -233,7 +235,6 @@ export async function getRelatedRecord(id, recordId, format, url) {
  * @param {string} url
  **/
 export async function getCopies(recordId, language = 'en', variationId, url) {
-     console.log(url);
      const { data } = await axios.get('/ItemAPI?method=getCopies', {
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,

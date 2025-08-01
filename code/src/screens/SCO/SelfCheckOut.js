@@ -252,7 +252,7 @@ export const SelfCheckOut = () => {
                                        <ModalBody>
                                             <FormControl pb="$5">
                                                  <Input>
-                                                      <InputField color={textColor} keyboardType={keyboardType === 1 ? 'number-pad' : 'default'} variant="outline" autoCapitalize="none" placeholder={getTermFromDictionary(language, 'enter_barcode')} size="lg" defaultValue={newBarcode} onChangeText={text => setNewBarcode(text)}/>
+                                                      <InputField color={textColor} keyboardType={keyboardType === 1 ? 'number-pad' : 'default'} variant="outline" autoCapitalize="none" placeholder={getTermFromDictionary(language, 'enter_barcode')} size="$lg" defaultValue={newBarcode} onChangeText={text => setNewBarcode(text)}/>
                                                  </Input>
                                             </FormControl>
                                        </ModalBody>

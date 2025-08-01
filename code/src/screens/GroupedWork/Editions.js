@@ -20,6 +20,8 @@ import { ActionButton } from '../../components/Action/ActionButton';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
+
 export const Editions = () => {
      const queryClient = useQueryClient();
      const navigation = useNavigation();
@@ -35,7 +37,7 @@ export const Editions = () => {
      const [confirmingHold, setConfirmingHold] = React.useState(false);
      const [selectedItem, setSelectedItem] = React.useState('');
 
-     //console.log("Showing editions for id " + id + " " + format + " " + source + " " + language);
+     //logDebugMessage("Showing editions for id " + id + " " + format + " " + source + " " + language);
      const { status, data, error, isFetching } = useQuery({
           queryKey: ['records', id, source, format, language, library.baseUrl],
           queryFn: () => getRecords(id, format, source, language, library.baseUrl),
@@ -117,9 +119,8 @@ export const Editions = () => {
           return loadingSpinner();
      }
 
-     //console.log("Showing editions");
-     //console.log("-->data records");
-     //console.log(data.records);
+     //logDebugMessage("Showing editions");
+     //logDebugMessage(data.records);
 
      return (
           <Box safeArea={5}>

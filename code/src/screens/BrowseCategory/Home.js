@@ -341,7 +341,7 @@ export const DiscoverHomeScreen = () => {
           return loadingSpinner();
      }
 
-     /* 
+     /*
      // load notification onboarding prompt
      if (isQueryFetching === 0 && preliminaryLoadingCheck) {
           if (notificationOnboard !== '0' && notificationOnboard !== 0) {
@@ -365,7 +365,7 @@ export const DiscoverHomeScreen = () => {
                               <InputSlot>
                                    <InputIcon as={SearchIcon} ml="$2" color={textColor} />
                               </InputSlot>
-                              <InputField returnKeyType="search" variant="outline" autoCapitalize="none" onChangeText={(term) => setSearchTerm(term)} status="info" placeholder={getTermFromDictionary(language, 'search')} onSubmitEditing={search} value={searchTerm} size="lg" sx={{ color: textColor, borderColor: textColor, ':focus': { borderColor: textColor } }} />
+                              <InputField returnKeyType="search" variant="outline" autoCapitalize="none" onChangeText={(term) => setSearchTerm(term)} status="info" placeholder={getTermFromDictionary(language, 'search')} onSubmitEditing={search} value={searchTerm} size="$lg" sx={{ color: textColor, borderColor: textColor, ':focus': { borderColor: textColor } }} />
                               {searchTerm ? (
                                    <InputSlot onPress={() => clearSearch()}>
                                         <InputIcon as={XIcon} mr="$2" color={textColor} />

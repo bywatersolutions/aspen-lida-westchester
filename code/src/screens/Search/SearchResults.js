@@ -532,7 +532,7 @@ const SearchBox = (props) => {
                         <InputSlot>
                              <InputIcon as={SearchIcon} ml="$2" color={textColor} />
                         </InputSlot>
-                        <InputField returnKeyType="search" variant="outline" autoCapitalize="none" onChangeText={(term) => setSearchTerm(term)} status="info" placeholder={getTermFromDictionary(language, 'search')} onSubmitEditing={updateSearch} value={searchTerm} size="lg" sx={{ color: textColor, borderColor: textColor, ':focus': { borderColor: textColor } }} />
+                        <InputField returnKeyType="search" variant="outline" autoCapitalize="none" onChangeText={(term) => setSearchTerm(term)} status="info" placeholder={getTermFromDictionary(language, 'search')} onSubmitEditing={updateSearch} value={searchTerm} size="$lg" sx={{ color: textColor, borderColor: textColor, ':focus': { borderColor: textColor } }} />
                         {searchTerm ? (
                              <InputSlot onPress={() => clearSearch()}>
                                   <InputIcon as={XIcon} mr="$2" color={textColor} />

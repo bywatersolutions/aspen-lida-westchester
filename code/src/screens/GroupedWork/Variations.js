@@ -20,6 +20,8 @@ import { stripHTML } from '../../util/apiAuth';
 import { placeHold } from '../../util/recordActions';
 import { getStatusIndicator } from './StatusIndicator';
 
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
+
 export const Variations = (props) => {
      const queryClient = useQueryClient();
      const route = useRoute();
@@ -273,8 +275,8 @@ const Variation = (payload) => {
      const { id, response, setResponse, responseIsOpen, setResponseIsOpen, onResponseClose, cancelResponseRef, prevRoute, format, volumeInfo, holdConfirmationResponse, setHoldConfirmationResponse, holdConfirmationIsOpen, setHoldConfirmationIsOpen, onHoldConfirmationClose, cancelHoldConfirmationRef, holdSelectItemResponse, setHoldSelectItemResponse, holdItemSelectIsOpen, setHoldItemSelectIsOpen, onHoldItemSelectClose, cancelHoldItemSelectRef } = payload;
      const variation = payload.records;
      const actions = variation.actions;
-     //console.log("Actions for variation:");
-     //console.log(actions);
+     //logDebugMessage("Actions for variation:");
+     //logDebugMessage(actions);
      const source = variation.source;
      const status = getStatusIndicator(variation.statusIndicator, language);
      const statusIndicator = variation.statusIndicator;
@@ -341,7 +343,8 @@ const Variation = (payload) => {
           });
      };
 
-     console.log(status);
+     //logDebugMessage("Status Indicator");
+     //logDebugMessage(status);
      return (
           <Box mt="$5" mb="$0">
                <Center m="$1" softShadow="5" p="$3" bgColor={colorMode === 'light' ? theme['colors']['white'] : theme['colors']['coolGray']['900']} borderRadius="$md" alignSelf="center" sx={{ '@base': { width: '100%' }, '@lg': { width: '75%' } }}>
