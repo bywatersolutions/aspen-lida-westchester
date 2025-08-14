@@ -135,7 +135,7 @@ export const AddToList = (props) => {
                                              <Text bold color={textColor}>{getTermFromDictionary(language, 'add_to_list')}</Text>
                                              <Pressable onPress={() => setOpen(false)}>
                                                   <CloseIcon
-                                                       zIndex="1"
+                                                       zIndex={1}
                                                        color={textColor}
                                                        p="$2"
                                                        bg="transparent"
@@ -235,7 +235,7 @@ export const AddToList = (props) => {
                                              <Text bold color={textColor}>{getTermFromDictionary(language, 'create_new_list_item')}</Text>
                                              <Pressable onPress={() => setOpen(false)}>
                                                   <CloseIcon
-                                                       zIndex="1"
+                                                       zIndex={1}
                                                        colorScheme="coolGray"
                                                        p="$2"
                                                        bg="transparent"

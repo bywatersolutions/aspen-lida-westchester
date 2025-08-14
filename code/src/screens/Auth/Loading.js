@@ -18,6 +18,7 @@ import { LIBRARY, reloadBrowseCategories } from '../../util/loadLibrary';
 import { getBrowseCategoryListForUser, PATRON } from '../../util/loadPatron';
 import { CatalogOffline } from './CatalogOffline';
 import { ForceLogout } from './ForceLogout';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
 
@@ -56,9 +57,11 @@ export const LoadingScreen = () => {
      const [loadingText, setLoadingText] = React.useState('');
      const [loadingTheme, setLoadingTheme] = React.useState(true);
 
+     const insets = useSafeAreaInsets();
+
      const numSteps = 14;
 
-      React.useEffect(() => {
+     React.useEffect(() => {
           const unsubscribe = navigation.addListener('focus', async () => {
                // The screen is focused
                logDebugMessage('The screen is focused.');
@@ -384,7 +387,7 @@ export const LoadingScreen = () => {
      ) {
           return (
                <Center flex={1} px="$3" w="100%">
-                    <Box w="90%" maxW={400}>
+                    <Box w="90%" maxW={400} pt={insets.top} pb={insets.bottom} pl={insets.left} pr={insets.right} >
                          <VStack>
                               <Heading pb="$5" color="$primary500" size="md">
                                    {loadingText}

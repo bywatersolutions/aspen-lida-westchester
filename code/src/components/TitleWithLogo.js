@@ -3,13 +3,14 @@ import { useNavigation } from '@react-navigation/native';
 import { LibrarySystemContext, ThemeContext } from '../context/initialContext';
 import { View, Image, StyleSheet, Text, useColorMode, HStack, VStack, Box, Pressable, Icon, ChevronLeftIcon } from '@gluestack-ui/themed';
 import { Platform, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { decodeHTML } from '../util/apiAuth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HeaderLogoBar = (props) => {
      const { theme, colorMode } = React.useContext(ThemeContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { width, height } = useWindowDimensions();
+
      if (library.headerLogoApp){
           const localBrandingLogoUri = library.headerLogoApp;
 
@@ -55,9 +56,9 @@ export default function TitleWithLogo(props) {
      const insets = useSafeAreaInsets();
 
      return (
-          <VStack pt={insets.top}>
+          <VStack pt={insets.top} pl={insets.left} pr={insets.right}>
                <HeaderLogoBar />
-               <HStack px="$1" py="$2" alignItems="center" justifyContent="space-between" backgroundColor={theme['colors']['primary']['base']}>
+               <HStack px="$1" py="$2" alignItems="left" justifyContent="space-between" backgroundColor={theme['colors']['primary']['base']}>
                     {navigation.canGoBack() && !hideBack ? (
                        <Pressable onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} pl="$1">
                             <Icon as={ChevronLeftIcon} size="xl" color={theme['colors']['primary']['baseContrast']} />
@@ -65,7 +66,7 @@ export default function TitleWithLogo(props) {
                     ) : (
                        <Box width="$6" />
                     )}
-                    <Text flex={1} textAlign="center" color={theme['colors']['primary']['baseContrast']} size="lg" lineHeight="$lg" fontWeight="bold" numberOfLines={1} ellipsizeMode="tail">{decodeHTML(props.title)}</Text>
+                    <Text flex={1} textAlign="left" color={theme['colors']['primary']['baseContrast']} size="lg" lineHeight="$lg" fontWeight="bold" numberOfLines={1} ellipsizeMode="tail">{decodeHTML(props.title)}</Text>
                     <Box width="$6" />
                </HStack>
           </VStack>

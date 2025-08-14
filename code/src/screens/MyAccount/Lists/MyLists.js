@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native';
 // custom components and helper files
 import { loadingSpinner } from '../../../components/loadingSpinner';
 import { DisplaySystemMessage } from '../../../components/Notifications';
-import { LanguageContext, LibrarySystemContext, SystemMessagesContext, UserContext } from '../../../context/initialContext';
+import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { getListDetails, getLists, getListTitles } from '../../../util/api/list';
@@ -30,6 +30,8 @@ export const MyLists = () => {
 
      const queryClient = useQueryClient();
      const { systemMessages, updateSystemMessages } = React.useContext(SystemMessagesContext);
+
+     const { theme, textColor, colorMode } = React.useContext(ThemeContext);
 
      const isFocused = useIsFocused();
 
@@ -120,8 +122,9 @@ export const MyLists = () => {
                          borderColor="coolGray.200"
                          pl="1"
                          pr="1"
-                         py="2">
-                         <HStack space={3} justifyContent="flex-start">
+                         py="2"
+                         >
+                         <HStack space={3} mt="$2" mb="$2" justifyContent="flex-start">
                               <VStack space={1}>
                                    <Image
                                         alt={item.title}
@@ -137,20 +140,20 @@ export const MyLists = () => {
                                    />
                                    <Badge mt={1}><BadgeText>{privacy}</BadgeText></Badge>
                               </VStack>
-                              <VStack space={1} justifyContent="space-between" maxW="80%">
+                              <VStack space={1} justifyContent="space-between" maxW="80%" pl="$2">
                                    <Box>
-                                        <Text bold fontSize="$md">
+                                        <Text bold fontSize="$md" color={textColor}>
                                              {item.title}
                                         </Text>
                                         {item.description ? (
-                                             <Text fontSize="$xs" mb={2}>
+                                             <Text fontSize="$xs" mb={2} color={textColor}>
                                                   {item.description}
                                              </Text>
                                         ) : null}
-                                        <Text fontSize="$xs" italic>
+                                        <Text fontSize="$xs" italic color={textColor}>
                                              {listLastUpdatedOn}
                                         </Text>
-                                        <Text fontSize="$xs" italic>
+                                        <Text fontSize="$xs" italic color={textColor}>
                                              {numListItems}
                                         </Text>
                                    </Box>
@@ -178,10 +181,15 @@ export const MyLists = () => {
 
      return (
           <SafeAreaView style={{ flex: 1 }}>
-               <Box safeArea={2} t={10} pb={10}>
+               <Box
+                    p="$5"
+                    bgColor={colorMode === 'light' ? theme['colors']['coolGray']['100'] : theme['colors']['coolGray']['700']}
+                    borderBottomWidth="$1"
+                    borderColor={colorMode === 'light' ? theme['colors']['coolGray']['200'] : theme['colors']['gray']['600']}
+                >
                     {showSystemMessage()}
                     <CreateList setLoading={setLoading} />
-                    <FlatList data={lists} ListEmptyComponent={listEmptyComponent} renderItem={({ item }) => renderList(item, library.baseUrl)} keyExtractor={(item, index) => index.toString()} />
+                    <FlatList mt="$2" data={lists} ListEmptyComponent={listEmptyComponent} renderItem={({ item }) => renderList(item, library.baseUrl)} keyExtractor={(item, index) => index.toString()} />
                </Box>
           </SafeAreaView>
      );

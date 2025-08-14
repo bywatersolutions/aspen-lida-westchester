@@ -14,6 +14,8 @@ import LibraryCardStackNavigator from '../stack/LibraryCardStackNavigator';
 import MoreStackNavigator from '../stack/MoreStackNavigator';
 import SelfCheckOutStackNavigator from '../stack/SelfCheckOutStackNavigator';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export default function TabNavigator() {
      const Tab = createBottomTabNavigator();
 
@@ -124,6 +126,8 @@ export const TabItem = ({ state, descriptors, navigation }) => {
      const [scoTabLabel, setScoTabLabel] = React.useState(getTermFromDictionary(language, 'nav_sco'));
      const [moreTabLabel, setMoreTabLabel] = React.useState(getTermFromDictionary(language, 'nav_more'));
 
+     const insets = useSafeAreaInsets();
+
      React.useEffect(() => {
           setTimeout(() => {
                setBrowseTabLabel(getTermFromDictionary(language, 'nav_discover'));
@@ -137,7 +141,7 @@ export const TabItem = ({ state, descriptors, navigation }) => {
      const bottomPaddingToken = Platform.OS === 'android' ? "$3" : "$8";
 
      return (
-          <HStack px="$7" pt="$2" pb={bottomPaddingToken} gap="$4" alignItems="center" justifyContent="space-between" backgroundColor={colorMode === 'light' ? '$white' : '$black'} borderTopWidth={1} borderColor={colorMode === 'light' ? '$coolGray200' : '$coolGray300'}>
+          <HStack px="$7" pt="$2" pb={insets.bottom} gap="$4" alignItems="center" justifyContent="space-between" backgroundColor={colorMode === 'light' ? '$white' : '$black'} borderTopWidth={1} borderColor={colorMode === 'light' ? '$coolGray200' : '$coolGray300'}>
                {state.routes.map((route, index) => {
                     const { options } = descriptors[route.key];
                     //let label = options.tabBarLabel !== undefined ? options.tabBarLabel : options.title !== undefined ? options.title : route.name;

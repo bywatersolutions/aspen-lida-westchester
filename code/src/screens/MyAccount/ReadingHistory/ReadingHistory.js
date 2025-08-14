@@ -330,7 +330,7 @@ export const MyReadingHistory = () => {
                                             onValueChange={(itemValue) => updateSort(itemValue)}>
                                              <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? 0 : 1}
                                                             borderColor={colorMode === 'light' ? '$none' : theme['colors']['gray']['400']}>
-                                                  <SelectInput color={textColor} value={sortLabel()} />
+                                                  <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={sortLabel()} />
                                                   <SelectIcon mr="$3">
                                                        <Icon color={textColor} as={ChevronDownIcon} />
                                                   </SelectIcon>
@@ -490,8 +490,8 @@ export const MyReadingHistory = () => {
                {_.size(systemMessagesForScreen) > 0 ? <Box safeArea={2}>{showSystemMessage()}</Box> : null}
                {user.trackReadingHistory !== '1' ? (
                     <Box p="$5">
-                         <Button onPress={optIn} isLoading={optingIn} isLoadingText={getTermFromDictionary(language, 'updating', true)}>
-                              <ButtonText>{getTermFromDictionary(language, 'reading_history_opt_in')}</ButtonText>
+                         <Button bgColor={theme['colors']['primary']['700']} onPress={optIn} isLoading={optingIn} isLoadingText={getTermFromDictionary(language, 'updating', true)}>
+                              <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'reading_history_opt_in')}</ButtonText>
                          </Button>
                          {getDisclaimer()}
                     </Box>

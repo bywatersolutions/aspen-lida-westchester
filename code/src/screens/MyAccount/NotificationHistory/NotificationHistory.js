@@ -79,8 +79,8 @@ export const MyNotificationHistory = () => {
           return (
                <>
                     {_.size(systemMessagesForScreen) > 0 ? <Box p="$2">{showSystemMessage()}</Box> : null}
-                    <Center flex={1}>
-                         <Heading pt="$5">{getTermFromDictionary(language, 'notification_history_empty')}</Heading>
+                    <Center flex={1} p="$5">
+                         <Heading pt="$5" color={textColor}>{getTermFromDictionary(language, 'notification_history_empty')}</Heading>
                     </Center>
                </>
           );

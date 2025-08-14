@@ -1,12 +1,14 @@
 import React from 'react';
 import { Center, Heading, HStack, VStack, Spinner } from '@gluestack-ui/themed';
 import { ThemeContext } from '../context/initialContext';
-
+import {isEmpty, isUndefined} from 'lodash';
 /*
 TODO: Translate the accessibility labels
 */
 
 export function loadingSpinner(message = '') {
+     const { theme, textColor, colorMode } = React.useContext(ThemeContext);
+
      if (message !== '') {
           return (
                <Center flex={1} px="3">
@@ -27,9 +29,9 @@ export function loadingSpinner(message = '') {
      );
 }
 
-export const LoadingSpinner = ({ message = '' }) => {
+export const LoadingSpinner = (message = '') => {
      const { colorMode, theme, textColor } = React.useContext(ThemeContext);
-     if (message && message !== '') {
+     if (!isUndefined(message) && !isEmpty(message)) {
           return (
                <Center flex={1} px="$3">
                     <VStack space="md" alignItems="center">

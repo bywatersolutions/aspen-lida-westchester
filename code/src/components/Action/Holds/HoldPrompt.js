@@ -512,16 +512,15 @@ export const HoldPrompt = (props) => {
                                   <FormControl mb="$3">
                                        <Checkbox
                                            size="sm"
-                                           value={rememberPickupLocation}
-                                           name="rememberHoldPickupLocation"
                                            defaultIsChecked={rememberPickupLocation}
+                                           accessibilityLabel={getTermFromDictionary(language, 'always_use_pickup_location')}
                                            onChange={(value) => {
                                                 setRememberPickupLocation(value);
                                            }}>
-                                            <CheckboxIndicator mr="$2">
-                                                 <CheckboxIcon as={CheckIcon} color={textColor} />
-                                            </CheckboxIndicator>
-                                            <CheckboxLabel color={textColor}>{getTermFromDictionary(language, 'always_use_pickup_location')}</CheckboxLabel>
+                                                <CheckboxIndicator mr="$2">
+                                                     <CheckboxIcon as={CheckIcon} color={textColor} />
+                                                </CheckboxIndicator>
+                                                <CheckboxLabel color={textColor}>{getTermFromDictionary(language, 'always_use_pickup_location')}</CheckboxLabel>
                                        </Checkbox>
                                   </FormControl>
                               ) : null}

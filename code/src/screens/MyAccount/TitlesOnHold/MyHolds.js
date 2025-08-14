@@ -323,7 +323,7 @@ export const MyHolds = () => {
                                                   onValueChange={(itemValue) => togglePendingSort(itemValue)}>
                                                   <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? '$0' : '$1'}
                                                                  borderColor={colorMode === 'light' ? 'transparent' : theme['colors']['gray']['400']}>
-                                                       <SelectInput color={textColor} value={pendingSortLabel()} />
+                                                       <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={pendingSortLabel()}/>
                                                        <SelectIcon mr="$3">
                                                             <Icon color={textColor} as={ChevronDownIcon} />
                                                        </SelectIcon>
@@ -369,7 +369,7 @@ export const MyHolds = () => {
                                              onValueChange={(itemValue) => togglePendingSort(itemValue)}>
                                              <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? '$0' : '$1'}
                                                             borderColor={colorMode === 'light' ? 'transparent' : theme['colors']['gray']['400']}>
-                                                  <SelectInput color={textColor} value={pendingSortLabel()} />
+                                                  <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={pendingSortLabel()} />
                                                   <SelectIcon mr="$3">
                                                        <Icon color={textColor} as={ChevronDownIcon} />
                                                   </SelectIcon>
@@ -459,7 +459,7 @@ export const MyHolds = () => {
                                              onValueChange={(itemValue) => toggleReadySort(itemValue)}>
                                              <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? '$0' : '$1'}
                                                             borderColor={colorMode === 'light' ? 'transparent' : theme['colors']['gray']['400']}>
-                                                  <SelectInput color={textColor} value={readySortLabel()} />
+                                                  <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={readySortLabel()} />
                                                   <SelectIcon mr="$3">
                                                        <Icon color={textColor} as={ChevronDownIcon} />
                                                   </SelectIcon>
@@ -533,7 +533,7 @@ export const MyHolds = () => {
                                         onValueChange={(itemValue) => toggleHoldSource(itemValue)}>
                                         <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? '$0' : '$1'}
                                                        borderColor={colorMode === 'light' ? 'transparent' : theme['colors']['gray']['400']}>
-                                             <SelectInput color={textColor} value={holdSourceLabel()} />
+                                             <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={holdSourceLabel()} />
                                              <SelectIcon mr="$3">
                                                   <Icon color={textColor} as={ChevronDownIcon} />
                                              </SelectIcon>

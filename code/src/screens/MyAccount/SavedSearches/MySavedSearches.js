@@ -7,7 +7,7 @@ import _ from 'lodash';
 
 // custom components and helper files
 import { loadingSpinner } from '../../../components/loadingSpinner';
-import { LanguageContext, LibrarySystemContext, SystemMessagesContext, UserContext } from '../../../context/initialContext';
+import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { fetchSavedSearches, getSavedSearch } from '../../../util/api/user';
 import { loadError } from '../../../components/loadError';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
@@ -20,6 +20,7 @@ export const MySavedSearches = () => {
      const { user } = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { language } = React.useContext(LanguageContext);
+     const { theme, textColor, colorMode } = React.useContext(ThemeContext);
 
      const queryClient = useQueryClient();
      const { systemMessages, updateSystemMessages } = React.useContext(SystemMessagesContext);
@@ -46,7 +47,7 @@ export const MySavedSearches = () => {
      const Empty = () => {
           return (
                <Center mt={5} mb={5}>
-                    <Text bold fontSize="$lg">
+                    <Text bold fontSize="$lg" color={textColor}>
                          {getTermFromDictionary(language, 'saved_searches_empty')}
                     </Text>
                </Center>
@@ -66,7 +67,11 @@ export const MySavedSearches = () => {
 
      return (
           <SafeAreaView style={{ flex: 1 }}>
-               <Box safeArea={2} h="100%">
+               <Box p="$5"
+                    bgColor={colorMode === 'light' ? theme['colors']['coolGray']['100'] : theme['colors']['coolGray']['700']}
+                    borderBottomWidth="$1"
+                    borderColor={colorMode === 'light' ? theme['colors']['coolGray']['200'] : theme['colors']['gray']['600']}
+                    >
                     {showSystemMessage()}
                     <FlatList data={data} ListEmptyComponent={Empty} renderItem={({ item }) => <Item data={item} />} keyExtractor={(item, index) => index.toString()} contentContainerStyle={{ paddingBottom: 30 }} />
                </Box>
@@ -77,6 +82,7 @@ export const MySavedSearches = () => {
 const Item = (data) => {
      const { language } = React.useContext(LanguageContext);
      const item = data.data;
+     const { theme, textColor, colorMode } = React.useContext(ThemeContext);
 
      let hasNewResults = 0;
      if (!_.isUndefined(item.hasNewResults)) {
@@ -106,7 +112,7 @@ const Item = (data) => {
                     <VStack space={1}>{/*<Image source={{uri: item.cover}} alt={item.title} size="lg" resizeMode="contain" />*/}</VStack>
                     <VStack space={1} justifyContent="space-between" maxW="80%">
                          <Box>
-                              <Text bold fontSize="$md">
+                              <Text bold fontSize="$md" color={textColor}>
                                    {item.title}{' '}
                                    {hasNewResults === 1 ? (
                                         <Badge mb="-0.5" colorScheme="warning">
@@ -114,7 +120,7 @@ const Item = (data) => {
                                         </Badge>
                                    ) : null}
                               </Text>
-                              <Text fontSize="$xs" italic>
+                              <Text fontSize="$xs" italic color={textColor}>
                                    Created on {item.created}
                               </Text>
                          </Box>

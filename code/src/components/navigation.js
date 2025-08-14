@@ -12,7 +12,7 @@ import { Platform } from 'react-native';
 import { enableScreens } from 'react-native-screens';
 
 import * as Sentry from '@sentry/react-native';
-import { BrowseCategoryProvider, CheckoutsProvider, GroupedWorkProvider, HoldsProvider, LanguageProvider, LibraryBranchProvider, LibrarySystemProvider, SearchProvider, SystemMessagesProvider, ThemeProvider, UserContext, UserProvider } from '../context/initialContext';
+import { BrowseCategoryProvider, CheckoutsProvider, GroupedWorkProvider, HoldsProvider, LanguageProvider, LibraryBranchProvider, LibrarySystemProvider, SearchProvider, SystemMessagesProvider, ThemeProvider, UserContext, UserProvider, LanguageContext } from '../context/initialContext';
 import { navigationRef } from '../helpers/RootNavigator';
 import LaunchStackNavigator from '../navigations/LaunchStackNavigator';
 
@@ -26,6 +26,7 @@ import { LIBRARY } from '../util/loadLibrary';
 import { checkCachedUrl } from '../util/login';
 import { RemoveData } from '../util/logout';
 import LibraryCardScanner from './LibraryCardScanner';
+import TitleWithLogo from '../components/TitleWithLogo'
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
 
@@ -257,6 +258,8 @@ export function App() {
           return <SplashScreen />;
      }
 
+     const { language } = React.useContext(LanguageContext);
+
      return (
           <AuthContext.Provider value={authContext}>
                <ThemeProvider>
@@ -385,7 +388,10 @@ export function App() {
                                                                                      name="SelfRegistration"
                                                                                      component={SelfRegistration}
                                                                                      options={{
-                                                                                          title: getTermFromDictionary('en', 'register_for_a_library_card'),
+                                                                                          header: () => {
+                                                                                               const title = getTermFromDictionary(language, 'register_for_a_library_card');
+                                                                                               return <TitleWithLogo title={title} hideBack={true} />;
+                                                                                          },
                                                                                           headerShown: true,
                                                                                           presentation: 'card',
                                                                                           gestureEnabled: false,

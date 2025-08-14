@@ -71,9 +71,9 @@ export const SelectPickupLocation = (props) => {
                          setShowModal(true);
                     }}>
                     <ActionsheetIcon>
-                         <Icon as={Ionicons} name="location" mr="$1" size="md" />
+                         <Icon as={Ionicons} name="location" mr="$1" size="md" color={textColor} />
                     </ActionsheetIcon>
-                    <ActionsheetItemText>{getTermFromDictionary(language, 'change_location')}</ActionsheetItemText>
+                    <ActionsheetItemText color={textColor}>{getTermFromDictionary(language, 'change_location')}</ActionsheetItemText>
                </ActionsheetItem>
                <Modal
 
@@ -99,7 +99,7 @@ export const SelectPickupLocation = (props) => {
                                    </Box>
                                    <Pressable onPress={() => setShowModal(false)}>
                                         <CloseIcon
-                                             zIndex="1"
+                                             zIndex={1}
                                              color={textColor}
                                              p="$2"
                                              bg="transparent"

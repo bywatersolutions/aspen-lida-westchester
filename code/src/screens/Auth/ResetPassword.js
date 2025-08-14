@@ -27,6 +27,7 @@ import { getTermFromDictionary, getTranslationsWithValues } from '../../translat
 import { createAuthTokens, getHeaders, postData, stripHTML } from '../../util/apiAuth';
 import { GLOBALS } from '../../util/globals';
 import { LIBRARY } from '../../util/loadLibrary';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ResetPassword = (props) => {
      const { library } = React.useContext(LibrarySystemContext)
@@ -253,7 +254,7 @@ const AspenResetPassword = (props) => {
                     <Text color={textColor}>{resetBody}</Text>
                     <FormControl>
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
                     </FormControl>
                     <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
@@ -374,13 +375,13 @@ const KohaResetPassword = (props) => {
                     <Text mb="$2" color={textColor}>{resetBody}</Text>
                     <FormControl mb="$2">
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
                          <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="next" enterKeyHint="next" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => fieldRef.current.focus()} blurOnSubmit={false} textContentType="username" color={textColor}/></Input>
                     </FormControl>
                     <FormControl mb="$2">
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{getTermFromDictionary('en', 'patron_email')}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{getTermFromDictionary('en', 'patron_email')}</FormControlLabelText>
                          </FormControlLabel>
                          <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><InputField id="email" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" enterKeyHint="done" returnKeyType="done" onChangeText={(text) => setEmail(text)} textContentType="emailAddress" ref={fieldRef} onSubmitEditing={() => initiateResetPassword()} color={textColor} /></Input>
                     </FormControl>
@@ -605,13 +606,13 @@ const EvergreenResetPassword = (props) => {
                     <Text color={textColor}>{resetBody}</Text>
                     <FormControl>
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
                          <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="next" enterKeyHint="next" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => fieldRef.current.focus()} blurOnSubmit={false} textContentType="username" color={textColor}/></Input>
                     </FormControl>
                     <FormControl>
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{getTermFromDictionary('en', 'patron_email')}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{getTermFromDictionary('en', 'patron_email')}</FormControlLabelText>
                          </FormControlLabel>
                          <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><InputField  id="email" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" enterKeyHint="done" returnKeyType="done" onChangeText={(text) => setEmail(text)} textContentType="emailAddress" ref={fieldRef} onSubmitEditing={() => initiateResetPassword()} color={textColor}/></Input>
                     </FormControl>
@@ -716,7 +717,7 @@ const SymphonyResetPassword = (props) => {
                     <Text color={textColor}>{resetBody}</Text>
                     <FormControl>
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
                          <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username" color={textColor} /></Input>
                     </FormControl>
@@ -790,7 +791,7 @@ const MillenniumResetPassword = (props) => {
                     <Text color={textColor}>{resetBody}</Text>
                     <FormControl>
                          <FormControlLabel>
-                              <FormControlLabelText fontSize="sm" color={textColor}>{usernameLabel}</FormControlLabelText>
+                              <FormControlLabelText fontSize="$sm" color={textColor}>{usernameLabel}</FormControlLabelText>
                          </FormControlLabel>
                          <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><InputField id="username" variant="filled" autoCorrect={false} autoCapitalize="none" size="$xl" returnKeyType="done" enterKeyHint="done" onChangeText={(text) => setUsername(text)} onSubmitEditing={() => initiateResetPassword()} textContentType="username"color={textColor}/></Input>
                     </FormControl>

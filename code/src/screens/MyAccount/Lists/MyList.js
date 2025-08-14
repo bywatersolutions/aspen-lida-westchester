@@ -416,7 +416,7 @@ export const MyList = () => {
                                         onValueChange={(itemValue) => setSort(itemValue)}>
                                         <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? 0 : 1}
                                                        borderColor={colorMode === 'light' ? '$none' : theme['colors']['gray']['400']}>
-                                             <SelectInput color={textColor} value={sortLabel()} />
+                                             <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={sortLabel()} />
                                              <SelectIcon mr="$3">
                                                   <Icon color={textColor} as={ChevronDownIcon} />
                                              </SelectIcon>

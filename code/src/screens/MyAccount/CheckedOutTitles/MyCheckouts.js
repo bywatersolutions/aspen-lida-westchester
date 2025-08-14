@@ -384,7 +384,7 @@ export const MyCheckouts = () => {
                                         onValueChange={(itemValue) => toggleCheckoutSource(itemValue)}>
                                         <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? 0 : 1}
                                                        borderColor={colorMode === 'light' ? '$none' : theme['colors']['gray']['400']}>
-                                             <SelectInput color={textColor} value={checkoutSourceSelectLabel()} />
+                                             <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={checkoutSourceSelectLabel()} />
                                              <SelectIcon mr="$3">
                                                   <Icon color={textColor} as={ChevronDownIcon} />
                                              </SelectIcon>
@@ -417,7 +417,7 @@ export const MyCheckouts = () => {
                                         onValueChange={(itemValue) => toggleSort(itemValue)}>
                                         <SelectTrigger variant="outline" size="sm" borderWidth={colorMode === 'light' ? 0 : 1}
                                                        borderColor={colorMode === 'light' ? '$none' : theme['colors']['gray']['400']}>
-                                             <SelectInput color={textColor} value={checkoutSortLabel()} />
+                                             <SelectInput pt="$2" mt="$1" fontSize="$sm" color={textColor} value={checkoutSortLabel()} />
                                              <SelectIcon mr="$3">
                                                   <Icon color={textColor} as={ChevronDownIcon} />
                                              </SelectIcon>
