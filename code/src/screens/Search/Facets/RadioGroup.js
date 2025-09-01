@@ -1,150 +1,82 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import _ from 'lodash';
-import { HStack, Icon, Pressable, Text, VStack } from 'native-base';
-import React, { Component } from 'react';
+import { HStack, Icon, Pressable, Text, VStack } from '@gluestack-ui/themed';
+import React from 'react';
 
 import { addAppliedFilter, removeAppliedFilter, SEARCH } from '../../../util/search';
+import { ThemeContext } from '../../../context/initialContext';
 
-export default class Facet_RadioGroup extends Component {
-     constructor(props, context) {
-          super(props, context);
-          this.state = {
-               isLoading: true,
-               title: this.props.title,
-               items: this.props.data,
-               category: this.props.category,
-               updater: this.props.updater,
-               applied: this.props.applied,
-               pending: SEARCH.pendingFilters,
-               value: '',
-          };
-          this._isMounted = false;
-     }
+export const Facet_RadioGroup = ({ title, data, category, updater, applied }) => {
+     const [isLoading, setIsLoading] = React.useState(true);
+     const [value, setValue] = React.useState('');
+     const [pending] = React.useState(SEARCH.pendingFilters);
+     const {theme, textColor, colorMode } = React.useContext(ThemeContext);
 
-     componentDidMount = async () => {
-          this._isMounted = true;
-          const facets = this.state.items;
-
+     React.useEffect(() => {
+          const facets = data;
           if (_.isObject(facets)) {
                const facet = _.filter(facets, 'isApplied');
                if (!_.isEmpty(facet)) {
-                    this.setState({
-                         value: facet[0]['value'] ?? '',
-                    });
+                    setValue(facet[0]['value'] ?? '');
                }
           }
+          setIsLoading(false);
+     }, [data]);
 
-          this.setState({
-               isLoading: false,
-          });
-     };
-
-     componentDidUpdate(prevProps, prevState) {
-          if (prevState.value !== this.state.applied) {
-               console.log('prevState.value', prevState.value);
-               console.log('this.state.applied', this.state.applied);
-               //this.renderValue();
+     React.useEffect(() => {
+          if (value !== applied) {
+               console.log('prevValue', value);
+               console.log('applied', applied);
           }
-     }
+     }, [applied, value]);
 
-     componentWillUnmount() {
-          this._isMounted = false;
-     }
-
-     renderValue = () => {
-          this.setState({
-               value: this.state.applied,
-          });
-     };
-
-     updateValue = (payload) => {
-          const { category, value } = this.state;
+     const updateValue = (payload) => {
           if (category !== 'sort_by') {
                console.log('payload > ', payload);
                console.log('value > ', value);
                if (payload === value) {
                     console.log('new is same as old. removing.');
                     removeAppliedFilter(category, payload);
-                    this.setState({
-                         value: '',
-                    });
+                    setValue('');
                } else {
                     console.log('new value. adding.');
                     addAppliedFilter(category, payload, false);
-                    this.setState({
-                         value: payload,
-                    });
+                    setValue(payload);
                }
-
-               console.log('current state value: ' + this.state.value);
+               console.log('current state value: ' + value);
           } else {
                console.log('payload > ', payload);
                console.log('value > ', value);
                if (payload === value) {
-                    this.setState({
-                         value: 'relevance',
-                    });
+                    setValue('relevance');
                } else {
-                    this.setState({
-                         value: payload,
-                    });
+                    setValue(payload);
                     SEARCH.sortMethod = payload;
                }
                addAppliedFilter(category, payload, false);
-               //console.log(SEARCH.pendingFilters);
           }
-
-          this.props.updater(category, payload);
+          updater(category, payload);
      };
 
-     render() {
-          const { items, category, title, updater, applied } = this.state;
-          const name = category + '_group';
+     console.log(data);
 
-          console.log(items);
-
-          if (category === 'sort_by') {
-               return (
-                    <VStack space={2}>
-                         {items.map((facet, index) => (
-                              <Pressable onPress={() => this.updateValue(facet.value)} p={0.5} py={2}>
-                                   {this.state.value === facet.value ? (
-                                        <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                             <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color="primary.600" />
-                                             <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
-                                                  {facet.display}
-                                             </Text>
-                                        </HStack>
-                                   ) : (
-                                        <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                             <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color="muted.400" />
-                                             <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
-                                                  {facet.display}
-                                             </Text>
-                                        </HStack>
-                                   )}
-                              </Pressable>
-                         ))}
-                    </VStack>
-               );
-          }
-
+     if (category === 'sort_by') {
           return (
-               <VStack space={2}>
-                    {items.map((facet, index) => (
-                         <Pressable onPress={() => this.updateValue(facet.value)} p={0.5} py={2}>
-                              {this.state.value === facet.value ? (
-                                   <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                        <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color="primary.600" />
-                                        <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
-                                             {facet.display} ({facet.count})
+               <VStack space="sm">
+                    {data.map((facet, index) => (
+                         <Pressable key={index} onPress={() => updateValue(facet.value)} p="$0.5" py="$2">
+                              {value === facet.value ? (
+                                   <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                        <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color={theme['colors']['primary']['600']} />
+                                        <Text color={textColor} ml="$2">
+                                             {facet.display}
                                         </Text>
                                    </HStack>
                               ) : (
-                                   <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                        <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color="muted.400" />
-                                        <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
-                                             {facet.display} ({facet.count})
+                                   <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                        <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color={theme['colors']['muted']['400']} />
+                                        <Text color={textColor} ml="$2">
+                                             {facet.display}
                                         </Text>
                                    </HStack>
                               )}
@@ -153,4 +85,28 @@ export default class Facet_RadioGroup extends Component {
                </VStack>
           );
      }
-}
+
+     return (
+          <VStack space="sm">
+               {data.map((facet, index) => (
+                    <Pressable key={index} onPress={() => updateValue(facet.value)} p="$0.5" py="$2">
+                         {value === facet.value ? (
+                              <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                   <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color={theme['colors']['primary']['600']} />
+                                   <Text color={textColor} ml="$2">
+                                        {facet.display} ({facet.count})
+                                   </Text>
+                              </HStack>
+                         ) : (
+                              <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                   <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color={theme['colors']['muted']['400']} />
+                                   <Text color={textColor} ml="$2">
+                                        {facet.display} ({facet.count})
+                                   </Text>
+                              </HStack>
+                         )}
+                    </Pressable>
+               ))}
+          </VStack>
+     );
+};

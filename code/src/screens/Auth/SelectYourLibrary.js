@@ -38,6 +38,11 @@ export const SelectYourLibrary = (payload) => {
      const { isCommunity, showModal, setShowModal, updateSelectedLibrary, selectedLibrary, shouldRequestPermissions, permissionRequested, libraries, allLibraries, setShouldRequestPermissions } = payload;
      const [query, setQuery] = React.useState('');
 
+	 if (libraries.length == 0 && allLibraries.length == 0)
+	 {
+		return <Center><Text>{getTermFromDictionary('en', 'error_no_library_connection')}</Text></Center>
+	 }
+
      function FilteredLibraries() {
           let haystack = [];
 

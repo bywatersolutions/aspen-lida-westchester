@@ -1,11 +1,11 @@
 import { useFocusEffect } from '@react-navigation/native';
 import _ from 'lodash';
 import moment from 'moment/moment';
-import { Box, Button, FormControl, HStack, Text, useColorModeValue, useToken } from 'native-base';
+import { Box, Button, ButtonText, FormControl, HStack, Text, useColorMode } from '@gluestack-ui/themed';
 import React from 'react';
 import { ScrollView } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { LanguageContext, LibrarySystemContext, UserContext } from '../../../context/initialContext';
+import { LanguageContext, ThemeContext } from '../../../context/initialContext';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { addAppliedFilter } from '../../../util/search';
 
@@ -13,14 +13,11 @@ import { addAppliedFilter } from '../../../util/search';
 
 export const Facet_Date = (props) => {
      const { data, category, updater } = props;
-     const { library } = React.useContext(LibrarySystemContext);
-     const { user, updateUser } = React.useContext(UserContext);
      const { language } = React.useContext(LanguageContext);
 
      const [loading, setLoading] = React.useState(false);
 
-     const textColor = useToken('colors', useColorModeValue('text.500', 'text.50'));
-     const colorMode = useColorModeValue(false, true);
+     const {theme, textColor, colorMode } = React.useContext(ThemeContext);;
 
      const today = new Date();
      const [fromValue, setFrom] = React.useState(today);
@@ -89,20 +86,38 @@ export const Facet_Date = (props) => {
 
      return (
           <ScrollView>
-               <Box safeArea={5}>
-                    <FormControl mb={2}>
-                         <HStack space={3} alignItems="center" justifyContent="center">
-                              <Button variant="outline" onPress={() => toggleFromDatePicker()}>
-                                   {moment(fromValue).format('MM/DD/YYYY')}
+               <Box p="$5">
+                    <FormControl mb="$2">
+                         <HStack space="sm" alignItems="center" justifyContent="center">
+                              <Button variant="outline" onPress={() => toggleFromDatePicker()} borderColor={theme['colors']['primary']['500']}>
+                                   <ButtonText color={theme['colors']['primary']['500']}>{moment(fromValue).format('MM/DD/YYYY')}</ButtonText>
                               </Button>
-                              <Text>to</Text>
-                              <Button variant="outline" onPress={() => toggleToDatePicker()}>
-                                   {toFacet === '*' ? 'MM/DD/YYYY' : moment(toValue).format('MM/DD/YYYY')}
+                              <Text color={textColor}>to</Text>
+                              <Button variant="outline" onPress={() => toggleToDatePicker()} borderColor={theme['colors']['primary']['500']}>
+                                   <ButtonText color={theme['colors']['primary']['500']}>{toFacet === '*' ? 'MM/DD/YYYY' : moment(toValue).format('MM/DD/YYYY')}</ButtonText>
                               </Button>
                          </HStack>
                     </FormControl>
-                    <DateTimePickerModal isVisible={isFromDatePickerVisible} date={fromValue} mode="date" onConfirm={onSelectFromDate} onCancel={toggleFromDatePicker} isDarkModeEnabled={colorMode} minimumDate={today} textColor={textColor} confirmTextIOS={getTermFromDictionary(language, 'update')} />
-                    <DateTimePickerModal isVisible={isToDatePickerVisible} date={toValue} mode="date" onConfirm={onSelectToDate} onCancel={toggleToDatePicker} isDarkModeEnabled={colorMode} minimumDate={today} textColor={textColor} confirmTextIOS={getTermFromDictionary(language, 'update')} />
+                    <DateTimePickerModal
+                         isVisible={isFromDatePickerVisible}
+                         date={fromValue}
+                         mode="date"
+                         onConfirm={onSelectFromDate}
+                         onCancel={toggleFromDatePicker}
+                         isDarkModeEnabled={colorMode === 'dark'}
+                         minimumDate={today}
+                         confirmTextIOS={getTermFromDictionary(language, 'update')}
+                    />
+                    <DateTimePickerModal
+                         isVisible={isToDatePickerVisible}
+                         date={toValue}
+                         mode="date"
+                         onConfirm={onSelectToDate}
+                         onCancel={toggleToDatePicker}
+                         isDarkModeEnabled={colorMode === 'dark'}
+                         minimumDate={today}
+                         confirmTextIOS={getTermFromDictionary(language, 'update')}
+                    />
                </Box>
           </ScrollView>
      );

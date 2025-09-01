@@ -1,146 +1,110 @@
 import _ from 'lodash';
-import { Box, FormControl, HStack, Input } from 'native-base';
-import React, { Component } from 'react';
+import { Box, FormControl, HStack, Input, InputField } from '@gluestack-ui/themed';
+import React from 'react';
 import { ScrollView } from 'react-native';
 
 // custom components and helper files
 import { LoadingSpinner } from '../../../components/loadingSpinner';
-import { userContext } from '../../../context/user';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { addAppliedFilter } from '../../../util/search';
+import { ThemeContext } from '../../../context/initialContext';
 
-export default class Facet_Slider extends Component {
-     static contextType = userContext;
+export const Facet_Slider = ({ data, category, updater, language }) => {
+     const [isLoading, setIsLoading] = React.useState(true);
+     const [startValue, setStartValue] = React.useState('*');
+     const [endValue, setEndValue] = React.useState('*');
+     const {theme, textColor, colorMode } = React.useContext(ThemeContext);
 
-     constructor(props, context) {
-          super(props, context);
-          this.state = {
-               isLoading: true,
-               startValue: '*',
-               endValue: '*',
-               item: this.props.data,
-               category: this.props.category,
-               updater: this.props.updater,
-               language: this.props.language,
-          };
-          this._isMounted = false;
-     }
+     React.useEffect(() => {
+          appliedStartValue();
+          appliedEndValue();
+          setIsLoading(false);
+     }, []);
 
-     componentDidMount = async () => {
-          this._isMounted = true;
-
-          this.appliedStartValue();
-          this.appliedEndValue();
-
-          this.setState({
-               isLoading: false,
-          });
+     const updateValue = (type, value) => {
+          if (type === 'startValue') {
+               setStartValue(value);
+          } else {
+               setEndValue(value);
+          }
+          updateFacet(type === 'startValue' ? value : startValue, type === 'endValue' ? value : endValue);
      };
 
-     componentWillUnmount() {
-          this._isMounted = false;
-     }
-
-     updateValue = (type, value) => {
-          const { category, updater } = this.state;
-
-          this.setState(
-               {
-                    [type]: value,
-               },
-               () => {
-                    this.updateFacet();
-               }
-          );
-     };
-
-     updateFacet = () => {
-          const { startValue, endValue } = this.state;
-
-          let value = '[' + this.state.startValue + '+TO+' + this.state.endValue + ']';
-          if (!startValue && endValue) {
-               value = '[*+TO+' + this.state.endValue + ']';
-          } else if (startValue && !endValue) {
-               value = '[' + this.state.startValue + '+TO+*]';
-          } else if (!startValue && !endValue) {
+     const updateFacet = (start = startValue, end = endValue) => {
+          let value = '[' + start + '+TO+' + end + ']';
+          if (!start && end) {
+               value = '[*+TO+' + end + ']';
+          } else if (start && !end) {
+               value = '[' + start + '+TO+*]';
+          } else if (!start && !end) {
                value = '[*+TO+*]';
           }
-          addAppliedFilter(this.state.category, value, false);
-          this.props.updater(this.state.category, value);
+          addAppliedFilter(category, value, false);
+          updater(category, value);
      };
 
-     appliedStartValue = () => {
-          const { item, category } = this.state;
+     const appliedStartValue = () => {
           let value = 0.0;
-
-          if (_.find(item, ['isApplied', true])) {
-               const appliedFilterObj = _.find(item, ['isApplied', true]);
+          if (_.find(data, ['isApplied', true])) {
+               const appliedFilterObj = _.find(data, ['isApplied', true]);
                value = appliedFilterObj['value'];
           }
-
-          this.setState({
-               startValue: value,
-          });
+          setStartValue(value);
      };
 
-     appliedEndValue = () => {
-          const { item, category } = this.state;
+     const appliedEndValue = () => {
           let value = 5.0;
-
-          if (_.find(item, ['isApplied', true])) {
-               const appliedFilterObj = _.find(item, ['isApplied', true]);
+          if (_.find(data, ['isApplied', true])) {
+               const appliedFilterObj = _.find(data, ['isApplied', true]);
                value = appliedFilterObj['value'];
           }
-
-          this.setState({
-               endValue: value,
-          });
+          setEndValue(value);
      };
 
-     render() {
-          if (this.state.isLoading) {
-               return <LoadingSpinner />;
-          }
-
-          return (
-               <ScrollView>
-                    <Box safeArea={5}>
-                         <FormControl mb={2}>
-                              <HStack space={3} justifyContent="center">
-                                   <Input
-                                        size="lg"
-                                        placeholder={getTermFromDictionary(this.state.language, 'from')}
-                                        accessibilityLabel={getTermFromDictionary(this.state.language, 'from')}
-                                        defaultValue={this.state.startValue}
-                                        value={this.state.startValue}
-                                        onChangeText={(value) => {
-                                             this.updateValue('startValue', value);
-                                        }}
-                                        w="50%"
-                                        _dark={{
-                                             color: 'muted.50',
-                                             borderColor: 'muted.50',
-                                        }}
-                                   />
-                                   <Input
-                                        size="lg"
-                                        placeholder={getTermFromDictionary(this.state.language, 'to')}
-                                        accessibilityLabel={getTermFromDictionary(this.state.language, 'to')}
-                                        defaultValue={this.state.endValue}
-                                        value={this.state.endValue}
-                                        onChangeText={(value) => {
-                                             this.updateValue('endValue', value);
-                                        }}
-                                        w="50%"
-                                        _dark={{
-                                             color: 'muted.50',
-                                             borderColor: 'muted.50',
-                                        }}
-                                   />
-                              </HStack>
-                         </FormControl>
-                    </Box>
-               </ScrollView>
-          );
+     if (isLoading) {
+          return <LoadingSpinner />;
      }
-}
+
+     return (
+          <ScrollView>
+               <Box p="$5">
+                    <FormControl mb="$2">
+                         <HStack space="sm" justifyContent="center">
+                              <Input
+                                   size="lg"
+                                   flex={1}
+                                   borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}
+                              >
+                                   <InputField
+                                        placeholder={getTermFromDictionary(language, 'from')}
+                                        accessibilityLabel={getTermFromDictionary(language, 'from')}
+                                        defaultValue={startValue}
+                                        value={startValue}
+                                        onChangeText={(value) => {
+                                             updateValue('startValue', value);
+                                        }}
+                                        color={textColor}
+                                   />
+                              </Input>
+                              <Input
+                                   size="lg"
+                                   flex={1}
+                                   borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}
+                              >
+                                   <InputField
+                                        placeholder={getTermFromDictionary(language, 'to')}
+                                        accessibilityLabel={getTermFromDictionary(language, 'to')}
+                                        defaultValue={endValue}
+                                        value={endValue}
+                                        onChangeText={(value) => {
+                                             updateValue('endValue', value);
+                                        }}
+                                        color={textColor}
+                                   />
+                              </Input>
+                         </HStack>
+                    </FormControl>
+               </Box>
+          </ScrollView>
+     );
+};

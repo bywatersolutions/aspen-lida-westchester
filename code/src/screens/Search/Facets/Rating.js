@@ -1,127 +1,108 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import _ from 'lodash';
-import { HStack, Icon, Pressable, Text, VStack } from 'native-base';
-import React, { Component } from 'react';
+import { HStack, Icon, Pressable, Text, VStack } from '@gluestack-ui/themed';
+import React from 'react';
 import { ScrollView } from 'react-native';
 import Stars from 'react-native-stars';
 
 // custom components and helper files
 import { LoadingSpinner } from '../../../components/loadingSpinner';
-import { userContext } from '../../../context/user';
 import { addAppliedFilter, removeAppliedFilter } from '../../../util/search';
+import { ThemeContext } from '../../../context/initialContext';
 
-export default class Facet_Rating extends Component {
-     static contextType = userContext;
+export const Facet_Rating = ({ data, category, updater }) => {
+     const [isLoading, setIsLoading] = React.useState(true);
+     const [value, setValue] = React.useState('');
+     const [stars] = React.useState([
+          {
+               label: 'fiveStar',
+               value: '5',
+          },
+          {
+               label: 'fourStar',
+               value: '4',
+          },
+          {
+               label: 'threeStar',
+               value: '3',
+          },
+          {
+               label: 'twoStar',
+               value: '2',
+          },
+          {
+               label: 'oneStar',
+               value: '1',
+          },
+          {
+               label: 'Unrated',
+               value: '0',
+          },
+     ]);
+     const {theme, textColor, colorMode } = React.useContext(ThemeContext);
 
-     constructor(props, context) {
-          super(props, context);
-          this.state = {
-               isLoading: true,
-               appliedRating: '',
-               value: '',
-               item: this.props.data,
-               category: this.props.category,
-               updater: this.props.updater,
-               stars: [
-                    {
-                         label: 'fiveStar',
-                         value: '5',
-                    },
-                    {
-                         label: 'fourStar',
-                         value: '4',
-                    },
-                    {
-                         label: 'threeStar',
-                         value: '3',
-                    },
-                    {
-                         label: 'twoStar',
-                         value: '2',
-                    },
-                    {
-                         label: 'oneStar',
-                         value: '1',
-                    },
-                    {
-                         label: 'Unrated',
-                         value: '0',
-                    },
-               ],
-          };
-          this._isMounted = false;
-     }
-
-     componentDidMount = async () => {
-          this._isMounted = true;
-          this.setState({
-               isLoading: false,
-          });
-
-          const { item } = this.state;
-          let value = '';
-          if (_.find(item, ['isApplied', true])) {
-               const appliedFilterObj = _.find(item, ['isApplied', true]);
-               value = appliedFilterObj['value'];
+     React.useEffect(() => {
+          setIsLoading(false);
+          let initialValue = '';
+          if (_.find(data, ['isApplied', true])) {
+               const appliedFilterObj = _.find(data, ['isApplied', true]);
+               initialValue = appliedFilterObj['value'];
           }
-          this.setState({
-               value,
-          });
-     };
+          setValue(initialValue);
+     }, [data]);
 
-     componentWillUnmount() {
-          this._isMounted = false;
-     }
-
-     getRatingCount(star) {
-          const { item } = this.state;
+     const getRatingCount = (star) => {
           let results = 0;
-          if (_.find(item, ['value', star])) {
-               results = _.find(item, ['value', star]);
+          if (_.find(data, ['value', star])) {
+               results = _.find(data, ['value', star]);
                results = results['count'];
           }
           return results;
-     }
-
-     updateSearch = (star) => {
-          const { category, value } = this.state;
-          if (star === value) {
-               removeAppliedFilter(category, star);
-               this.setState({
-                    value: '',
-               });
-          } else {
-               addAppliedFilter(category, star, false);
-               this.setState({
-                    value: star,
-               });
-          }
-          this.props.updater(this.state.category, star);
      };
 
-     render() {
-          const stars = this.state.stars;
-
-          if (this.state.isLoading) {
-               return <LoadingSpinner />;
+     const updateSearch = (star) => {
+          if (star === value) {
+               removeAppliedFilter(category, star);
+               setValue('');
+          } else {
+               addAppliedFilter(category, star, false);
+               setValue(star);
           }
+          updater(category, star);
+     };
 
-          return (
-               <ScrollView>
-                    <VStack space={2}>
-                         {stars.map((star, index) => (
-                              <Pressable onPress={() => this.updateSearch(star.label)} p={0.5} py={2}>
-                                   <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                        {this.state.value === star.label ? <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color="primary.600" /> : <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color="muted.400" />}
-                                        <Stars default={star.value} count={5} starSize={50} disabled fullStar={<Icon as={MaterialIcons} name="star" size="lg" color="yellow.500" />} emptyStar={<Icon as={MaterialIcons} name="star-border" size="lg" color="yellow.500" />} />
-                                        <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
-                                             ({this.getRatingCount(star.label)})
-                                        </Text>
-                                   </HStack>
-                              </Pressable>
-                         ))}
-                    </VStack>
-               </ScrollView>
-          );
+     if (isLoading) {
+          return <LoadingSpinner />;
      }
-}
+
+     return (
+          <ScrollView>
+               <VStack space="$2">
+                    {stars.map((star, index) => (
+                         <Pressable key={index} onPress={() => updateSearch(star.label)} p="$0.5" py="$2">
+                              <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                   {value === star.label ?
+                                        <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color={theme['colors']['primary']['600']} /> :
+                                        <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color={theme['colors']['muted']['400']} />
+                                   }
+                                   <Stars
+                                        default={star.value}
+                                        count={5}
+                                        starSize={50}
+                                        disabled
+                                        fullStar={<Icon as={MaterialIcons} name="star" size="lg" color={theme['colors']['yellow']['500']} />}
+                                        emptyStar={<Icon as={MaterialIcons} name="star-border" size="lg" color={theme['colors']['yellow']['500']} />}
+                                   />
+                                   <Text
+                                        color={textColor}
+                                        ml="$2"
+                                   >
+                                        ({getRatingCount(star.label)})
+                                   </Text>
+                              </HStack>
+                         </Pressable>
+                    ))}
+               </VStack>
+          </ScrollView>
+     );
+};

@@ -1,9 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import _ from 'lodash';
-import { Box, HStack, Icon, Pressable, ScrollView, Text, View } from 'native-base';
+import { Box, HStack, Icon, Pressable, Text, VStack } from '@gluestack-ui/themed';
 import React from 'react';
+import { ScrollView } from 'react-native';
 
-import { LanguageContext, LibrarySystemContext, SearchContext } from '../../../context/initialContext';
+import { LanguageContext, LibrarySystemContext, SearchContext, ThemeContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getSearchIndexes, SEARCH } from '../../../util/search';
 
@@ -13,7 +14,7 @@ export const SearchSourceScreen = () => {
      const { library } = React.useContext(LibrarySystemContext);
      const { language } = React.useContext(LanguageContext);
      const { currentSource, sources, updateCurrentSource, updateIndexes, updateCurrentIndex } = React.useContext(SearchContext);
-
+     const {theme, textColor, colorMode } = React.useContext(ThemeContext);
      console.log('currentSource: ' + currentSource);
 
      const search = async () => {
@@ -46,24 +47,24 @@ export const SearchSourceScreen = () => {
      };
 
      return (
-          <View pt={5} style={{ flex: 1 }}>
+          <VStack pt="$5" flex={1}>
                <ScrollView>
-                    <Box safeAreaX={5}>
+                    <Box px="$5">
                          {_.map(sources, function (source, index, array) {
                               if (index === 'events' || index === 'local') {
                                    return (
-                                        <Pressable p={0.5} py={2} onPress={() => updateSource(index)}>
+                                        <Pressable p="$0.5" py="$2" onPress={() => updateSource(index)}>
                                              {currentSource === index ? (
-                                                  <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                                       <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color="primary.600" />
-                                                       <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
+                                                  <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                                       <Icon as={MaterialIcons} name="radio-button-checked" size="lg" color={theme['colors']['primary']['600']} />
+                                                       <Text color={textColor} ml="$2">
                                                             {source.name}
                                                        </Text>
                                                   </HStack>
                                              ) : (
-                                                  <HStack space={3} justifyContent="flex-start" alignItems="center">
-                                                       <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color="muted.400" />
-                                                       <Text _light={{ color: 'darkText' }} _dark={{ color: 'lightText' }} ml={2}>
+                                                  <HStack space="sm" justifyContent="flex-start" alignItems="center">
+                                                       <Icon as={MaterialIcons} name="radio-button-unchecked" size="lg" color={theme['colors']['muted']['400']} />
+                                                       <Text color={textColor} ml="$2">
                                                             {source.name}
                                                        </Text>
                                                   </HStack>
@@ -74,6 +75,6 @@ export const SearchSourceScreen = () => {
                          })}
                     </Box>
                </ScrollView>
-          </View>
+          </VStack>
      );
 };
