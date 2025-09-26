@@ -524,6 +524,7 @@ const OpenBarcode = (data) => {
      const [showModal, setShowModal] = React.useState(false);
      const [orientation, setOrientation] = React.useState('portrait');
      const [screenDimensions, setScreenDimensions] = React.useState(Dimensions.get('window'));
+     const [previousOrientation, setPreviousOrientation] = React.useState(null);
 
      React.useEffect(() => {
           const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -540,12 +541,23 @@ const OpenBarcode = (data) => {
           return () => subscription?.remove();
      }, []);
 
-     const toggleModal = () => {
+     const toggleModal = async () => {
           const newShowModal = !showModal;
           setShowModal(newShowModal);
           if (newShowModal) {
                setShowRotateWarning(false);
                barcodeWidthRef.current = null;
+               // Store current orientation when modal opens
+               const currentOrient = await ScreenOrientation.getOrientationAsync();
+               setPreviousOrientation(currentOrient);
+          } else {
+               // Restore orientation when modal closes
+               if (previousOrientation) {
+                    await ScreenOrientation.unlockAsync();
+                    if (previousOrientation === ScreenOrientation.Orientation.PORTRAIT_UP) {
+                         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+                    }
+               }
           }
      };
 
@@ -564,6 +576,16 @@ const OpenBarcode = (data) => {
           const shouldShowWarning = isTooWide && currentOrientation === 'portrait';
 
           return shouldShowWarning;
+     };
+
+     const rotateToLandscape = async () => {
+          await ScreenOrientation.unlockAsync();
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
+     };
+
+     const rotateToPortrait = async () => {
+          await ScreenOrientation.unlockAsync();
+          await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
      };
 
      const onBarcodeLayout = (event) => {
@@ -601,11 +623,34 @@ const OpenBarcode = (data) => {
 
                               {showRotateWarning && (
                                    <VStack space="md" alignItems="center" p="$4">
-                                        <Icon as={MaterialCommunityIcons} name="phone-rotate-landscape" size="xl" color="$amber600" />
                                         <Text fontSize="$lg" textAlign="center" color="black">
                                              {getTermFromDictionary(language, 'rotate_device_for_barcode')}
                                         </Text>
+                                        <Button
+                                             size="md"
+                                             bgColor={theme['colors']['primary']['500']}
+                                             onPress={rotateToLandscape}
+                                             mt="$2">
+                                             <ButtonIcon as={MaterialCommunityIcons} name="phone-rotate-landscape" size="sm" mr="$2" />
+                                             <ButtonText color={theme['colors']['primary']['500-text']}>
+                                                  {getTermFromDictionary(language, 'rotate_to_landscape') || 'Rotate to Landscape'}
+                                             </ButtonText>
+                                        </Button>
                                    </VStack>
+                              )}
+
+                              {!showRotateWarning && !isPortrait && (
+                                   <Center mt="$2" mb="$2">
+                                        <Button
+                                             size="md"
+                                             bgColor={theme['colors']['primary']['500']}
+                                             onPress={rotateToPortrait}>
+                                             <ButtonIcon as={MaterialCommunityIcons} name="phone-rotate-portrait" size="sm" mr="$2" />
+                                             <ButtonText color={theme['colors']['primary']['500-text']}>
+                                                  {getTermFromDictionary(language, 'rotate_to_portrait') || 'Rotate to Portrait'}
+                                             </ButtonText>
+                                        </Button>
+                                   </Center>
                               )}
 
                               <Center mt="$2">
