@@ -3,7 +3,7 @@ import { useIsFocused, useLinkTo, useNavigation } from '@react-navigation/native
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
-import {isEmpty, isUndefined} from 'lodash';
+import _, {isEmpty, isUndefined} from 'lodash';
 import { Box, Center, Heading, Progress, VStack } from '@gluestack-ui/themed';
 import React from 'react';
 import { checkVersion } from 'react-native-check-version';
@@ -12,15 +12,16 @@ import { createGlueTheme } from '../../themes/theme';
 import { getLanguageDisplayName, getTermFromDictionary, getTranslatedTermsForUserPreferredLanguage, translationsLibrary } from '../../translations/TranslationService';
 import { getCatalogStatus, getLibraryInfo, getLibraryLanguages, getLibraryLinks, getSystemMessages } from '../../util/api/library';
 import { getLocationInfo, getSelfCheckSettings } from '../../util/api/location';
-import { fetchNotificationHistory, getAppPreferencesForUser, getLinkedAccounts, refreshProfile } from '../../util/api/user';
+import { fetchNotificationHistory, formatLinkedAccounts, formatNotificationHistory, getAppPreferencesForUser, getLinkedAccounts, refreshProfile } from '../../util/api/user';
 import { GLOBALS } from '../../util/globals';
-import { LIBRARY, reloadBrowseCategories } from '../../util/loadLibrary';
+import { formatBrowseCategories, LIBRARY, reloadBrowseCategories } from '../../util/loadLibrary';
 import { getBrowseCategoryListForUser, PATRON } from '../../util/loadPatron';
 import { CatalogOffline } from './CatalogOffline';
 import { ForceLogout } from './ForceLogout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
+import { getErrorMessage, stripHTML } from '../../util/apiAuth';
 
 const prefix = Linking.createURL('/');
 
@@ -42,6 +43,7 @@ export const LoadingScreen = () => {
      const [progress, setProgress] = React.useState(0);
      const [isReloading, setIsReloading] = React.useState(false);
      const [hasError, setHasError] = React.useState(false);
+     const [errorMessage, setErrorMessage] = React.useState(null);
      const [hasUpdate, setHasUpdate] = React.useState(false);
      const [incomingUrl, setIncomingUrl] = React.useState('');
      const [hasIncomingUrlChanged, setIncomingUrlChanged] = React.useState(false);
@@ -68,7 +70,6 @@ export const LoadingScreen = () => {
                setIsReloading(true);
                setProgress(0);
                queryClient.clear();
-               //navigation.dispatch(StackActions.popToTop());
                try {
                     await AsyncStorage.getItem('@colorMode').then(async (mode) => {
                          if (mode === 'light' || mode === 'dark') {
@@ -103,17 +104,35 @@ export const LoadingScreen = () => {
      const { isSuccess: catalogStatusSuccess, status: catalogStatusQueryStatus, data: catalogStatusQuery } = useQuery(['catalog_status', LIBRARY.url], () => getCatalogStatus(LIBRARY.url), {
           enabled: !!LIBRARY.url && !loadingTheme,
           onSuccess: (data) => {
-               updateCatalogStatus(data);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading catalog...');
-               }else if (LIBRARY.appSettings.loadingMessageType == 2) {
-                    setLoadingText(LIBRARY.appSettings.loadingMessage);
+               if(data.ok) {
+                    let catalogMessage = null;
+                    if (data.data.result?.api?.message) {
+                         catalogMessage = stripHTML(data.data.result.api.message);
+                    }
+                    let status = data.data.result?.catalogStatus ?? 0;
+                    const currentStatus = {
+                         status: status,
+                         message: catalogMessage
+                    }
+                    updateCatalogStatus(currentStatus);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading catalog...');
+                    }else if (LIBRARY.appSettings.loadingMessageType == 2) {
+                         setLoadingText(LIBRARY.appSettings.loadingMessage);
+                    }
+                    setProgress(progress + (100 / numSteps));
+               } else {
+                    logWarnMessage("Setting Error to true because catalog status returned not ok");
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
-               setProgress(progress + (100 / numSteps));
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading catalog status failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading catalog status failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error checking catalog status. Please try again.')
           }
      });
 
@@ -131,24 +150,41 @@ export const LoadingScreen = () => {
                     setLoadingText('Loading Languages');
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading active language failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading active language failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading user preferred language. Please try again.')
           }
      });
 
      const { isSuccess: languagesQuerySuccess, status: languagesQueryStatus, data: languagesQuery } = useQuery(['languages', LIBRARY.url], () => getLibraryLanguages(LIBRARY.url), {
           enabled: hasError === false && catalogStatusSuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateLanguages(data);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Library Information');
+               if(data.ok) {
+                    setProgress(progress + (100 / numSteps));
+                    let languages = [];
+                    if (data?.data?.result) {
+                         logDebugMessage('Library languages saved at Loading');
+                         languages = _.sortBy(data.data.result.languages, 'weight', 'displayName');;
+                    }
+                    updateLanguages(languages);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Library Information');
+                    }
+               } else {
+                    logDebugMessage("Error loading library languages");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading languages failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading languages failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading languages. Please try again.')
           }
      });
 
@@ -156,7 +192,7 @@ export const LoadingScreen = () => {
           const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
                const url = response?.notification?.request?.content?.data?.url ?? prefix;
                if (url !== incomingUrl) {
-                    logInfoMessage('Incoming url changed');
+                    logDebugMessage('Incoming url changed');
                     logDebugMessage('OLD > ' + incomingUrl);
                     logDebugMessage('NEW > ' + url);
                     setIncomingUrl(response?.notification?.request?.content?.data?.url ?? prefix);
@@ -174,197 +210,332 @@ export const LoadingScreen = () => {
      const { isSuccess: librarySystemQuerySuccess, status: librarySystemQueryStatus, data: librarySystemQuery } = useQuery(['library_system', LIBRARY.url], () => getLibraryInfo(LIBRARY.url), {
           enabled: hasError === false && languagesQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateLibrary(data);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading User Information');
+               if(data.ok) {
+                    const library = data.data.result?.library ?? [];
+                    setProgress(progress + (100 / numSteps));
+                    updateLibrary(library);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading User Information');
+                    }
+               } else {
+                    logDebugMessage("Error loading library system settings");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
           onError: () => {
                logWarnMessage("Setting Error to true because loading library system failed");
                setHasError(true);
+               setErrorMessage('Unknown error loading library system settings. Please try again.')
           }
      });
 
      const { isSuccess: userQuerySuccess, status: userQueryStatus, data: userQuery } = useQuery(['user', LIBRARY.url, 'en'], () => refreshProfile(LIBRARY.url), {
           enabled: hasError === false && librarySystemQuerySuccess,
           onSuccess: (data) => {
-               logInfoMessage('User Profile refreshed');
-               logDebugMessage(data);
-               if (isUndefined(data) || isEmpty(data)) {
-                    logWarnMessage("Setting Error to true because profile data was undefined or empty");
-                    setHasError(true);
-               } else {
-                    if (data.success === false || data.success === 'false') {
-                         logWarnMessage("Setting Error to true because profile response returned a success of false");
+               if(data.ok) {
+                    const profile = data.data.result.profile ?? [];
+                    logInfoMessage('User Profile refreshed');
+                    if (isUndefined(profile) || isEmpty(profile)) {
+                         logWarnMessage("Setting Error to true because profile data was undefined or empty");
                          setHasError(true);
                     } else {
-                         setProgress(progress + (100 / numSteps));
-                         updateUser(data);
-                         updateLanguage(data.interfaceLanguage ?? 'en');
-                         updateLanguageDisplayName(getLanguageDisplayName(data.interfaceLanguage ?? 'en', languages));
-                         PATRON.language = data.interfaceLanguage ?? 'en';
+                         if (data.data.result.success === false || data.data.result.success === 'false') {
+                              logWarnMessage("Setting Error to true because profile response returned a success of false");
+                              setHasError(true);
+                         } else {
+                              setProgress(progress + (100 / numSteps));
+                              updateUser(profile);
+                              updateLanguage(profile.interfaceLanguage ?? 'en');
+                              updateLanguageDisplayName(getLanguageDisplayName(profile.interfaceLanguage ?? 'en', languages));
+                              PATRON.language = profile.interfaceLanguage ?? 'en';
+                         }
                     }
-               }
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Menu');
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Menu');
+                    }
+               } else {
+                    logDebugMessage("Error reloading user profile");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading profile failed");
+          onError: (error) => {
+               logDebugMessage("Error reloading user profile");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading user profile. Please try again.')
           }
      });
 
      const { isSuccess: libraryLinksQuerySuccess, status: libraryLinksQueryStatus, data: libraryLinksQuery } = useQuery(['library_links', LIBRARY.url], () => getLibraryLinks(LIBRARY.url), {
           enabled: hasError === false && userQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateMenu(data);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Browse Categories');
+               if(data.ok) {
+                    const links = data.data.result?.items ?? [];
+                    setProgress(progress + (100 / numSteps));
+                    updateMenu(links);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Browse Categories');
+                    }
+               } else {
+                    logDebugMessage("Error loading library links");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading library links failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading library links failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading library links. Please try again.');
           }
      });
 
      const { isSuccess: browseCategoryQuerySuccess, status: browseCategoryQueryStatus, data: browseCategoryQuery } = useQuery(['browse_categories', LIBRARY.url, 'en', false], () => reloadBrowseCategories(5, LIBRARY.url), {
           enabled: hasError === false && libraryLinksQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateBrowseCategories(data);
-               updateMaxCategories(5);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Browse Category List');
+               if(data.ok) {
+                    setProgress(progress + (100 / numSteps));
+                    const categories = formatBrowseCategories(data.data.result);
+                    updateBrowseCategories(categories);
+                    updateMaxCategories(5);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Browse Category List');
+                    }
+               } else {
+                    logDebugMessage("Error loading browse categories");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading browse categories failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading browse categories failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading browse categories. Please try again.');
           }
      });
 
      const { isSuccess: browseCategoryListQuerySuccess, status: browseCategoryListQueryStatus, data: browseCategoryListQuery } = useQuery(['browse_categories_list', LIBRARY.url, 'en'], () => getBrowseCategoryListForUser(LIBRARY.url), {
           enabled: hasError === false && browseCategoryQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               if (isUndefined(LIBRARY.appSettings.loadingMessageType) || LIBRARY.appSettings.loadingMessageType == 0) {
-                    setLoadingText(getTermFromDictionary(language ?? 'en', 'loading_2'));
-               }else if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Branch Information');
+               if(data.ok) {
+                    const categories = _.sortBy(data.data.result, ['title']);
+                    setProgress(progress + (100 / numSteps));
+                    if (isUndefined(LIBRARY.appSettings.loadingMessageType) || LIBRARY.appSettings.loadingMessageType == 0) {
+                         setLoadingText(getTermFromDictionary(language ?? 'en', 'loading_2'));
+                    }else if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Branch Information');
+                    }
+                    updateBrowseCategoryList(categories);
+               } else {
+                    logDebugMessage("Error loading browse category list");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
-               updateBrowseCategoryList(data);
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading browse category list failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading browse category list failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading browse category list. Please try again.');
           }
      });
 
      const { isSuccess: libraryBranchQuerySuccess, status: libraryBranchQueryStatus, data: libraryBranchQuery } = useQuery(['library_location', LIBRARY.url, 'en'], () => getLocationInfo(LIBRARY.url), {
           enabled: hasError === false && browseCategoryListQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateLocation(data);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Self Check Information');
+               if(data.ok) {
+                    const location = data.data.result?.location ?? [];
+                    setProgress(progress + (100 / numSteps));
+                    updateLocation(location);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Library Locations');
+                    }
+               } else {
+                    logDebugMessage("Error loading library location");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
+          onError: (error) => {
                logWarnMessage("Setting Error to true because library location failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading library branches. Please try again.')
           }
      });
 
      const { isSuccess: selfCheckQuerySuccess, status: selfCheckQueryStatus, data: selfCheckQuery } = useQuery(['self_check_settings', LIBRARY.url, 'en'], () => getSelfCheckSettings(LIBRARY.url), {
           enabled: hasError === false && libraryBranchQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Linked Account');
-               }
-               if (data.success) {
-                    updateEnableSelfCheck(data.settings?.isEnabled ?? false);
-                    updateSelfCheckSettings(data.settings);
+               if(data.ok) {
+                    const settings = data.data.result ?? [];
+                    setProgress(progress + (100 / numSteps));
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Self Check Information');
+                    }
+                    if (data.success) {
+                         updateEnableSelfCheck(settings.isEnabled ?? false);
+                         updateSelfCheckSettings(settings);
+                    } else {
+                         updateEnableSelfCheck(false);
+                    }
                } else {
-                    updateEnableSelfCheck(false);
+                    logDebugMessage("Error loading self check settings");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading self check settings failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading self check settings failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading self check settings. Please try again.')
           }
 
      });
 
-     const { isSuccess: linkedAccountQuerySuccess, status: linkedAccountQueryStatus, data: linkedAccountQuery } = useQuery(['linked_accounts', user ?? [], cards ?? [], LIBRARY.url, 'en'], () => getLinkedAccounts(user ?? [], cards ?? [], library.barcodeStyle, LIBRARY.url, 'en'), {
+     const { isSuccess: linkedAccountQuerySuccess, status: linkedAccountQueryStatus, data: linkedAccountQuery } = useQuery(['linked_accounts', user ?? [], cards ?? [], LIBRARY.url, 'en'], () => getLinkedAccounts(LIBRARY.url, 'en'), {
           enabled: hasError === false && selfCheckQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateLinkedAccounts(data.accounts);
-               updateLibraryCards(data.cards);
-               setIsReloading(false);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading System Message Information');
+               if(data.ok) {
+                    setProgress(progress + (100 / numSteps));
+                    const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library.barcodeStyle, data.data.result.linkedAccounts);
+                    updateLinkedAccounts(linkedAccounts.accounts);
+                    updateLibraryCards(linkedAccounts.cards);
+                    setIsReloading(false);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Linked Accounts');
+                    }
+               } else {
+                    logDebugMessage("Error loading linked accounts");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading linked accounts failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading linked accounts failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading linked accounts. Please try again.')
           }
      });
 
      const { isSuccess: systemMessagesQuerySuccess, status: systemMessagesQueryStatus, data: systemMessagesQuery } = useQuery(['system_messages', LIBRARY.url], () => getSystemMessages(library.libraryId, location.locationId, LIBRARY.url), {
           enabled: hasError === false && linkedAccountQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateSystemMessages(data);
-               setIsReloading(false);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Application Preferences');
+               if(data.ok) {
+                    const messages = _.castArray(data.data.result?.systemMessages ?? {});
+                    setProgress(progress + (100 / numSteps));
+                    updateSystemMessages(messages);
+                    setIsReloading(false);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading System Messages');
+                    }
+               } else {
+                    logDebugMessage("Error loading system messages");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading system messages failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading system messages failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading system messages. Please try again.')
           }
      });
 
      const { isSuccess: appPreferencesQuerySuccess, status: appPreferencesQueryStatus, data: appPreferencesQuery } = useQuery(['app_preferences', LIBRARY.url], () => getAppPreferencesForUser(LIBRARY.url, 'en'), {
           enabled: hasError === false && systemMessagesQuerySuccess,
           onSuccess: (data) => {
-               updateAppPreferences(data);
-               setProgress(progress + (100 / numSteps));
-               setIsReloading(false);
-               if (LIBRARY.appSettings.loadingMessageType == 1) {
-                    setLoadingText('Loading Notification History');
+               if(data.ok) {
+                    const preferences = data.data.result ?? {
+                         onboardAppNotifications: 0,
+                         shouldAskBrightness: 0,
+                         notification_preferences: [
+                              {
+                                   device: 'Unknown',
+                                   token: false,
+                                   notifySavedSearch: 0,
+                                   notifyCustom: 0,
+                                   notifyAccount: 0,
+                                   onboardStatus: 0,
+                              },
+                         ],
+                    }
+                    updateAppPreferences(preferences);
+                    setProgress(progress + (100 / numSteps));
+                    setIsReloading(false);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading App Preferences');
+                    }
+               } else {
+                    logDebugMessage("Error loading app preferences");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
                }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading app preferences failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading app preferences failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading app preferences. Please try again.')
           }
      });
 
      const { isSuccess: notificationHistoryQuerySuccess, status: notificationHistoryQueryStatus, data: notificationHistoryQuery } = useQuery(['notification_history'], () => fetchNotificationHistory(1, 20, true, library.baseUrl, 'en'), {
           enabled: hasError === false && appPreferencesQuerySuccess,
           onSuccess: (data) => {
-               setProgress(progress + (100 / numSteps));
-               updateNotificationHistory(data);
-               updateInbox(data?.inbox ?? []);
-               setIsReloading(false);
+               if(data.ok) {
+                    const notificationHistory = formatNotificationHistory(data.data.result)
+                    setProgress(progress + (100 / numSteps));
+                    updateNotificationHistory(notificationHistory);
+                    updateInbox(notificationHistory?.inbox ?? []);
+                    setIsReloading(false);
+                    if (LIBRARY.appSettings.loadingMessageType == 1) {
+                         setLoadingText('Loading Notification History');
+                    }
+               } else {
+                    logDebugMessage("Error loading notification history");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setHasError(true);
+                    setErrorMessage(error.message);
+               }
           },
-          onError: () => {
-               logWarnMessage("Setting Error to true because loading notification history failed");
+          onError: (error) => {
+               logDebugMessage("Setting Error to true because loading notification history failed");
+               logErrorMessage(error);
                setHasError(true);
+               setErrorMessage('Unknown error loading notification history. Please try again.')
           }
      });
 
      if (hasError) {
-          return <ForceLogout />;
+          return <ForceLogout reason={errorMessage} />;
      }
 
      if (catalogStatus > 0) {
