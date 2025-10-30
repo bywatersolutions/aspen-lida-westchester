@@ -1,6 +1,8 @@
 import { create } from 'apisauce';
-import { createAuthTokens, getHeaders, postData } from '../apiAuth';
+import { createAuthTokens, getErrorMessage, getHeaders, postData } from '../apiAuth';
 import { GLOBALS } from '../globals';
+import { popToast } from '../../components/loadError';
+import { logErrorMessage } from '../logging';
 
 /** *******************************************************************
  * General
@@ -28,25 +30,7 @@ export async function fetchSavedEvents(page = 1, pageSize = 25, filter = 'upcomi
           },
      });
 
-     const response = await api.post('/EventAPI?method=getSavedEvents', postBody);
-     let data = [];
-     let morePages = false;
-     if (response.ok) {
-          data = response.data;
-          if (data.page_current !== data.page_total) {
-               morePages = true;
-          }
-     }
-
-     return {
-          events: data.events ?? [],
-          totalResults: data.totalResults ?? 0,
-          curPage: data.page_current ?? 0,
-          totalPages: data.page_total ?? 0,
-          hasMore: morePages,
-          filter: data.filter ?? filter,
-          message: data?.message ?? null,
-     };
+     return await api.post('/EventAPI?method=getSavedEvents', postBody);
 }
 
 /**
@@ -68,11 +52,7 @@ export async function getEventDetails(id, source, language, url) {
                language,
           },
      });
-     const response = await api.post('/EventAPI?method=getEventDetails', postBody);
-
-     return {
-          results: response.data,
-     };
+     return await api.post('/EventAPI?method=getEventDetails', postBody);
 }
 
 /**
@@ -100,9 +80,11 @@ export async function saveEvent(id, language, url) {
                return response.data;
           }
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          return [];
      }
-     return [];
 }
 
 /**
@@ -130,7 +112,9 @@ export async function removeSavedEvent(id, language, url) {
                return response.data;
           }
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          return [];
      }
-     return [];
 }

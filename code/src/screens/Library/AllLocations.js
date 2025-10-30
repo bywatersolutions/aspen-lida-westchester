@@ -16,6 +16,8 @@ import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { getLocations } from '../../util/api/location';
 import { PATRON } from '../../util/loadPatron';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
+import { getErrorMessage } from '../../util/apiAuth';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -35,13 +37,19 @@ export const AllLocations = () => {
      const { status, data, error, isFetching } = useQuery(['locations', user.id, library.baseUrl, language, userLatitude, userLongitude, sort], () => getLocations(library.baseUrl, language, userLatitude, userLongitude), {
           initialData: locations,
           onSuccess: (data) => {
-               updateLocations(data);
-               if (sort === 'distance') {
-                    const tmpSortedLocations = _.sortBy(data, ['distance', 'displayName']);
-                    setSortedLocations(tmpSortedLocations);
+               if(data.ok) {
+                    updateLocations(data.data.result.locations);
+                    if (sort === 'distance') {
+                         const tmpSortedLocations = _.sortBy(data, ['distance', 'displayName']);
+                         setSortedLocations(tmpSortedLocations);
+                    } else {
+                         const tmpSortedLocations = _.sortBy(data, ['displayName']);
+                         setSortedLocations(tmpSortedLocations);
+                    }
                } else {
-                    const tmpSortedLocations = _.sortBy(data, ['displayName']);
-                    setSortedLocations(tmpSortedLocations);
+                    logDebugMessage("Error fetching locations");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
                }
                setLoading(false);
           },
@@ -54,6 +62,10 @@ export const AllLocations = () => {
                     setSortedLocations(tmpSortedLocations);
                }
                setLoading(false);
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching locations");
+               logErrorMessage(error);
           },
           placeholderData: [],
      });

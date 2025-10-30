@@ -56,6 +56,7 @@ import { getTermFromDictionary, getTranslationsWithValues } from '../../../trans
 import { getListTitles, removeTitlesFromList } from '../../../util/api/list';
 import { formatDiscoveryVersion } from '../../../util/loadLibrary';
 import EditList from './EditList';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -134,6 +135,10 @@ export const MyList = () => {
                     setPaginationLabel(tmp);
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching user list titles for list " + id);
+               logErrorMessage(error);
+          }
      });
 
      const handleOpenItem = (id, title) => {

@@ -13,6 +13,7 @@ import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeCont
 import { getTermFromDictionary, getTranslationsWithValues } from '../../translations/TranslationService';
 import { fetchSearchResultsForBrowseCategory } from '../../util/api/search';
 import { DisplayResult } from './DisplayResult';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -40,6 +41,10 @@ export const SearchResultsForBrowseCategory = () => {
                     setPaginationLabel(tmp);
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error searching by browse category");
+               logErrorMessage(error);
+          }
      });
 
      const systemMessagesForScreen = [];

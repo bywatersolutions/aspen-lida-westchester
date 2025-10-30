@@ -13,8 +13,10 @@ import { DisplaySystemMessage } from '../../../components/Notifications';
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { getListDetails, getLists, getListTitles } from '../../../util/api/list';
+import { formatLists, getListDetails, getLists, getListTitles } from '../../../util/api/list';
 import CreateList from './CreateList';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -56,12 +58,23 @@ export const MyLists = () => {
      useQuery(['lists', user.id, library.baseUrl, language], () => getLists(library.baseUrl), {
           initialData: lists,
           onSuccess: (data) => {
-               updateLists(data);
+               if(data.ok) {
+                    const lists = formatLists(data.data.result);
+                    updateLists(lists)
+               } else {
+                    logDebugMessage("Error fetching user linked accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
                setLoading(false);
           },
           onSettle: (data) => {
                setLoading(false);
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching user lists");
+               logErrorMessage(error);
+          }
      });
 
      useQueries({

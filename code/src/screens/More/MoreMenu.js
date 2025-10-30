@@ -37,6 +37,7 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 import { deleteAspenUser } from '../../util/api/user';
 import { GLOBALS } from '../../util/globals';
 import { LIBRARY } from '../../util/loadLibrary';
+import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
 
 export const MoreMenu = () => {
      const { language } = React.useContext(LanguageContext);
@@ -300,12 +301,12 @@ const PrivacyPolicy = () => {
 
      const openURL = async () => {
           const url = appendQuery(LIBRARY.appSettings?.privacyPolicy ?? GLOBALS.privacyPolicy, 'minimalInterface=true');
-          console.log(url);
+          logInfoMessage(url);
           await WebBrowser.openBrowserAsync(url, browserParams)
                .then((res) => {
-                    console.log(res);
+                    logDebugMessage(res);
                     if (res.type === 'cancel' || res.type === 'dismiss') {
-                         console.log('User closed window.');
+                         logDebugMessage('User closed window.');
                          WebBrowser.dismissBrowser();
                          WebBrowser.coolDownAsync();
                     }
@@ -317,20 +318,22 @@ const PrivacyPolicy = () => {
                               WebBrowser.coolDownAsync();
                               await WebBrowser.openBrowserAsync(url, browserParams)
                                    .then((response) => {
-                                        console.log(response);
+                                        logDebugMessage(response);
                                         if (response.type === 'cancel') {
-                                             console.log('User closed window.');
+                                             logDebugMessage('User closed window.');
                                         }
                                    })
                                    .catch(async (error) => {
-                                        console.log('Unable to close previous browser session.');
+                                        logDebugMessage('Unable to close previous browser session.');
+                                        logErrorMessage(error);
                                    });
                          } catch (error) {
-                              console.log('Really borked.');
+                              logDebugMessage('Really borked.');
+                              logErrorMessage(error);
                          }
                     } else {
                          popToast(getTermFromDictionary('en', 'error_no_open_resource'), getTermFromDictionary('en', 'error_device_block_browser'), 'error');
-                         console.log(err);
+                         logErrorMessage(err);
                     }
                });
      };
@@ -389,7 +392,7 @@ const MenuLink = (payload) => {
           let formattedUrl = url;
           if (!isValidHttpUrl(url)) {
                /* Assume the URL is a relative one to Aspen Discovery */
-               console.log('URL not valid!');
+               logDebugMessage('URL not valid!');
                formattedUrl = _.trimEnd(library.baseUrl, '/') + '/' + _.trimStart(url, '/');
           }
           if (formattedUrl.includes(library.baseUrl)) {
@@ -399,37 +402,37 @@ const MenuLink = (payload) => {
 
           await WebBrowser.openBrowserAsync(formattedUrl, browserParams)
                .then(async (res) => {
-                    console.log(res);
+                    logInfoMessage(res);
                     if (res.type === 'cancel' || res.type === 'dismiss') {
-                         console.log('User closed window.');
+                         logDebugMessage('User closed window.');
                          WebBrowser.dismissBrowser();
                          WebBrowser.coolDownAsync();
                     }
                })
                .catch(async (err) => {
-                    console.log(err);
                     if (err.message === 'Another WebBrowser is already being presented.') {
                          try {
                               WebBrowser.dismissBrowser();
                               WebBrowser.coolDownAsync();
                               await WebBrowser.openBrowserAsync(formattedUrl, browserParams)
                                    .then(async (response) => {
-                                        console.log(response);
+                                        logDebugMessage(response);
                                         if (response.type === 'cancel' || response.type === 'dismiss') {
-                                             console.log('User closed window.');
+                                             logDebugMessage('User closed window.');
                                              WebBrowser.dismissBrowser();
                                              WebBrowser.coolDownAsync();
                                         }
                                    })
                                    .catch(async (error) => {
-                                        console.log('Unable to close previous browser session.');
+                                        logDebugMessage('Unable to close previous browser session.');
                                    });
                          } catch (error) {
-                              console.log('Really borked.');
+                              logDebugMessage('Really borked.');
+                              logErrorMessage(error);
                          }
                     } else {
                          popToast(getTermFromDictionary('en', 'error_no_open_resource'), getTermFromDictionary('en', 'error_device_block_browser'), 'error');
-                         console.log(err);
+                         logErrorMessage(err);
                     }
                });
      };

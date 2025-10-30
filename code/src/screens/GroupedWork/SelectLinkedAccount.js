@@ -7,6 +7,8 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 import { refreshProfile } from '../../util/api/user';
 import { completeAction } from '../../util/recordActions';
 import { SelectVolume } from './SelectVolume';
+import { logDebugMessage, logWarnMessage } from '../../util/logging';
+import { getErrorMessage } from '../../util/apiAuth';
 
 const SelectLinkedAccount = (props) => {
      const { id, action, title, volumeInfo, prevRoute, isEContent, response, setResponse, responseIsOpen, setResponseIsOpen, onResponseClose, cancelResponseRef } = props;
@@ -62,8 +64,6 @@ const SelectLinkedAccount = (props) => {
                pickupLocation = pickupLocation.code;
           }
      }
-
-     //console.log(pickupLocation);
 
      const [location, setLocation] = React.useState(pickupLocation);
 
@@ -159,8 +159,14 @@ const SelectLinkedAccount = (props) => {
                                                   if (result) {
                                                        setResponseIsOpen(true);
                                                        if (result.success) {
-                                                            await refreshProfile(library.baseUrl).then((profile) => {
-                                                                 updateUser(profile);
+                                                            await refreshProfile(library.baseUrl).then((data) => {
+                                                                 if(data.ok) {
+                                                                      updateUser(data.data.result.profile);
+                                                                 } else {
+                                                                      logWarnMessage('Could not refresh profile after placing hold or checkout from linked account');
+                                                                      logDebugMessage(data);
+                                                                      getErrorMessage(data.code ?? 0, data.problem);
+                                                                 }
                                                             });
                                                        }
                                                   }

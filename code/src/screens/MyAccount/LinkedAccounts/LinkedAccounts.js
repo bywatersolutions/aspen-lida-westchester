@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import _ from 'lodash';
+import _, { values } from 'lodash';
 import { Box, Button, ButtonText, Divider, FlatList, Heading, HStack, ScrollView, Text } from '@gluestack-ui/themed';
 import React from 'react';
 
@@ -13,10 +13,12 @@ import {
      UserContext,
 } from '../../../context/initialContext';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { getLinkedAccounts, getViewerAccounts, removeLinkedAccount, removeViewerAccount } from '../../../util/api/user';
+import { formatLinkedAccounts, getLinkedAccounts, getViewerAccounts, removeLinkedAccount, removeViewerAccount } from '../../../util/api/user';
 import AddLinkedAccount from './AddLinkedAccount';
 import DisableAccountLinking from './DisableAccountLinking';
 import EnableAccountLinking from './EnableAccountLinking';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 export const MyLinkedAccounts = () => {
      const navigation = useNavigation();
@@ -46,17 +48,38 @@ export const MyLinkedAccounts = () => {
 
      useQuery(['linked_accounts', user.id, cards ?? [], library.baseUrl, language], () => getLinkedAccounts(user, cards, library.barcodeStyle, library.baseUrl, language), {
           initialData: accounts,
-          onSuccess: (data) => {
-               updateLinkedAccounts(data.accounts);
-               updateLibraryCards(data.cards);
-          },
           placeholderData: [],
+          onSuccess: (data) => {
+               if(data.ok) {
+                    const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library.barcodeStyle, data.data.result.linkedAccounts);
+                    updateLinkedAccounts(linkedAccounts.accounts);
+                    updateLibraryCards(linkedAccounts.cards);
+               } else {
+                    logDebugMessage("Error fetching linked accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching linked accounts");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['viewer_accounts', user.id, library.baseUrl, language], () => getViewerAccounts(library.baseUrl, language), {
           initialData: viewers,
           onSuccess: (data) => {
-               updateLinkedViewerAccounts(data);
+               if(data.ok) {
+                    updateLinkedViewerAccounts(values(data.data?.result?.viewers ?? []));
+               } else {
+                    logDebugMessage("Error fetching linked viewer accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching linked viewer accounts");
+               logErrorMessage(error);
           },
           placeholderData: [],
      });

@@ -1,9 +1,7 @@
 import { GLOBALS } from '../globals';
 import { createAuthTokens, getHeaders } from '../apiAuth';
-import axios from 'axios';
 import { create } from 'apisauce';
 import _ from 'lodash';
-import { getVariableTermFromDictionary } from '../../translations/TranslationService';
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../logging.js';
 
 /** *******************************************************************
@@ -17,22 +15,28 @@ import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from
  * @param {string} url
  **/
 export async function getManifestation(itemId, format, language, url) {
-     const { data } = await axios.get('/ItemAPI?method=getManifestation', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
           auth: createAuthTokens(),
-          params: {
-               id: itemId,
-               format: format,
-               language,
-          },
      });
 
+     const response = await api.get('/ItemAPI?method=getManifestation', {
+          id: itemId,
+          format: format,
+          language,
+     });
+
+     if(!response.ok) {
+          logErrorMessage(`Error fetching manifestation for itemId ${itemId} format ${format} language ${language}: ${response.problem}`);
+          logDebugMessage(response);
+     }
+
      return {
-          id: data.id ?? itemId,
-          format: data.format ?? format,
-          manifestation: data.manifestation ?? [],
+          id: response.data?.id ?? itemId,
+          format: response.data?.format ?? format,
+          manifestation: response.data?.manifestation ?? [],
      };
 }
 
@@ -45,39 +49,40 @@ export async function getManifestation(itemId, format, language, url) {
  * @param {array} variation
  **/
 export async function getVariations(itemId, format, language, url, variation) {
-     //logDebugMessage("Getting variations itemId " + itemId + " format " + format + " language " + language + " url " + url);
-     //logDebugMessage(variation);
      let recordId = null;
      if (variation.recordId) {
           recordId = variation.recordId;
      }
 
-     const { data } = await axios.get('/ItemAPI?method=getVariations', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
           auth: createAuthTokens(),
-          params: {
-               id: itemId,
-               format: format,
-               language,
-               recordId,
-          },
      });
 
-     //logDebugMessage("Response from get variations");
-     //logDebugMessage(data);
+     const response = await api.get('/ItemAPI?method=getVariations', {
+          id: itemId,
+          format: format,
+          language,
+          recordId,
+     });
+
+     if(!response.ok) {
+          logErrorMessage(`Error fetching variations for itemId ${itemId} format ${format} language ${language}: ${response.problem}`);
+          logDebugMessage(response);
+     }
 
      return {
-          id: data.id ?? itemId,
-          format: data.format ?? format,
-          variations: data.variations ?? [],
+          id: response.data?.id ?? itemId,
+          format: response.data?.format ?? format,
+          variations: response.data?.variations ?? [],
           volumeInfo: {
-               numItemsWithVolumes: data.numItemsWithVolumes ?? 0,
-               numItemsWithoutVolumes: data.numItemsWithoutVolumes ?? 0,
-               hasItemsWithoutVolumes: data.hasItemsWithoutVolumes ?? 0,
-               majorityOfItemsHaveVolumes: data.majorityOfItemsHaveVolumes ?? false,
-               alwaysPlaceVolumeHoldWhenVolumesArePresent: data.alwaysPlaceVolumeHoldWhenVolumesArePresent ?? false,
+               numItemsWithVolumes: response.data?.numItemsWithVolumes ?? 0,
+               numItemsWithoutVolumes: response.data?.numItemsWithoutVolumes ?? 0,
+               hasItemsWithoutVolumes: response.data?.hasItemsWithoutVolumes ?? 0,
+               majorityOfItemsHaveVolumes: response.data?.majorityOfItemsHaveVolumes ?? false,
+               alwaysPlaceVolumeHoldWhenVolumesArePresent: response.data?.alwaysPlaceVolumeHoldWhenVolumesArePresent ?? false,
           },
      };
 }
@@ -91,77 +96,69 @@ export async function getVariations(itemId, format, language, url, variation) {
  * @param {string} url
  **/
 export async function getRecords(itemId, format, source, language, url) {
-     const { data } = await axios.get('/ItemAPI?method=getRecords', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
           auth: createAuthTokens(),
-          params: {
-               id: itemId,
-               format: format,
-               source: source,
-               language,
-          },
      });
 
-     logDebugMessage("getRecords response");
-     logDebugMessage(data);
-
-     return {
-          id: data.id ?? itemId,
-          format: data.format ?? format,
-          records: data.records ?? [],
-     };
-}
-
-/**
- * Returns item availability for the given record id
- * @param {string} recordId
- * @param {string} url
- **/
-export async function getItemAvailability(recordId, url) {
-     const { data } = await axios.get('/ItemAPI?method=getItemAvailability', {
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutSlow,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-          params: {
-               id: recordId,
-          },
+     const response = await api.get('/ItemAPI?method=getRecords', {
+          id: itemId,
+          format: format,
+          source: source,
+          language,
      });
 
+     if(!response.ok) {
+          logErrorMessage(`Error fetching records for itemId ${itemId} format ${format} source ${source} language ${language}: ${response.problem}`);
+          logDebugMessage(response);
+     }
+
      return {
-          id: data.id ?? recordId,
-          holdings: data.holdings ?? [],
+          id: response.data?.id ?? itemId,
+          format: response.data?.format ?? format,
+          records: response.data?.records ?? [],
      };
 }
 
 export async function getFirstRecord(itemId, format, language, url) {
-     const { data } = await axios.get('/ItemAPI?method=getRecords', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
           auth: createAuthTokens(),
-          params: {
-               id: itemId,
-               format: format,
-               language,
-          },
+     });
+
+     const response = await api.get('/ItemAPI?method=getRecords', {
+          id: itemId,
+          format: format,
+          language,
      });
 
      let id = null;
      let source = 'ils';
      let record = null;
-     if (data.records) {
-          const records = data.records;
-          const keys = Object.keys(records);
-          let firstKey = _.toString(_.take(keys));
-          id = records[firstKey].id;
-          record = id;
-          const recordId = _.split(id, ':');
-          id = _.toString(recordId[1]);
-          source = _.toString(recordId[0]);
+
+     if(response.ok) {
+          if (response.data?.records) {
+               const records = response.data.records;
+               const keys = Object.keys(records);
+               let firstKey = keys[0];
+               id = records[firstKey].id;
+               record = id;
+               const recordId = id.split(':');
+               id = recordId[1]?.toString();
+               source = recordId[0]?.toString();
+          } else {
+               logWarnMessage(`No records found for itemId ${itemId} format ${format} language ${language}`);
+
+          }
+     } else {
+          logErrorMessage(`Error fetching records for itemId ${itemId} format ${format} language ${language}: ${response.problem}`);
+          logDebugMessage(response);
      }
+
      return {
           id: id,
           source: source,
@@ -186,44 +183,41 @@ export async function getVolumes(id, url) {
      if (response.ok) {
           if (response.data?.volumes) {
                volumes = _.sortBy(response.data.volumes, 'key');
+          } else {
+               logWarnMessage(`No volumes found for id ${id}`);
           }
+     } else {
+          logErrorMessage(`Error fetching volumes for id ${id}: ${response.problem}`);
+          logDebugMessage(response);
      }
 
      return volumes;
 }
 
-export async function getBasicItemInfo(id, url) {
-     const { data } = await axios.get('/ItemAPI?method=getBasicItemInfo', {
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutSlow,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-          params: {
-               id: id,
-          },
-     });
-
-     return data;
-}
-
 export async function getRelatedRecord(id, recordId, format, url) {
-     const { data } = await axios.get('/ItemAPI?method=getRelatedRecord', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
           auth: createAuthTokens(),
-          params: {
-               id: id,
-               record: recordId,
-               format: format,
-          },
      });
+
+     const response = await api.get('/ItemAPI?method=getRelatedRecord', {
+          id: id,
+          record: recordId,
+          format: format,
+     });
+
+     if(!response.ok) {
+          logErrorMessage(`Error fetching related record for id ${id} recordId ${recordId} format ${format}: ${response.problem}`);
+          logDebugMessage(response);
+     }
 
      return {
-          id: data.id ?? id,
-          recordId: data.record ?? recordId,
-          format: data.format ?? format,
-          manifestation: data.record ?? [],
+          id: response.data?.id ?? id,
+          recordId: response.data?.record ?? recordId,
+          format: response.data?.format ?? format,
+          manifestation: response.data?.record ?? [],
      };
 }
 
@@ -235,20 +229,26 @@ export async function getRelatedRecord(id, recordId, format, url) {
  * @param {string} url
  **/
 export async function getCopies(recordId, language = 'en', variationId, url) {
-     const { data } = await axios.get('/ItemAPI?method=getCopies', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutSlow,
           headers: getHeaders(),
           auth: createAuthTokens(),
-          params: {
-               recordId,
-               language,
-               variationId,
-          },
      });
+
+     const response = await api.get('/ItemAPI?method=getCopies', {
+          recordId,
+          language,
+          variationId,
+     });
+
+     if(!response.ok) {
+          logErrorMessage(`Error fetching copies for recordId ${recordId} language ${language} variationId ${variationId}: ${response.problem}`);
+          logDebugMessage(response);
+     }
 
      return {
           recordId: recordId,
-          copies: data.copies ?? [],
+          copies: response.data?.copies ?? [],
      };
 }

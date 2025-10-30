@@ -3,14 +3,13 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Box, Button, Checkbox, CheckIcon, FormControl, Input, Select, Text, TextArea, ScrollView } from 'native-base';
 import React from 'react';
 import { Platform } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadingSpinner } from '../../components/loadingSpinner';
 import { submitLocalIllRequest } from '../../util/recordActions';
-import { HoldsContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
+import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
 import { popAlert, loadError } from '../../components/loadError';
 import { getLocalIllForm } from '../../util/loadLibrary';
-import { reloadProfile } from '../../util/api/user';
-import { reloadHolds } from '../../util/loadPatron';
+import { logInfoMessage } from '../../util/logging';
 
 export const CreateLocalIllRequest = () => {
      const route = useRoute();
@@ -25,10 +24,10 @@ export const CreateLocalIllRequest = () => {
           return loadError('The ILL System is not setup properly, please contact your library to place a request', '');
      }
 
-     //console.log("Local ILL Form Id " + location.localIllFormId);
-     //console.log("ID " + route.params.id);
-     //console.log("Volume ID " + volumeId);
-     //console.log("Volume Name " + volumeName);
+     logInfoMessage("Local ILL Form Id " + location.localIllFormId);
+     logInfoMessage("ID " + route.params.id);
+     logInfoMessage("Volume ID " + volumeId);
+     logInfoMessage("Volume Name " + volumeName);
 
      const { status, data, error, isFetching } = useQuery({
           queryKey: ['localIllForm', location.localIllFormId, library.baseUrl],
@@ -40,10 +39,11 @@ export const CreateLocalIllRequest = () => {
 
 const Request = (payload) => {
      const navigation = useNavigation();
+     const queryClient = useQueryClient();
      const { config, workId, workTitle, volumeId, volumeName } = payload;
      const { library } = React.useContext(LibrarySystemContext);
-     const { updateUser } = React.useContext(UserContext);
-     const { updateHolds } = React.useContext(HoldsContext);
+     const { user } = React.useContext(UserContext);
+     const { language } = React.useContext(LanguageContext);
 
      const [title, setTitle] = React.useState(workTitle);
      const [note, setNote] = React.useState('');
@@ -65,12 +65,8 @@ const Request = (payload) => {
                setIsSubmitting(false);
                if (result.success) {
                     navigation.goBack();
-                    await reloadHolds(library.baseUrl).then((result) => {
-                         updateHolds(result);
-                    });
-                    await reloadProfile(library.baseUrl).then((result) => {
-                         updateUser(result);
-                    });
+                    queryClient.invalidateQueries({ queryKey: ['holds', user.id, library.baseUrl, language] });
+                    queryClient.invalidateQueries({ queryKey: ['user', library.baseUrl, language] });
                } else {
                     popAlert(result.title, result.message, 'error');
                }

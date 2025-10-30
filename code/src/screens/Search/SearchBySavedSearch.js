@@ -12,6 +12,7 @@ import { LibrarySystemContext, LanguageContext, ThemeContext, SystemMessagesCont
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { fetchSearchResultsForSavedSearch } from '../../util/api/search';
 import { DisplayResult } from './DisplayResult';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 export const SearchResultsForSavedSearch = () => {
      const [page, setPage] = React.useState(1);
@@ -36,6 +37,10 @@ export const SearchResultsForSavedSearch = () => {
                     setPaginationLabel(tmp);
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error searching for saved search");
+               logErrorMessage(error);
+          }
      });
 
      const systemMessagesForScreen = [];

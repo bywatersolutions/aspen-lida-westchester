@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
-import _ from 'lodash';
+import _, { values } from 'lodash';
 import { Badge, Box, Button, Container, Divider, HStack, Icon, Image, Pressable, Text, useColorModeValue, useToken, VStack } from 'native-base';
 import React from 'react';
 import navigation, { AuthContext } from '../../components/navigation';
@@ -26,15 +26,16 @@ import { UseColorMode } from '../../themes/theme';
 import { getTermFromDictionary, getTranslationsWithValues, LanguageSwitcher } from '../../translations/TranslationService';
 import { fetchSavedEvents } from '../../util/api/event';
 import { getCatalogStatus } from '../../util/api/library';
-import { getLists } from '../../util/api/list';
+import { formatLists, getLists } from '../../util/api/list';
 import { getLocations } from '../../util/api/location';
-import { fetchNotificationHistory, fetchReadingHistory, fetchSavedSearches, getLinkedAccounts, getPatronCheckedOutItems, sortCheckouts, getPatronHolds, sortHolds, getViewerAccounts, refreshProfile, reloadProfile, revalidateUser, validateSession } from '../../util/api/user';
-import { passUserToDiscovery } from '../../util/apiAuth';
+import { fetchNotificationHistory, fetchReadingHistory, fetchSavedSearches, getLinkedAccounts, getPatronCheckedOutItems, sortCheckouts, getPatronHolds, sortHolds, getViewerAccounts, refreshProfile, reloadProfile, revalidateUser, validateSession, formatReadingHistory, formatNotificationHistory, formatLinkedAccounts, formatHolds } from '../../util/api/user';
+import { getErrorMessage, passUserToDiscovery, stripHTML } from '../../util/apiAuth';
 import { GLOBALS } from '../../util/globals';
-import { formatDiscoveryVersion, getPickupLocations, reloadBrowseCategories } from '../../util/loadLibrary';
+import { formatBrowseCategories, formatDiscoveryVersion, formatLocations, formatPickupLocations, getPickupLocations, reloadBrowseCategories } from '../../util/loadLibrary';
 import { getBrowseCategoryListForUser, getILSMessages, PATRON } from '../../util/loadPatron';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
+import * as Sentry from '@sentry/react-native';
 
 Notifications.setNotificationHandler({
      handleNotification: async () => ({
@@ -105,8 +106,24 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           refetchOnWindowFocus: 'always',
           onSuccess: (data) => {
-               updateCatalogStatus(data);
+               if(data.ok) {
+                    let catalogMessage = null;
+                    if (data.data.result?.api?.message) {
+                         catalogMessage = stripHTML(data.data.result.api.message);
+                    }
+
+                    let status = data.data.result?.catalogStatus ?? 0;
+                    updateCatalogStatus({status: status, message: catalogMessage});
+               } else {
+                    logDebugMessage("Error fetching catalog status");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching catalog status");
+               logErrorMessage(error);
+          }
      });
 
      //MDN 25.08 DIS-276 Change to use refresh profile rather than reload profile because it utilizes caching within
@@ -117,51 +134,84 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           refetchOnWindowFocus: 'always',
           onSuccess: (data) => {
-               const validProfile = data.success ?? true;
-               if (validProfile) {
-                    setInvalidSession(false);
-                    if (user) {
-                         if (data !== user) {
-                              updateUser(data);
-                              updateLanguage(data.interfaceLanguage ?? 'en');
-                              PATRON.language = data.interfaceLanguage ?? 'en';
+               if(data.ok) {
+                    const validProfile = data.data.result.success ?? true;
+                    if (validProfile) {
+                         setInvalidSession(false);
+                         if (user) {
+                              if (data.data.result.profile !== user) {
+                                   updateUser(data.data.result.profile);
+                                   updateLanguage(data.data.result.profile.interfaceLanguage ?? 'en');
+                                   PATRON.language = data.data.result.profile.interfaceLanguage ?? 'en';
+                              }
+                         } else {
+                              updateUser(data.data.result.profile);
+                              updateLanguage(data.data.result.profile.interfaceLanguage ?? 'en');
+                              PATRON.language = data.data.result.profile.interfaceLanguage ?? 'en';
                          }
                     } else {
-                         updateUser(data);
-                         updateLanguage(data.interfaceLanguage ?? 'en');
-                         PATRON.language = data.interfaceLanguage ?? 'en';
+                         //MDN 25.08 DIS-276 Change to use refresh profile rather than reload profile because it utilizes caching within
+                         let errorFetching = data.errorFetching ?? false;
+                         //If we had an error fetching data, do not force the user out
+                         if (errorFetching === false) {
+                              logWarnMessage("Session was invalid after reloading profile");
+                              logWarnMessage(data);
+                              setInvalidSession(true);
+                         }
+                         logErrorMessage(data); // go ahead and log the error so it goes to Sentry in hopes to identify issues
                     }
                } else {
-                    //MDN 25.08 DIS-276 Change to use refresh profile rather than reload profile because it utilizes caching within
-                    errorFetching = data.errorFetching ?? false;
-                    //If we had an error fetching data, do not force the user out
-                    if (errorFetching === false) {
-                         logWarnMessage("Session was invalid after reloading profile");
-                         logWarnMessage(data);
-                         setInvalidSession(true);
-                    }
+                    logDebugMessage("Error reloading user profile");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error reloading user profile");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['browse_categories', library.baseUrl, language, maxNum], () => reloadBrowseCategories(maxNum, library.baseUrl), {
           refetchInterval: 60 * 1000 * 15,
           refetchIntervalInBackground: true,
-          onSuccess: (data) => {
-               updateBrowseCategories(data);
-          },
           initialData: category,
+          onSuccess: (data) => {
+               if(data.ok) {
+                    const categories = formatBrowseCategories(data.data.result);
+                    updateBrowseCategories(categories);
+               } else {
+                    logDebugMessage("Error fetching browse categories");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching browse categories");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['holds', user.id, library.baseUrl, language], () => getPatronHolds(userHoldReadySortMethod, userHoldPendingSortMethod, 'all', library.baseUrl, false, language), {
           refetchInterval: 60 * 1000 * 15,
           refetchIntervalInBackground: true,
           refetchOnWindowFocus: 'always',
-          onSuccess: (data) => {
-               const sortedHolds = sortHolds(data, userHoldPendingSortMethod, userHoldReadySortMethod);
-               updateHolds(sortedHolds);
-          },
           placeholderData: [],
+          onSuccess: (data) => {
+               if(data.ok) {
+                    let holds = formatHolds(data.data.result.holds ?? []);
+                    holds = sortHolds(holds, userHoldPendingSortMethod, userHoldReadySortMethod);
+                    updateHolds(holds);
+               } else {
+                    logDebugMessage("Error fetching user holds");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching user holds");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['checkouts', user.id, library.baseUrl, language], () => getPatronCheckedOutItems('all', library.baseUrl, false, language), {
@@ -169,10 +219,20 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           refetchOnWindowFocus: 'always',
           onSuccess: (data) => {
-               const sortedCheckouts = sortCheckouts(data, userCheckoutSortMethod);
-               updateCheckouts(sortedCheckouts);
+               if(data.ok) {
+                    let checkouts = data.data.result.checkedOutItems ?? [];
+                    checkouts = sortCheckouts(checkouts, userCheckoutSortMethod);
+                    updateCheckouts(checkouts);
+               } else {
+                    logDebugMessage("Error fetching user checkouts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
-          placeholderData: [],
+          onError: (error) => {
+               logDebugMessage("Error fetching user checkouts");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['lists', user.id, library.baseUrl, language], () => getLists(library.baseUrl), {
@@ -180,24 +240,48 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           notifyOnChangeProps: ['data'],
           refetchOnWindowFocus: 'always',
-          onSuccess: (data) => updateLists(data),
           placeholderData: [],
+          onSuccess: (data) => {
+               if(data.ok) {
+                    const lists = formatLists(data.data.result);
+                    updateLists(lists)
+               } else {
+                    logDebugMessage("Error fetching user linked accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching user lists");
+               logErrorMessage(error);
+          }
      });
 
-     useQuery(['linked_accounts', user, cards ?? [], library.baseUrl, language], () => getLinkedAccounts(user, cards, library.barcodeStyle, library.baseUrl, language), {
+     useQuery(['linked_accounts', library.baseUrl, language], () => getLinkedAccounts(library.baseUrl, language), {
           initialData: accounts,
           refetchInterval: 60 * 1000 * 15,
           refetchIntervalInBackground: true,
           notifyOnChangeProps: ['data'],
           refetchOnWindowFocus: 'always',
           onSuccess: (data) => {
-               if (accounts !== data.accounts) {
-                    updateLinkedAccounts(data.accounts);
-               }
-               if (cards !== data.cards) {
-                    updateLibraryCards(data.cards);
+               if(data.ok) {
+                    const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library.barcodeStyle, data.data.result.linkedAccounts);
+                    if (accounts !== linkedAccounts.accounts) {
+                         updateLinkedAccounts(linkedAccounts.accounts);
+                    }
+                    if (cards !== linkedAccounts.cards) {
+                         updateLibraryCards(linkedAccounts.cards);
+                    }
+               } else {
+                    logDebugMessage("Error fetching linked accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching linked accounts");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['viewer_accounts', user.id, library.baseUrl, language], () => getViewerAccounts(library.baseUrl, language), {
@@ -205,15 +289,18 @@ export const DrawerContent = () => {
           refetchInterval: 60 * 1000 * 15,
           refetchIntervalInBackground: true,
           onSuccess: (data) => {
-               updateLinkedViewerAccounts(data);
+               if(data.ok) {
+                    updateLinkedViewerAccounts(values(data.data?.result?.viewers ?? []));
+               } else {
+                    logDebugMessage("Error fetching linked viewer accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
-     });
-
-     useQuery(['ils_messages', user.id, library.baseUrl, language], () => getILSMessages(library.baseUrl), {
-          refetchInterval: 60 * 1000 * 5,
-          refetchIntervalInBackground: true,
-          refetchOnWindowFocus: 'always',
-          placeholderData: [],
+          onError: (error) => {
+               logDebugMessage("Error fetching linked viewer accounts");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['notification_history', user.id, library.baseUrl, language], () => fetchNotificationHistory(1, 20, false, library.baseUrl, language), {
@@ -221,8 +308,19 @@ export const DrawerContent = () => {
           refetchInterval: 60 * 1000 * 5,
           refetchIntervalInBackground: true,
           onSuccess: (data) => {
-               updateNotificationHistory(data);
+               if(data.ok) {
+                    const notificationHistory = formatNotificationHistory(data.data.result)
+                    updateNotificationHistory(notificationHistory);
+               } else {
+                    logDebugMessage("Error fetching notification history");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching notification history");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['pickup_locations', library.baseUrl, language], () => getPickupLocations(library.baseUrl), {
@@ -231,11 +329,22 @@ export const DrawerContent = () => {
           placeholderData: [],
           onSuccess: (data) => {
                logDebugMessage("Finished pickup_locations query, setting data");
-               updatePickupLocations(data.locations);
-               updatePreferredPickupLocationIsValid(data.preferredPickupLocationIsValid);
-               updatePreferredPickupLocationWarning(data.preferredPickupLocationWarning);
-               logDebugMessage("Finished pickup_locations query, done setting data");
+               if(data.ok) {
+                    const pickupLocations = formatPickupLocations(data.data.result);
+                    updatePickupLocations(pickupLocations.pickupLocations);
+                    updatePreferredPickupLocationIsValid(pickupLocations.preferredPickupLocationIsValid);
+                    updatePreferredPickupLocationWarning(pickupLocations.preferredPickupLocationWarning);
+                    logDebugMessage("Finished pickup_locations query, done setting data");
+               } else {
+                    logDebugMessage("Error with pickup_locations query");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching pickup locations");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['locations', library.baseUrl, language, userLatitude, userLongitude], () => getLocations(library.baseUrl, language, userLatitude, userLongitude), {
@@ -244,8 +353,18 @@ export const DrawerContent = () => {
           refetchOnWindowFocus: 'always',
           placeholderData: [],
           onSuccess: (data) => {
-               updateLocations(data);
+               if(data.ok){
+                    updateLocations(data.data.result.locations);
+               } else {
+                    logDebugMessage("Error fetching locations");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching locations");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['saved_searches', user?.id ?? 'unknown', library.baseUrl, language], () => fetchSavedSearches(library.baseUrl, language), {
@@ -253,8 +372,18 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           placeholderData: [],
           onSuccess: (data) => {
-               updateSavedSearchesStorage(data);
+               if(data.ok) {
+                    updateSavedSearchesStorage(data.data.result?.searches ?? []);
+               } else {
+                    logDebugMessage("Error fetching saved searches for user");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching saved searches for user");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['reading_history', user.id, library.baseUrl, 1, 'checkedOut'], () => fetchReadingHistory(1, 20, 'checkedOut', '', library.baseUrl, language), {
@@ -262,8 +391,19 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           placeholderData: [],
           onSuccess: (data) => {
-               updateReadingHistory(data);
+               if(data.ok) {
+                    const readingHistory = formatReadingHistory(data.data.result);
+                    updateReadingHistory(readingHistory);
+               } else {
+                    logDebugMessage("Error fetching reading history for user");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching reading history for user");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['browse_categories_list', library.baseUrl, language], () => getBrowseCategoryListForUser(library.baseUrl), {
@@ -271,8 +411,19 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           placeholderData: list,
           onSuccess: (data) => {
-               updateBrowseCategoryList(data);
+               if(data.ok){
+                    const categories = _.sortBy(data.data.result, ['title']);
+                    updateBrowseCategoryList(categories);
+               } else {
+                    logDebugMessage("Error fetching browse category list for user");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
+               }
           },
+          onError: (error) => {
+               logDebugMessage("Error fetching browse category list for user");
+               logErrorMessage(error);
+          }
      });
 
      useQuery(['session', library.baseUrl, user.id], () => validateSession(library.baseUrl), {
@@ -281,10 +432,22 @@ export const DrawerContent = () => {
           refetchIntervalInBackground: true,
           retry: 5,
           onSuccess: (data) => {
-               if (typeof data.result?.session !== 'undefined') {
-                    GLOBALS.appSessionId = data.result.session;
+               if(data.ok) {
+                    if (typeof data.data.result?.session !== 'undefined') {
+                         GLOBALS.appSessionId = data.data.result.session;
+                    } else {
+                         logWarnMessage("No session returned when validating session");
+                    }
+               } else {
+                    logDebugMessage("Error validating session");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error validating session");
+               logErrorMessage(error);
+          }
      });
 
      useFocusEffect(
@@ -301,8 +464,14 @@ export const DrawerContent = () => {
                          }
                     });
 
-                    await getILSMessages(library.baseUrl).then((result) => {
-                         setILSMessages(result);
+                    await getILSMessages(library.baseUrl).then((response) => {
+                         if(response.ok) {
+                              setILSMessages(response.data?.result?.messages ?? []);
+                         } else {
+                              logDebugMessage("Error fetching ILS messages");
+                              logDebugMessage(response);
+                              getErrorMessage(response.code, response.problem);
+                         }
                     });
                };
                update().then(() => {
@@ -324,16 +493,16 @@ export const DrawerContent = () => {
           if (supported) {
                try {
                     url = url.replace(prefix, '/');
-                    console.log('Opening url in DrawerContent...');
-                    console.log(url);
+                    logDebugMessage('Opening url in DrawerContent...');
+                    logDebugMessage(url);
                     linkTo(url);
                } catch (e) {
-                    console.log('Could not open url in DrawerContent');
-                    console.log(e);
+                    logDebugMessage('Could not open url in DrawerContent');
+                    logDebugMessage(e);
                }
           } else {
-               console.log('Could not open url in DrawerContent');
-               console.log(url);
+               logDebugMessage('Could not open url in DrawerContent');
+               logDebugMessage(url);
           }
      };
 

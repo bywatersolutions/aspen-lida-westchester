@@ -14,8 +14,9 @@ import { CheckoutsContext, LanguageContext, LibrarySystemContext, SystemMessages
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
 import { confirmRenewAllCheckouts, confirmRenewCheckout, renewAllCheckouts } from '../../../util/accountActions';
 import { getPatronCheckedOutItems, setSortPreferences, sortCheckouts } from '../../../util/api/user';
-import { stripHTML } from '../../../util/apiAuth';
+import { getErrorMessage, stripHTML } from '../../../util/apiAuth';
 import { MyCheckout } from './MyCheckout';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
 
 export const MyCheckouts = () => {
      const isFetchingCheckouts = useIsFetching({ queryKey: ['checkouts'] });
@@ -68,10 +69,21 @@ export const MyCheckouts = () => {
      useQuery(['checkouts', user.id, library.baseUrl, language], () => getPatronCheckedOutItems('all', library.baseUrl, false, language), {
           placeholderData: checkouts,
           onSuccess: (data) => {
-               const sortedCheckouts = sortCheckouts(data, userCheckoutSortMethod);
-               updateCheckouts(sortedCheckouts);
+               if(data.ok) {
+                    let checkouts = data.data.result.checkedOutItems ?? [];
+                    checkouts = sortCheckouts(checkouts, userCheckoutSortMethod);
+                    updateCheckouts(checkouts);
+               } else {
+                    logDebugMessage("Error fetching user checkouts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
           onSettle: (data) => setLoading(false),
+          onError: (error) => {
+               logDebugMessage("Error fetching user checkouts");
+               logErrorMessage(error);
+          }
      });
 
      const toggleSort = async (value) => {

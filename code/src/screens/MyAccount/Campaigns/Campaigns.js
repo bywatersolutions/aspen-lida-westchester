@@ -43,6 +43,7 @@ import { Image } from 'expo-image';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import PlaceholderImg from '../../../assets/digital-reward-placeholder.png';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
 
 // Constants
 const PAGE_SIZE = 20;
@@ -162,7 +163,11 @@ export const MyCampaigns = () => {
 					updateCampaigns(data.campaigns);
 				}
 			},
-		  	onSettled: () => setLoading(false),  
+		  	onSettled: () => setLoading(false),
+               onError: (error) => {
+                    logDebugMessage("Error searching for saved search");
+                    logErrorMessage(error);
+               }
 		}
 	);
 

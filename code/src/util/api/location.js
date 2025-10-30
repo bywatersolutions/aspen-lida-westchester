@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'apisauce';
-import { createAuthTokens, getHeaders } from '../apiAuth';
+import { createAuthTokens, getErrorMessage, getHeaders } from '../apiAuth';
 import { GLOBALS } from '../globals';
 import { LIBRARY } from '../loadLibrary';
+import { popToast } from '../../components/loadError';
+import { logDebugMessage, logErrorMessage } from '../logging';
 
 export async function getLocationInfo(url = null, locationId = null) {
      const apiUrl = url ?? LIBRARY.url;
@@ -11,7 +13,7 @@ export async function getLocationInfo(url = null, locationId = null) {
           try {
                locationId = await AsyncStorage.getItem('@locationId');
           } catch (e) {
-               console.log(e);
+               logDebugMessage(e);
           }
      }
 
@@ -25,13 +27,7 @@ export async function getLocationInfo(url = null, locationId = null) {
                version: GLOBALS.appVersion,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getLocationInfo');
-     if (response.ok) {
-          if (response.data.result) {
-               return response.data.result.location;
-          }
-     }
-     return [];
+     return await discovery.get('/SystemAPI?method=getLocationInfo');
 }
 
 export async function getSelfCheckSettings(url = null) {
@@ -40,7 +36,7 @@ export async function getSelfCheckSettings(url = null) {
      try {
           locationId = await AsyncStorage.getItem('@locationId');
      } catch (e) {
-          console.log(e);
+          logDebugMessage(e);
      }
 
      const discovery = create({
@@ -52,21 +48,7 @@ export async function getSelfCheckSettings(url = null) {
                locationId: locationId,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getSelfCheckSettings');
-     if (response.ok) {
-          if (response.data.result) {
-               return response.data.result;
-          } else {
-               return {
-                    success: false,
-                    settings: [],
-               };
-          }
-     }
-     return {
-          success: false,
-          settings: [],
-     };
+     return await discovery.get('/SystemAPI?method=getSelfCheckSettings');
 }
 
 export async function getLocations(url, language = 'en', latitude, longitude) {
@@ -81,11 +63,5 @@ export async function getLocations(url, language = 'en', latitude, longitude) {
                language,
           },
      });
-     const response = await discovery.get('/SystemAPI?method=getLocations');
-     if (response.ok) {
-          if (response?.data?.result?.locations) {
-               return response.data.result.locations;
-          }
-     }
-     return [];
+     return await discovery.get('/SystemAPI?method=getLocations');
 }

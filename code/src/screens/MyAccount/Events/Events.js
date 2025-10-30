@@ -17,6 +17,8 @@ import { getCleanTitle } from '../../../helpers/item';
 import { navigate } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
 import { fetchSavedEvents, removeSavedEvent } from '../../../util/api/event';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -58,16 +60,43 @@ export const MyEvents = () => {
           keepPreviousData: true,
           staleTime: 1000,
           onSuccess: (data) => {
-               updateSavedEvents(data.events);
-               if (data.totalPages) {
-                    let tmp = getTermFromDictionary(language, 'page_of_page');
-                    tmp = tmp.replace('%1%', page);
-                    tmp = tmp.replace('%2%', data.totalPages);
-                    console.log(tmp);
-                    setPaginationLabel(tmp);
+               if(data.ok) {
+                    let morePages = false;
+
+                    if (data.data.page_current !== data.data.page_total) {
+                         morePages = true;
+                    }
+
+                    const events = {
+                         events: data.data.events ?? [],
+                         totalResults: data.data.totalResults ?? 0,
+                         curPage: data.data.page_current ?? 0,
+                         totalPages: data.data.page_total ?? 0,
+                         hasMore: morePages,
+                         filter: data.data.filter ?? filterBy,
+                         message: data.data?.message ?? null,
+                    }
+
+                    updateSavedEvents(events.events);
+                    updateEvents(data.data ?? []);
+
+                    if (data.data.totalPages) {
+                         let tmp = getTermFromDictionary(language, 'page_of_page');
+                         tmp = tmp.replace('%1%', page);
+                         tmp = tmp.replace('%2%', data.data.totalPages);
+                         setPaginationLabel(tmp);
+                    }
+               } else {
+                    logDebugMessage("Error fetching saved events for user");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
                }
           },
           onSettle: (data) => setLoading(false),
+          onError: (error) => {
+               logDebugMessage("Error fetching saved events");
+               logErrorMessage(error);
+          }
      });
 
      const getActionButtons = () => {
@@ -126,7 +155,7 @@ export const MyEvents = () => {
      };
 
      const Paging = () => {
-          if (data?.totalResults > 0) {
+          if (savedEvents?.totalResults > 0) {
                return (
                     <Box
                          safeArea={2}
@@ -180,7 +209,7 @@ export const MyEvents = () => {
           <SafeAreaView style={{ flex: 1 }}>
                {_.size(systemMessagesForScreen) > 0 ? <Box safeArea={2}>{showSystemMessage()}</Box> : null}
                {getActionButtons()}
-               {status === 'loading' || isFetching ? (
+               {events.length === 0 || status === 'loading' || isFetching ? (
                     loadingSpinner()
                ) : status === 'error' ? (
                     loadError('Error', '')

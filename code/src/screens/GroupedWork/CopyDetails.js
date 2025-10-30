@@ -7,6 +7,9 @@ import _ from 'lodash';
 import {LanguageContext, LibrarySystemContext} from '../../context/initialContext';
 import {useQueryClient} from '@tanstack/react-query';
 import {getTermFromDictionary} from '../../translations/TranslationService';
+import { logDebugMessage } from '../../util/logging';
+import { getErrorMessage } from '../../util/apiAuth';
+import { DisplayErrorAlertDialog } from '../../components/loadError';
 
 /*const CopyDetails = (props) => {
  const { library } = React.useContext(LibrarySystemContext);
@@ -34,6 +37,8 @@ const ShowItemDetails = (props) => {
      const [details, setDetails] = React.useState('');
      const [shouldFetch, setShouldFetch] = React.useState(true);
      const loading = React.useCallback(() => setShouldFetch(true), []);
+     const [errorDetails, setErrorDetails] = React.useState(null);
+     const [showErrorDialog, setShowErrorDialog] = React.useState(false);
 
      let copies = copyDetails;
 
@@ -76,8 +81,16 @@ const ShowItemDetails = (props) => {
                         <Button
                             onPress={() => {
                                  getItemDetails(libraryUrl, id, format).then((response) => {
-                                      setDetails(response);
-                                      setShowModal(true);
+                                      if(response.ok) {
+                                           setDetails(response.data);
+                                           setShowModal(true);
+                                      } else {
+                                           logDebugMessage("Error fetching items details for item ID: " + id);
+                                           logDebugMessage(response);
+                                           const error = getErrorMessage(response.code ?? 0, response.problem);
+                                           setShowErrorDialog(true);
+                                           setErrorDetails(error)
+                                      }
                                  });
                             }}
                             colorScheme="tertiary"
@@ -101,6 +114,9 @@ const ShowItemDetails = (props) => {
                                   </Modal.Body>
                              </Modal.Content>
                         </Modal>
+                        {showErrorDialog && (
+                             <DisplayErrorAlertDialog title={errorDetails.title} message={errorDetails.message} />
+                        )}
                    </Center>
               </SafeAreaView>
           );

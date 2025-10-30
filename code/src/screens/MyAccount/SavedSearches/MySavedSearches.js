@@ -14,13 +14,16 @@ import { getTermFromDictionary } from '../../../translations/TranslationService'
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getListTitles } from '../../../util/api/list';
 import { DisplaySystemMessage } from '../../../components/Notifications';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 export const MySavedSearches = () => {
      const navigation = useNavigation();
-     const { user } = React.useContext(UserContext);
+     const { user, updateSavedSearchesStorage } = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { language } = React.useContext(LanguageContext);
      const { theme, textColor, colorMode } = React.useContext(ThemeContext);
+     const [searches, setSearches] = React.useState([]);
 
      const queryClient = useQueryClient();
      const { systemMessages, updateSystemMessages } = React.useContext(SystemMessagesContext);
@@ -33,10 +36,24 @@ export const MySavedSearches = () => {
 
      const { status, data, error, isFetching, isPreviousData } = useQuery(['saved_searches', user.id, library.baseUrl, language], () => fetchSavedSearches(library.baseUrl), {
           placeholderData: [],
+          onSuccess: (data) => {
+               if(data.ok) {
+                    setSearches(data.data.result?.searches ?? []);
+                    updateSavedSearchesStorage(data.data.result?.searches ?? []);
+               } else {
+                    logDebugMessage("Error fetching saved searches for user");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching saved searches for user");
+               logErrorMessage(error);
+          }
      });
 
      useQueries({
-          queries: data.map((savedSearch) => {
+          queries: searches.map((savedSearch) => {
                return {
                     queryKey: ['saved_search', savedSearch.id, user.id],
                     queryFn: () => getSavedSearch(savedSearch.id, language, library.baseUrl),
@@ -73,7 +90,15 @@ export const MySavedSearches = () => {
                     borderColor={colorMode === 'light' ? theme['colors']['coolGray']['200'] : theme['colors']['gray']['600']}
                     >
                     {showSystemMessage()}
-                    <FlatList data={data} ListEmptyComponent={Empty} renderItem={({ item }) => <Item data={item} />} keyExtractor={(item, index) => index.toString()} contentContainerStyle={{ paddingBottom: 30 }} />
+                    {status === 'loading' || isFetching ? (
+                         loadingSpinner()
+                    ) : status === 'error' ? (
+                         loadError('Error', '')
+                    ) : (
+                         <>
+                              <FlatList data={searches} ListEmptyComponent={Empty} renderItem={({ item }) => <Item data={item} />} keyExtractor={(item, index) => index.toString()} contentContainerStyle={{ paddingBottom: 30 }} />
+                         </>
+                    )}
                </Box>
           </SafeAreaView>
      );

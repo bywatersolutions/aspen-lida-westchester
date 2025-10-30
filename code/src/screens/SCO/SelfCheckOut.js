@@ -35,6 +35,8 @@ import _ from 'lodash';
 import { loadingSpinner } from '../../components/loadingSpinner';
 import { checkoutItem } from '../../util/recordActions';
 import { useQueryClient } from '@tanstack/react-query';
+import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
+import { getErrorMessage } from '../../util/apiAuth';
 
 export const SelfCheckOut = () => {
      const queryClient = useQueryClient();
@@ -82,7 +84,6 @@ export const SelfCheckOut = () => {
      const [errorBody, setErrorBody] = React.useState(null);
      const [errorTitle, setErrorTitle] = React.useState(null);
 
-     //console.log(activeAccount);
      if (_.find(cards, ['ils_barcode', activeAccount])) {
           activeAccount = _.find(cards, ['ils_barcode', activeAccount]);
      } else if (_.find(cards, ['cat_username', activeAccount])) {
@@ -103,15 +104,13 @@ export const SelfCheckOut = () => {
                     checkoutHasError = false;
                } else {
                     if (barcode) {
-                         console.log('barcode: ' + barcode);
-                         console.log('items:');
-                         console.log(items);
-                         console.log('session checkouts: ');
-                         console.log(sessionCheckouts);
-                         console.log('matching items: ');
-                         console.log(_.find(sessionCheckouts, ['barcode', barcode]) ?? false);
-                         //console.log(checkouts);
-                         //console.log(_.find(checkouts, ['barcode', barcode]));
+                         logDebugMessage('barcode: ' + barcode);
+                         logDebugMessage('items:');
+                         logDebugMessage(items);
+                         logDebugMessage('session checkouts: ');
+                         logDebugMessage(sessionCheckouts);
+                         logDebugMessage('matching items: ');
+                         logDebugMessage(_.find(sessionCheckouts, ['barcode', barcode]) ?? false);
                          // check if item is already checked out
                          if (_.find(sessionCheckouts, ['barcode', barcode]) || _.find(checkouts, ['barcode', barcode])) {
                               // prompt error
@@ -129,11 +128,12 @@ export const SelfCheckOut = () => {
                                         setErrorBody(result.message ?? getTermFromDictionary(language, 'unknown_error_checking_out'));
                                         setErrorTitle(result.title ?? getTermFromDictionary(language, 'unable_to_checkout_title'));
                                         setIsOpen(true);
+                                        logErrorMessage(result);
                                    } else {
                                         let tmp = result.itemData;
                                         tmp.completionMessage = result.completionMessage ?? null;
                                         let updatedSession = _.concat(tmp, items);
-                                        //console.log(tmp);
+                                        logInfoMessage(tmp);
                                         //setItems(tmp);
                                         setItems([...items, tmp]);
                                         sessionCheckouts = updatedSession;

@@ -17,7 +17,7 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 import { confirmHold } from '../../util/api/circulation';
 import { getFirstRecord, getRecords, getVariations } from '../../util/api/item';
 import { refreshProfile } from '../../util/api/user';
-import { stripHTML } from '../../util/apiAuth';
+import { getErrorMessage, stripHTML } from '../../util/apiAuth';
 import { placeHold } from '../../util/recordActions';
 import { getStatusIndicator } from './StatusIndicator';
 
@@ -174,10 +174,16 @@ export const Variations = (props) => {
                                                             await confirmHold(holdConfirmationResponse.recordId, holdConfirmationResponse.confirmationId, language, library.baseUrl).then(async (result) => {
                                                                  setResponse(result);
                                                                  queryClient.invalidateQueries({ queryKey: ['holds', library.baseUrl, language] });
-                                                                 await refreshProfile(library.baseUrl).then((result) => {
-                                                                      updateUser(result);
-																	  queryClient.invalidateQueries({ queryKey: ['records']});
-																	  queryClient.invalidateQueries({ queryKey: ['variation']});
+                                                                 await refreshProfile(library.baseUrl).then((data) => {
+                                                                      if(data.ok) {
+                                                                           updateUser(data.data.result.profile);
+                                                                           queryClient.invalidateQueries({ queryKey: ['records']});
+                                                                           queryClient.invalidateQueries({ queryKey: ['variation']});
+                                                                      } else {
+                                                                           logWarnMessage('Could not refresh profile after placing hold or checkout from linked account');
+                                                                           logDebugMessage(data);
+                                                                           getErrorMessage(data.code ?? 0, data.problem);
+                                                                      }
                                                                  });
 
                                                                  setHoldConfirmationIsOpen(false);

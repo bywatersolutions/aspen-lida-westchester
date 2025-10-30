@@ -42,6 +42,7 @@ import { formatDiscoveryVersion } from '../../util/loadLibrary';
 import { getAppliedFilters, getAvailableFacetsKeys, getSortList, SEARCH, setDefaultFacets } from '../../util/search';
 import { decodeHTML } from '../../util/apiAuth';
 import AddToList from './AddToList';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -126,6 +127,10 @@ export const SearchResults = () => {
                     }
                }
           },
+          onError: (error) => {
+               logDebugMessage("Error searching");
+               logErrorMessage(error);
+          }
      });
 
      const Header = () => {

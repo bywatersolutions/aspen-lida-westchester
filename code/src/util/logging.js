@@ -1,4 +1,5 @@
 import { GLOBALS } from './globals';
+import * as Sentry from '@sentry/react-native';
 
 /**
  * Does logging of messages to console.log depending on the value of logLevel within the app config.
@@ -31,7 +32,7 @@ export function logWarnMessage(message) {
                logMessage("WARN", message);
           }
      }else{
-          //TODO: log warning to Sentry?
+          logSentryMessage(message, 'warning');
      }
 }
 
@@ -41,7 +42,7 @@ export function logErrorMessage(message) {
                logMessage('ERROR', message);
           }
      }else{
-          //TODO: log error to Sentry?
+          logSentryMessage(message, 'error');
      }
 }
 
@@ -61,5 +62,16 @@ function logMessage(type, message) {
           console.log(type + " " + null);
      }else{
           console.log(type + " " + message);
+     }
+}
+
+export function logSentryMessage(message, level = 'error') {
+     if (!__DEV__) {
+          Sentry.captureMessage(
+                message,
+               {
+                    level: level,
+               }
+          );
      }
 }

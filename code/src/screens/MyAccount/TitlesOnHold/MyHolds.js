@@ -26,17 +26,18 @@ import { loadingSpinner } from '../../../components/loadingSpinner';
 import { DisplaySystemMessage } from '../../../components/Notifications';
 import { HoldsContext, LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import {getPatronCheckedOutItems, getPatronHolds, sortHolds, setSortPreferences} from '../../../util/api/user';
-import { getPickupLocations } from '../../../util/loadLibrary';
+import { getPatronCheckedOutItems, getPatronHolds, sortHolds, setSortPreferences, formatHolds } from '../../../util/api/user';
+import { formatPickupLocations, getPickupLocations } from '../../../util/loadLibrary';
 import { ManageAllHolds, ManageSelectedHolds, MyHold } from './MyHold';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 export const MyHolds = () => {
      const isFetchingHolds = useIsFetching({ queryKey: ['holds'] });
      const queryClient = useQueryClient();
      const navigation = useNavigation();
-     const { user, updateUser, userHoldPendingSortMethod, updateUserHoldPendingSortMethod, userHoldReadySortMethod, updateUserHoldReadySortMethod} = React.useContext(UserContext);
+     const { user, updateUser, userHoldPendingSortMethod, updateUserHoldPendingSortMethod, userHoldReadySortMethod, updateUserHoldReadySortMethod, locations, updatePickupLocations} = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { holds, updateHolds } = React.useContext(HoldsContext);
      const { language } = React.useContext(LanguageContext);
@@ -73,10 +74,21 @@ export const MyHolds = () => {
      useQuery(['holds', user.id, library.baseUrl, language, userHoldReadySortMethod, userHoldPendingSortMethod, 'all'], () => getPatronHolds(userHoldReadySortMethod, userHoldPendingSortMethod, 'all', library.baseUrl, true, language), {
           placeHolderData: holds,
           onSuccess: (data) => {
-               const sortedHolds = sortHolds(data, userHoldPendingSortMethod, userHoldReadySortMethod);
-               updateHolds(sortedHolds);
+               if(data.ok) {
+                    let holds = formatHolds(data.data.result.holds ?? []);
+                    holds = sortHolds(holds, userHoldPendingSortMethod, userHoldReadySortMethod);
+                    updateHolds(holds);
+               } else {
+                    logDebugMessage("Error fetching user holds");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           },
           onSettle: (data) => setLoading(false),
+          onError: (error) => {
+               logDebugMessage("Error fetching user holds");
+               logErrorMessage(error);
+          }
      });
 
      const toggleReadySort = async (value) => {
@@ -124,8 +136,11 @@ export const MyHolds = () => {
           React.useCallback(() => {
                const update = async () => {
                     await getPickupLocations(library.baseUrl).then((result) => {
-                         if (pickupLocations !== result.locations) {
-                              setPickupLocations(result.locations);
+                         if(result.ok) {
+                              const pickupLocations = formatPickupLocations(result.data.result);
+                              if (locations !== pickupLocations.locations) {
+                                   updatePickupLocations(pickupLocations.locations);
+                              }
                          }
                     });
 

@@ -10,6 +10,8 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 import { getVolumes } from '../../util/api/item';
 import { refreshProfile } from '../../util/api/user';
 import { completeAction } from '../../util/recordActions';
+import { logDebugMessage, logWarnMessage } from '../../util/logging';
+import { getErrorMessage } from '../../util/apiAuth';
 
 const SelectVolumeHold = (props) => {
      const { id, title, action, volumeInfo, prevRoute, response, setResponse, responseIsOpen, setResponseIsOpen, onResponseClose, cancelResponseRef } = props;
@@ -206,8 +208,14 @@ const SelectVolumeHold = (props) => {
                                                   if (result) {
                                                        setResponseIsOpen(true);
                                                        if (result.success) {
-                                                            await refreshProfile(library.baseUrl).then((profile) => {
-                                                                 updateUser(profile);
+                                                            await refreshProfile(library.baseUrl).then((data) => {
+                                                                 if(data.ok) {
+                                                                      updateUser(data.data.result.profile);
+                                                                 } else {
+                                                                      logWarnMessage('Could not refresh profile after placing hold from volume selection.');
+                                                                      logDebugMessage(data);
+                                                                      getErrorMessage(data.code ?? 0, data.problem);
+                                                                 }
                                                             });
                                                        }
                                                   }

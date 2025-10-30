@@ -1,12 +1,13 @@
 import {create} from 'apisauce';
 import i18n from 'i18n-js';
 import {includes, isUndefined, orderBy, size, sortBy, values} from 'lodash';
-import {popAlert} from '../../components/loadError';
-import {createAuthTokens, ENDPOINT, getHeaders, postData} from '../apiAuth';
+import { popAlert, popToast } from '../../components/loadError';
+import { createAuthTokens, ENDPOINT, getErrorMessage, getHeaders, postData } from '../apiAuth';
 import {GLOBALS} from '../globals';
 import {PATRON} from '../loadPatron';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../logging.js';
+import { error } from 'expo-updates/build-cli/utils/log';
 
 const endpoint = ENDPOINT.user;
 
@@ -30,25 +31,7 @@ export async function refreshProfile(url) {
           },
      });
      logDebugMessage("Refreshing profile");
-     const response = await discovery.post(`${endpoint.url}getPatronProfile`, postBody);
-     if (response.ok) {
-          if (response.data?.result) {
-               //console.log(response.data.result.profile);
-               if (response.data?.result?.profile) {
-                    return response.data.result.profile;
-               } else {
-                    return response.data.result;
-               }
-          }else{
-               logWarnMessage("Refreshing profile failed, did not get a result");
-          }
-     }else{
-          logWarnMessage("Refreshing profile failed did not get an ok response");
-     }
-     return {
-          success: false,
-          errorFetching: true
-     };
+     return await discovery.post(`${endpoint.url}getPatronProfile`, postBody);
 }
 
 /**
@@ -72,7 +55,6 @@ export async function reloadProfile(url) {
      const response = await discovery.post(`${endpoint.url}getPatronProfile`, postBody);
      if (response.ok) {
           if (response.data.result) {
-               //console.log(response.data.result.profile);
                if (response.data?.result?.profile) {
                     return response.data.result.profile;
                } else {
@@ -82,7 +64,8 @@ export async function reloadProfile(url) {
                logWarnMessage("Reloading profile failed, did not get a result");
           }
      }else{
-          logWarnMessage("Reloading profile failed");
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
      }
      return {
           success: false,
@@ -106,14 +89,14 @@ export async function loginToLiDA(username, password, url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const results = await discovery.post('/UserAPI?method=loginToLiDA', postBody);
+     return await discovery.post('/UserAPI?method=loginToLiDA', postBody);
      if (results.ok) {
           logInfoMessage("Got API response from loginToLiDA");
           logInfoMessage(results.data);
           return results.data.result;
      }else{
-          logWarnMessage("Login to LiDA failed");
-          logWarnMessage(results);
+          getErrorMessage({ statusCode: results.status, problem: results.problem, sendToSentry: true });
+          logErrorMessage(results);
      }
 }
 
@@ -139,6 +122,8 @@ export async function validateUser(username, password, url) {
           return results.data.result;
      }else{
           logWarnMessage("Validating User failed");
+          getErrorMessage({ statusCode: results.status, problem: results.problem, sendToSentry: true });
+          logErrorMessage(results);
      }
 }
 
@@ -147,6 +132,7 @@ export async function validateUser(username, password, url) {
  * @param {string} url
  **/
 export async function validateSession(url) {
+     logDebugMessage("Validating Session");
      const postBody = await postData();
      const api = create({
           baseURL: url + '/API',
@@ -154,16 +140,7 @@ export async function validateSession(url) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     const response = await api.post('/UserAPI?method=validateSession', postBody);
-     logDebugMessage("Validating Session");
-     if (response.ok) {
-          if (response?.data?.result) {
-               return response.data.result;
-          }
-     } else {
-          logWarnMessage("Validating Session failed");
-     }
-     return [];
+     return await api.post('/UserAPI?method=validateSession', postBody);
 }
 
 /**
@@ -188,6 +165,8 @@ export async function revalidateUser(url) {
           }
      } else {
           logWarnMessage("Revalidating user failed");
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
      }
      return false;
 }
@@ -206,7 +185,8 @@ export async function logoutUser(url) {
      if (response.ok) {
           return response.data;
      } else {
-          console.log(response);
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
           return false;
      }
 }
@@ -231,7 +211,10 @@ export async function setSortPreferences(sortType, sortValue, language = 'en', u
           },
      });
      const response = await discovery.post('/UserAPI?method=updateSortPreferences', postBody);
-     console.log(response);
+     if (!response.ok) {
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
+     }
      return response;
 }
 
@@ -262,6 +245,9 @@ export async function updateAlternateLibraryCard(cardNumber = '', cardPassword =
      let data = [];
      if (response.ok) {
           data = response.data;
+     } else {
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
      }
 
      return {
@@ -307,7 +293,8 @@ export async function updateHoldPickupPreferences(pickupLocationId = "", myLocat
                popAlert(response.data.result.title, response.data.result.message, response.data.result.success === true ? 'success' : 'error');
           }
      } else {
-          popAlert("Error", response.data.error, 'error');
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
      }
 }
 
@@ -339,62 +326,31 @@ export async function getPatronHolds(readySort = 'expire', pendingSort = 'sortTi
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getPatronHolds', postBody);
-     if (response.ok) {
-          const allHolds = response.data.result.holds;
-          let holds;
-          let holdsReady = [];
-          let holdsNotReady = [];
+     return await discovery.post('/UserAPI?method=getPatronHolds', postBody);
+}
 
-          let pendingSortMethod = pendingSort;
-          if (pendingSort === 'sortTitle') {
-               pendingSortMethod = 'title';
-          } else if (pendingSort === 'libraryAccount') {
-               pendingSortMethod = 'user';
-          }
+export function formatHolds(data) {
+     let holdsReady = [];
+     let holdsNotReady = [];
 
-          let readySortMethod = readySort;
-          if (readySort === 'sortTitle') {
-               readySortMethod = 'title';
-          } else if (readySort === 'libraryAccount') {
-               readySortMethod = 'user';
-          }
-
-          if (typeof allHolds !== 'undefined') {
-               if (typeof allHolds.unavailable !== 'undefined') {
-                    holdsNotReady = Object.values(allHolds.unavailable);
-                    if (pendingSortMethod === 'position') {
-                         holdsNotReady = orderBy(holdsNotReady, [pendingSortMethod], ['desc']);
-                    }
-                    holdsNotReady = orderBy(holdsNotReady, [pendingSortMethod], ['asc']);
-               }
-
-               if (typeof allHolds.available !== 'undefined') {
-                    holdsReady = Object.values(allHolds.available);
-                    holdsReady = orderBy(holdsReady, [readySortMethod], ['asc']);
-               }
-          }
-
-          holds = holdsReady.concat(holdsNotReady);
-          PATRON.holds = holds;
-          return [
-               {
-                    title: 'Ready',
-                    data: holdsReady,
-               },
-               {
-                    title: 'Pending',
-                    data: holdsNotReady,
-               },
-          ];
-     } else {
-          console.log(response);
-          return {
-               holds: [],
-               holdsReady: [],
-               holdsNotReady: [],
-          };
+     if (typeof data.unavailable !== 'undefined') {
+          holdsNotReady = Object.values(data.unavailable);
      }
+
+     if (typeof data.available !== 'undefined') {
+          holdsReady = Object.values(data.available);
+     }
+
+     return [
+          {
+               title: 'Ready',
+               data: holdsReady,
+          },
+          {
+               title: 'Pending',
+               data: holdsNotReady,
+          },
+     ];
 }
 
 export function sortHolds(holds, pendingSort, readySort) {
@@ -471,29 +427,12 @@ export async function getPatronCheckedOutItems(source = 'all', url, refresh = tr
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getPatronCheckedOutItems', postBody);
-     if (response.ok) {
-          if (response.data?.result?.success) {
-               //console.log("Loaded checkouts successfully");
-               let items = response.data.result.checkedOutItems ?? [];
-               //console.log("Found " + items.length + " checkouts");
-               items = sortBy(items, ['daysUntilDue', 'title']);
-               return items;
-          }else{
-               return [];
-          }
-     } else {
-          console.log("Loading checkouts failed");
-          console.log(response);
-          return [];
-     }
+     return await discovery.post('/UserAPI?method=getPatronCheckedOutItems', postBody);
 }
 
 export function sortCheckouts(checkouts, sort) {
      let sortedCheckouts = [];
-     if (__DEV__) {
-          console.log("Sorting checkouts by " + sort);
-     }
+     logDebugMessage("Sorting checkouts by " + sort);
 
      let sortMethod = sort;
      let order = 'asc';
@@ -535,88 +474,32 @@ export async function deleteAspenUser(url) {
           if(results?.data?.result) {
                return results.data.result;
           } else {
+               logErrorMessage(results);
                return {
                     success: false,
                     message: 'Unknown error trying to complete request.'
                }
           }
+     } else {
+          getErrorMessage({ statusCode: results.status, problem: results.problem, sendToSentry: true });
+          logErrorMessage(results);
      }
 }
 
 /** *******************************************************************
  * Browse Category Management
  ******************************************************************* **/
-/**
- * Show a hidden browse category for a user
- * @param {string} categoryId
- * @param {string} patronId
- * @param {string} url
- * @param {string} language
- **/
-export async function showBrowseCategory(categoryId, patronId, url, language = 'en') {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url,
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(endpoint.isPost),
-          auth: createAuthTokens(),
-          params: {
-               browseCategoryId: categoryId,
-               patronId: patronId,
-               language,
-          },
-     });
-     const response = await discovery.post(`${endpoint.url}showBrowseCategory`, postBody);
-     if (response.ok) {
-          return response.data;
-     } else {
-          console.log(response);
-          return false;
-     }
-}
-
-/**
- * Dismiss a browse category for a user
- * @param {string} categoryId
- * @param {string} patronId
- * @param {string} url
- * @param {string} language
- **/
-export async function hideBrowseCategory(categoryId, patronId, url, language = 'en') {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url,
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(endpoint.isPost),
-          auth: createAuthTokens(),
-          params: {
-               browseCategoryId: categoryId,
-               patronId: patronId,
-               language,
-          },
-     });
-     const response = await discovery.post(`${endpoint.url}dismissBrowseCategory`, postBody);
-     if (response.ok) {
-          return response.data;
-     } else {
-          console.log(response);
-          return false;
-     }
-}
 
 /** *******************************************************************
  * Linked Accounts
  ******************************************************************* **/
 /**
  * Return a list of accounts that the user has initiated account linking with
- * @param {array} primaryUser
- * @param {array} cards
- * @param {string} barcodeStyle
  * @param {string} url
  * @param {string} language
  * @return array
  **/
-export async function getLinkedAccounts(primaryUser, cards, barcodeStyle, url, language = 'en') {
+export async function getLinkedAccounts(url, language = 'en') {
      const postBody = await postData();
      const discovery = create({
           baseURL: url + '/API',
@@ -627,65 +510,63 @@ export async function getLinkedAccounts(primaryUser, cards, barcodeStyle, url, l
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getLinkedAccounts', postBody);
-     if (response.ok) {
-          let count = 1;
-          let cardStack = [];
-          let accounts = [];
-          const primaryCard = {
-               key: 0,
-               displayName: primaryUser.displayName,
-               userId: primaryUser.id,
-               ils_barcode: primaryUser.ils_barcode ?? primaryUser.cat_username,
-               expired: primaryUser.expired,
-               expires: primaryUser.expires,
-               barcodeStyle: barcodeStyle,
-               homeLocation: primaryUser.homeLocation,
-          };
-          cardStack.push(primaryCard);
-          if (!isUndefined(response.data.result.linkedAccounts)) {
-               accounts = values(response.data.result.linkedAccounts);
-               PATRON.linkedAccounts = accounts;
-               if (size(accounts) >= 1) {
-                    accounts.forEach((account) => {
-                         if (includes(cards, account.ils_barcode) === false) {
-                              count = count + 1;
-                              const card = {
-                                   key: count,
-                                   displayName: account.displayName,
-                                   userId: account.id,
-                                   ils_barcode: account.ils_barcode ?? account.barcode,
-                                   expired: account.expired,
-                                   expires: account.expires,
-                                   barcodeStyle: account.barcodeStyle ?? barcodeStyle,
-                                   homeLocation: account.homeLocation,
-                              };
-                              cardStack.push(card);
-                         } else if (includes(cards, account.cat_username) === false) {
-                              count = count + 1;
-                              const card = {
-                                   key: count,
-                                   displayName: account.displayName,
-                                   userId: account.id,
-                                   cat_username: account.cat_username ?? account.barcode,
-                                   expired: account.expired,
-                                   expires: account.expires,
-                                   barcodeStyle: account.barcodeStyle ?? barcodeStyle,
-                                   homeLocation: account.homeLocation,
-                              };
-                              cardStack.push(card);
-                         }
-                    });
-               }
+     return await discovery.post('/UserAPI?method=getLinkedAccounts', postBody);
+}
+
+export function formatLinkedAccounts(primaryUser, cards, barcodeStyle, data) {
+     let count = 1;
+     let cardStack = [];
+     let accounts = [];
+     const primaryCard = {
+          key: 0,
+          displayName: primaryUser.displayName,
+          userId: primaryUser.id,
+          ils_barcode: primaryUser.ils_barcode ?? primaryUser.cat_username,
+          expired: primaryUser.expired,
+          expires: primaryUser.expires,
+          barcodeStyle: barcodeStyle,
+          homeLocation: primaryUser.homeLocation,
+     };
+     cardStack.push(primaryCard);
+     if (!isUndefined(data)) {
+          accounts = values(data);
+          PATRON.linkedAccounts = accounts;
+          if (size(accounts) >= 1) {
+               accounts.forEach((account) => {
+                    if (includes(cards, account.ils_barcode) === false) {
+                         count = count + 1;
+                         const card = {
+                              key: count,
+                              displayName: account.displayName,
+                              userId: account.id,
+                              ils_barcode: account.ils_barcode ?? account.barcode,
+                              expired: account.expired,
+                              expires: account.expires,
+                              barcodeStyle: account.barcodeStyle ?? barcodeStyle,
+                              homeLocation: account.homeLocation,
+                         };
+                         cardStack.push(card);
+                    } else if (includes(cards, account.cat_username) === false) {
+                         count = count + 1;
+                         const card = {
+                              key: count,
+                              displayName: account.displayName,
+                              userId: account.id,
+                              cat_username: account.cat_username ?? account.barcode,
+                              expired: account.expired,
+                              expires: account.expires,
+                              barcodeStyle: account.barcodeStyle ?? barcodeStyle,
+                              homeLocation: account.homeLocation,
+                         };
+                         cardStack.push(card);
+                    }
+               });
           }
-          return {
-               accounts: accounts ?? [],
-               cards: cardStack ?? [],
-          };
-     } else {
-          console.log(response);
-          return false;
      }
+     return {
+          accounts: accounts ?? [],
+          cards: cardStack ?? [],
+     };
 }
 
 /**
@@ -704,18 +585,7 @@ export async function getViewerAccounts(url, language = 'en') {
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getViewers', postBody);
-     if (response.ok) {
-          let viewers = [];
-          if (!isUndefined(response.data.result.viewers)) {
-               viewers = response.data.result.viewers;
-               PATRON.viewerAcccounts = viewers;
-          }
-          return values(viewers);
-     } else {
-          console.log(response);
-          return false;
-     }
+     return await discovery.post('/UserAPI?method=getViewers', postBody);
 }
 
 /**
@@ -749,13 +619,18 @@ export async function addLinkedAccount(username = '', password = '', url, langua
                     try {
                          popAlert(response.data.result.title, response.data.result.message, 'success');
                     } catch (e) {
-                         console.log(e);
+                         logErrorMessage(e);
                     }
                }
+          } else {
+               logDebugMessage("disableAccountLinking did not return a success status");
+               logErrorMessage(response);
           }
           return status;
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      }
 }
@@ -789,13 +664,18 @@ export async function removeLinkedAccount(patronToRemove, url, language) {
                     try {
                          popAlert(response.data.result.title, response.data.result.message, 'success');
                     } catch (e) {
-                         console.log(e);
+                         logDebugMessage(e);
                     }
                }
+          } else {
+               logDebugMessage("disableAccountLinking did not return a success status");
+               logErrorMessage(response);
           }
           return status;
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      }
 }
@@ -828,10 +708,15 @@ export async function removeViewerAccount(patronToRemove, url, language = 'en') 
                } else {
                     popAlert(response.data.result.title, response.data.result.message, 'success');
                }
+          } else {
+               logDebugMessage("disableAccountLinking did not return a success status");
+               logErrorMessage(response);
           }
           return status;
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      }
 }
@@ -862,10 +747,14 @@ export async function disableAccountLinking(language, url) {
                } else {
                     popAlert(response.data.result.title, response.data.result.message, 'success');
                }
+          } else {
+               logDebugMessage("disableAccountLinking did not return a success status");
+               logErrorMessage(response);
           }
           return status;
      } else {
-          console.log(response);
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
           return false;
      }
 }
@@ -899,7 +788,9 @@ export async function enableAccountLinking(language, url) {
           }
           return status;
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      }
 }
@@ -927,11 +818,12 @@ export async function saveLanguage(code, url, language = 'en') {
      });
      const response = await discovery.post('/UserAPI?method=saveLanguage', postBody);
      if (response.ok) {
-          //i18n.locale = code;
           PATRON.language = code;
           return true;
      } else {
-          console.log(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      }
 }
@@ -964,25 +856,22 @@ export async function fetchReadingHistory(page = 1, pageSize = 20, sort = 'check
           },
      });
 
-     const response = await api.post('/UserAPI?method=getPatronReadingHistory', postBody);
+     return await api.post('/UserAPI?method=getPatronReadingHistory', postBody);
+}
 
-     let data = [];
+export function formatReadingHistory(data) {
      let morePages = false;
-     if (response.ok) {
-          data = response.data;
-          if (data.result?.page_current !== data.result?.page_total) {
-               morePages = true;
-          }
+     if (data.page_current !== data.page_total) {
+          morePages = true;
      }
-
      return {
-          history: data.result?.readingHistory ?? [],
-          totalResults: data.result?.totalResults ?? 0,
-          curPage: data.result?.page_current ?? 0,
-          totalPages: data.result?.page_total ?? 0,
+          history: data.readingHistory ?? [],
+          totalResults: data.totalResults ?? 0,
+          curPage: data.page_current ?? 0,
+          totalPages: data.page_total ?? 0,
           hasMore: morePages,
-          sort: data.result?.sort ?? 'checkedOut',
-          message: data.data?.message ?? null,
+          sort: data.sort ?? 'checkedOut',
+          message: data.message ?? null,
      };
 }
 
@@ -1005,8 +894,12 @@ export async function optIntoReadingHistory(url, language = 'en') {
      const response = await discovery.post('/UserAPI?method=optIntoReadingHistory', postBody);
      if (response.ok) {
           return true;
+     } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          return false;
      }
-     return false;
 }
 
 /**
@@ -1029,8 +922,12 @@ export async function optOutOfReadingHistory(url, language = 'en') {
      if (response.ok) {
           console.log(response.data);
           return true;
+     } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          return false;
      }
-     return false;
 }
 
 /**
@@ -1055,8 +952,12 @@ export async function deleteAllReadingHistory(url, language = 'en') {
           if (response.data.result?.success) {
                return true;
           }
+     } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          return false;
      }
-     return false;
 }
 
 /**
@@ -1082,8 +983,12 @@ export async function deleteSelectedReadingHistory(item, url, language = 'en') {
           if (response.data.result?.success) {
                return true;
           }
+     } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          return false;
      }
-     return false;
 }
 
 /** *******************************************************************
@@ -1106,18 +1011,7 @@ export async function fetchSavedSearches(url, language = 'en') {
           },
      });
 
-     const response = await api.post('/ListAPI?method=getSavedSearchesForLiDA', postBody);
-
-     if (response.ok) {
-          return response.data.result.searches;
-     }
-
-     return {
-          success: false,
-          count: 0,
-          countNewResults: 0,
-          searches: [],
-     };
+     return await api.post('/ListAPI?method=getSavedSearchesForLiDA', postBody);
 }
 
 /**
@@ -1143,6 +1037,9 @@ export async function getSavedSearch(id, language = 'en', url) {
      if (response.ok) {
           return response.data?.result ?? [];
      } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return [];
      }
 }
@@ -1181,7 +1078,8 @@ export async function updateNotificationOnboardingStatus(status, token, url, lan
           }
           return false;
      } else {
-          console.log(response);
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
           return false;
      }
 }
@@ -1197,26 +1095,7 @@ export async function getAppPreferencesForUser(url, language) {
                language,
           },
      });
-     const response = await discovery.post('/UserAPI?method=getAppPreferencesForUser', postBody);
-     if (response.ok) {
-          return response.data.result;
-     }
-
-     return {
-          success: false,
-          onboardAppNotifications: 0,
-          shouldAskBrightness: 0,
-          notification_preferences: [
-               {
-                    device: 'Unknown',
-                    token: false,
-                    notifySavedSearch: 0,
-                    notifyCustom: 0,
-                    notifyAccount: 0,
-                    onboardStatus: 0,
-               },
-          ],
-     };
+     return await discovery.post('/UserAPI?method=getAppPreferencesForUser', postBody);
 }
 
 /**
@@ -1241,14 +1120,14 @@ export async function fetchNotificationHistory(page = 1, pageSize = 20, forceUpd
           },
      });
 
-     const response = await api.post('/UserAPI?method=getInbox', postBody);
-     let data = [];
+     return await api.post('/UserAPI?method=getInbox', postBody);
+}
+
+export function formatNotificationHistory(data) {
      let morePages = false;
-     if (response.ok) {
-          data = response.data.result;
-          if (data.page_current !== data.page_total) {
-               morePages = true;
-          }
+
+     if (data.page_current !== data.page_total) {
+          morePages = true;
      }
 
      return {
@@ -1257,7 +1136,7 @@ export async function fetchNotificationHistory(page = 1, pageSize = 20, forceUpd
           curPage: data.page_current ?? 0,
           totalPages: data.page_total ?? 0,
           hasMore: morePages,
-          message: data?.message ?? null,
+          message: data.message ?? null,
      };
 }
 
@@ -1281,14 +1160,28 @@ export async function markMessageAsRead(id, url, language = 'en') {
 
      const response = await api.post('/UserAPI?method=markMessageAsRead', postBody);
      let data = [];
+     let message = null;
+     let title = null;
      if (response.ok) {
           data = response.data;
+          if(data.message) {
+               message = data.message;
+          }
+          if(data.title) {
+               title = data.title;
+          }
+     } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          message = error.message;
+          title = error.title;
+          logErrorMessage(response);
      }
 
      return {
           success: data?.success ?? false,
-          title: data?.title ?? null,
-          message: data?.message ?? null,
+          title: title,
+          message: message,
      };
 }
 
@@ -1312,14 +1205,28 @@ export async function markMessageAsUnread(id, url, language = 'en') {
 
      const response = await api.post('/UserAPI?method=markMessageAsUnread', postBody);
      let data = [];
+     let message = null;
+     let title = null;
      if (response.ok) {
           data = response.data;
+          if(data.message) {
+               message = data.message;
+          }
+          if(data.title) {
+               title = data.title;
+          }
+     } else {
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
+          message = error.message;
+          title = error.title;
      }
 
      return {
           success: data?.success ?? false,
-          title: data?.title ?? null,
-          message: data?.message ?? null,
+          title: title,
+          message: message,
      };
 }
 
@@ -1355,7 +1262,8 @@ export async function updateScreenBrightnessStatus(status, url, language = 'en')
           }
           return false;
      } else {
-          console.log(response);
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
           return false;
      }
 }
@@ -1393,14 +1301,20 @@ export async function fetchCampaigns(page = 1, pageSize = 20, filter = 'enrolled
      const response = await api.post('/UserAPI?method=getUserCampaigns', postBody);
      let data = [];
      let morePages = false;
+     let message = null;
 
      if (response.ok) {
           data = response.data;
           if (data.result?.page_current !== data.result?.page_total) {
                morePages = true;
           }
+          if(data.data?.message) {
+               message = data.data.message;
+          }
      } else {
-          console.error("ERROR fetching campaigns: ", response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
+          message = error.message;
      }
 
      return {
@@ -1409,7 +1323,7 @@ export async function fetchCampaigns(page = 1, pageSize = 20, filter = 'enrolled
          totalPages: data.result?.page_total ??0,
          hasMore: morePages,
          filter: data.result?.filter ?? 'enrolled',
-         message: data.data?.message ?? null,
+         message: message,
      }
 
 };
@@ -1444,11 +1358,13 @@ export async function enrollCampaign(campaignId, linkedUserId, filter = 'enrolle
           if (data.result && data.result.success) {
                return true;
           } else {
-               console.error('Failed to enroll in campaign: ', data.message);
+               logDebugMessage('Failed to enroll in campaign: ', data.message);
                return false;
           }
      } else {
-          console.error(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      } 
 }
@@ -1483,11 +1399,13 @@ export async function unenrollCampaign(campaignId, linkedUserId, filter = 'enrol
           if (data.result && data.result.success) {
                return true;
           } else {
-               console.error('Failed to unenroll from campaign: ', data.message);
+               logDebugMessage('Failed to unenroll from campaign: ', data.message);
                return false;
           }
      } else {
-          console.error(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      } 
 }
@@ -1526,12 +1444,13 @@ export async function optIntoCampaignEmails(campaignId, linkedUserId, filter = '
           if (data.result && data.result.success) {
                return true;
           } else {
-               console.error('Failed to opt user into campaign emails: ', data.message);
-
+               logDebugMessage('Failed to opt user into campaign emails: ', data.message);
                return false;
           }
      } else {
-          console.error(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      } 
 }
@@ -1566,11 +1485,13 @@ export async function optUserInToCampaignLeaderboard(campaignId, linkedUserId, f
           if (data.result && data.result.success) {
                return true;
           } else {
-               console.error('Failed to enroll in campaign: ', data.message);
+               logDebugMessage('Failed to enroll in campaign leaderboard: ', data.message);
                return false;
           }
      } else {
-          console.error(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      } 
 }
@@ -1605,11 +1526,13 @@ export async function optUserOutOfCampaignLeaderboard(campaignId, linkedUserId, 
           if (data.result && data.result.success) {
                return true;
           } else {
-               console.error('Failed to enroll in campaign: ', data.message);
+               logDebugMessage('Failed to enroll in campaign leaderboard: ', data.message);
                return false;
           }
      } else {
-          console.error(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      } 
 }
@@ -1648,11 +1571,13 @@ export async function addActivityProgress(activityId, linkedUserId, activityType
           if (data.result && data.result.success) {
                return true;
           } else {
-               console.error('Failed to add progress: ', data.message);
+               logDebugMessage('Failed to add progress: ', data.message);
                return false;
           }
      } else {
-          console.error(response);
+          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          popToast(error.title, error.message, 'error');
+          logErrorMessage(response);
           return false;
      } 
 }
