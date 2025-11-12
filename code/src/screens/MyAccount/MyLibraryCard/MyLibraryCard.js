@@ -17,8 +17,10 @@ import { PermissionsPrompt } from '../../../components/PermissionsPrompt';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import { getLinkedAccounts, updateScreenBrightnessStatus } from '../../../util/api/user';
+import { formatLinkedAccounts, getLinkedAccounts, updateScreenBrightnessStatus } from '../../../util/api/user';
 import { formatDiscoveryVersion } from '../../../util/loadLibrary';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 export const MyLibraryCard = () => {
      const queryClient = useQueryClient();
@@ -44,8 +46,19 @@ export const MyLibraryCard = () => {
      useQuery(['linked_accounts', user, cards, library.baseUrl, language], () => getLinkedAccounts(user, cards, library.barcodeStyle, library.baseUrl, language), {
           initialData: accounts,
           onSuccess: (data) => {
-               updateLinkedAccounts(data.accounts);
-               updateLibraryCards(data.cards);
+               if(data.ok) {
+                    const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library.barcodeStyle, data.data.result.linkedAccounts);
+                    updateLinkedAccounts(linkedAccounts.accounts);
+                    updateLibraryCards(linkedAccounts.cards);
+               } else {
+                    logDebugMessage("Error fetching linked accounts");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching linked accounts");
+               logErrorMessage(error);
           },
           placeholderData: [],
      });

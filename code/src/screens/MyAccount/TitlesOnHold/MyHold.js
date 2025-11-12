@@ -12,7 +12,7 @@ import { getAuthor, getBadge, getCleanTitle, getExpirationDate, getFormat, getOn
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { cancelHold, cancelHolds, cancelVdxRequest, freezeHold, freezeHolds, thawHold, thawHolds } from '../../../util/accountActions';
-import {formatDiscoveryVersion, getPickupLocations} from '../../../util/loadLibrary';
+import { formatDiscoveryVersion, formatPickupLocations, getPickupLocations } from '../../../util/loadLibrary';
 import { checkoutItem } from '../../../util/recordActions';
 import { SelectPickupLocation } from './SelectPickupLocation';
 import { SelectThawDate } from './SelectThawDate.js';
@@ -59,8 +59,11 @@ export const MyHold = (props) => {
           }
           const update = async () => {
                await getPickupLocations(library.baseUrl, null, hold.id).then((result) => {
-                    if (pickupLocations !== result.locations) {
-                         setPickupLocations(result.locations);
+                    if(result.ok) {
+                         const pickupLocationsList = formatPickupLocations(result.data.result);
+                         if (pickupLocations !== pickupLocationsList.locations) {
+                              setPickupLocations(pickupLocationsList.locations);
+                         }
                     }
                });
           };

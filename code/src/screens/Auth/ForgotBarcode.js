@@ -23,10 +23,11 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { getTermFromDictionary, getTranslation, getTranslationsWithValues } from '../../translations/TranslationService';
-import { createAuthTokens, getHeaders, stripHTML } from '../../util/apiAuth';
+import { createAuthTokens, getErrorMessage, getHeaders, stripHTML } from '../../util/apiAuth';
 import { GLOBALS } from '../../util/globals';
 import { LIBRARY } from '../../util/loadLibrary';
 import { useKeyboard } from '../../util/useKeyboard';
+import { logDebugMessage } from '../../util/logging';
 
 export const ForgotBarcode = (props) => {
      const isKeyboardOpen = useKeyboard();
@@ -42,6 +43,7 @@ export const ForgotBarcode = (props) => {
      const [phoneNumber, setPhoneNumber] = React.useState('');
      const [showResults, setShowResults] = React.useState(false);
      const [results, setResults] = React.useState('');
+     const [hasError, setHasError] = React.useState(false);
 
      const [buttonLabel, setButtonLabel] = React.useState('Forgot Barcode?');
      const [modalTitle, setModalTitle] = React.useState('Forgot Barcode');
@@ -98,9 +100,19 @@ export const ForgotBarcode = (props) => {
 
      const initiateForgotBarcode = async () => {
           setIsProcessing(true);
-          await forgotBarcode(phoneNumber, libraryUrl).then((data) => {
-               setResults(data);
-               setShowResults(true);
+          await forgotBarcode(phoneNumber, libraryUrl).then((response) => {
+               if(response.ok) {
+                    setResults(response.data.result);
+                    setShowResults(true);
+                    setHasError(false);
+               } else {
+                    logDebugMessage("Error initiating forgot barcode");
+                    logDebugMessage(response);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setResults(error.message);
+                    setShowResults(true);
+                    setHasError(true);
+               }
           });
           setIsProcessing(false);
      };
@@ -108,6 +120,7 @@ export const ForgotBarcode = (props) => {
      const resetWindow = () => {
           setShowResults(false);
           setResults('');
+          setHasError(false);
      };
 
      if (isLoading) {
@@ -131,6 +144,8 @@ export const ForgotBarcode = (props) => {
                          <ModalBody>
                               {showResults && !results.success ? (
                                    <Text color={textColor}>{stripHTML(results.message || getTermFromDictionary('en', 'forgot_barcode_error_message'))}</Text>
+                              ) : hasError ? (
+                                   <Text color={textColor}>{results}</Text>
                               ) : showResults ? (
                                    <Text color={textColor}>{stripHTML(results.message || getTermFromDictionary('en', 'forgot_barcode_success_message'))}</Text>
                               ) : (
@@ -147,7 +162,7 @@ export const ForgotBarcode = (props) => {
                          </ModalBody>
                          <ModalFooter>
                               <ButtonGroup space="$4">
-                                   {showResults && !results.success ? (
+                                   {(showResults && !results.success) || hasError ? (
                                         <Button bgColor={theme['colors']['primary']['500']} onPress={resetWindow}>
                                              <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary('en', 'try_again')}</ButtonText>
                                         </Button>
@@ -184,18 +199,7 @@ async function forgotBarcode(phone, url) {
           headers: getHeaders(),
           auth: createAuthTokens(),
      });
-     const results = await discovery.get('/RegistrationAPI?method=lookupAccountByPhoneNumber', {
+     return await discovery.get('/RegistrationAPI?method=lookupAccountByPhoneNumber', {
           phone: phone,
      });
-     if (results.ok) {
-          if (results.data.result) {
-               return results.data.result;
-          }
-          return results.data;
-     } else {
-          return {
-               success: false,
-               message: 'Unable to connect to library',
-          };
-     }
 }

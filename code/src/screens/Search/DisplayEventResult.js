@@ -13,6 +13,7 @@ import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { decodeHTML } from '../../util/apiAuth';
 import AddToList from './AddToList';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -91,9 +92,8 @@ export const DisplayEventResult = (props) => {
           };
           await WebBrowser.openBrowserAsync(url, browserParams)
                .then((res) => {
-                    console.log(res);
                     if (res.type === 'cancel' || res.type === 'dismiss') {
-                         console.log('User closed or dismissed window.');
+                         logDebugMessage('User closed or dismissed window.');
                          WebBrowser.dismissBrowser();
                          WebBrowser.coolDownAsync();
                     }
@@ -105,20 +105,22 @@ export const DisplayEventResult = (props) => {
                               WebBrowser.coolDownAsync();
                               await WebBrowser.openBrowserAsync(url, browserParams)
                                    .then((response) => {
-                                        console.log(response);
+                                        logDebugMessage(response);
                                         if (response.type === 'cancel') {
-                                             console.log('User closed window.');
+                                             logDebugMessage('User closed window.');
                                         }
                                    })
                                    .catch(async (error) => {
-                                        console.log('Unable to close previous browser session.');
+                                        logDebugMessage('Unable to close previous browser session.');
+                                        logErrorMessage(error);
                                    });
                          } catch (error) {
-                              console.log('Really borked.');
+                              logDebugMessage('Really borked.');
+                              logErrorMessage(error);
                          }
                     } else {
                          popToast(getTermFromDictionary('en', 'error_no_open_resource'), getTermFromDictionary('en', 'error_device_block_browser'), 'error');
-                         console.log(err);
+                         logErrorMessage(err);
                     }
                });
      };

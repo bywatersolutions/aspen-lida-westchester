@@ -14,7 +14,8 @@ import { DisplaySystemMessage } from '../../../components/Notifications';
 import { BackIcon } from '../../../themes/theme';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { refreshProfile, updateAlternateLibraryCard } from '../../../util/api/user';
-import { decodeHTML } from '../../../util/apiAuth';
+import { decodeHTML, getErrorMessage } from '../../../util/apiAuth';
+import { logDebugMessage, logWarnMessage } from '../../../util/logging';
 
 export const MyAlternateLibraryCard = () => {
      const navigation = useNavigation();
@@ -99,15 +100,27 @@ export const MyAlternateLibraryCard = () => {
 
      const deleteCard = async () => {
           await updateAlternateLibraryCard('', '', true, library.baseUrl, language);
-          await refreshProfile(library.baseUrl).then(async (result) => {
-               updateUser(result);
+          await refreshProfile(library.baseUrl).then((data) => {
+               if(data.ok) {
+                    updateUser(data.data.result.profile);
+               } else {
+                    logWarnMessage('Could not refresh profile after placing hold from volume selection.');
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           });
      };
 
      const updateCard = async () => {
           await updateAlternateLibraryCard(card, password, false, library.baseUrl, language);
-          await refreshProfile(library.baseUrl).then(async (result) => {
-               updateUser(result);
+          await refreshProfile(library.baseUrl).then((data) => {
+               if(data.ok) {
+                    updateUser(data.data.result.profile);
+               } else {
+                    logWarnMessage('Could not refresh profile after placing hold from volume selection.');
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
           });
           setCard('');
           setPassword('');

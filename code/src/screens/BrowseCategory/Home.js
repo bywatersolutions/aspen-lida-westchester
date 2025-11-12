@@ -16,10 +16,13 @@ import { NotificationsOnboard } from '../../components/NotificationsOnboard';
 import { BrowseCategoryContext, LanguageContext, LibrarySystemContext, SearchContext, SystemMessagesContext, ThemeContext, UserContext } from '../../context/initialContext';
 import { navigateStack, pushNavigateStack } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { formatDiscoveryVersion, reloadBrowseCategories } from '../../util/loadLibrary';
+import { formatBrowseCategories, formatDiscoveryVersion, reloadBrowseCategories } from '../../util/loadLibrary';
 import { updateBrowseCategoryStatus } from '../../util/loadPatron';
 import { getDefaultFacets, getSearchIndexes, getSearchSources } from '../../util/search';
 import DisplayBrowseCategory from './Category';
+import { getErrorMessage } from '../../util/apiAuth';
+import { DisplayErrorAlertDialog } from '../../components/loadError';
+import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -49,6 +52,10 @@ export const DiscoverHomeScreen = () => {
      const [showAndroidEndSupportMessage, setShowAndroidEndSupportMessage] = React.useState(false);
      const [androidEndSupportMessageIsOpen, setAndroidEndSupportMessageIsOpen] = React.useState(false);
 
+     const [showErrorDialog, setShowErrorDialog] = React.useState(false);
+     const [errorTitle, setErrorTitle] = React.useState('');
+     const [errorMessage, setErrorMessage] = React.useState('');
+
      navigation.setOptions({
           headerLeft: () => {
                return null;
@@ -60,8 +67,6 @@ export const DiscoverHomeScreen = () => {
                const checkSettings = async () => {
                     if (Platform.OS === 'android') {
                          if (Device.platformApiLevel <= 30) {
-                              // SDK 30 == Android 11
-                              console.log('Android SDK is 30 or older');
                               setShowAndroidEndSupportMessage(true);
                               setAndroidEndSupportMessageIsOpen(true);
                          }
@@ -80,23 +85,6 @@ export const DiscoverHomeScreen = () => {
 
                     if (version >= '22.11.00') {
                          await getDefaultFacets(library.baseUrl, 5, language);
-                    }
-
-                    console.log('notificationOnboard: ' + notificationOnboard);
-                    if (!_.isUndefined(notificationOnboard)) {
-                         if (notificationOnboard === 1 || notificationOnboard === 2 || notificationOnboard === '1' || notificationOnboard === '2') {
-                              console.log('Notification onboarding preferences found. Set to 1 or 2. Show onboard prompt.');
-                              setPreliminaryCheck(true);
-                              setPromptOpen('yes');
-                         } else {
-                              console.log('Notification onboarding preferences found. Set to 0. Do not show onboard prompt.');
-                              setPreliminaryCheck(true);
-                              setPromptOpen('');
-                         }
-                    } else {
-                         console.log('No notification onboarding preferences found. Show onboard prompt.');
-                         setPreliminaryCheck(true);
-                         setPromptOpen('yes');
                     }
                };
                checkSettings().then(() => {
@@ -287,9 +275,18 @@ export const DiscoverHomeScreen = () => {
 
      const onHideCategory = async (url, category) => {
           setLoading(true);
-          await updateBrowseCategoryStatus(category);
-          await queryClient.invalidateQueries({ queryKey: ['browse_categories', library.baseUrl, language, maxNum] });
-          await queryClient.invalidateQueries({ queryKey: ['browse_categories_list', library.baseUrl, language] });
+          await updateBrowseCategoryStatus(category, url).then(async (response) => {
+               if (!response.ok) {
+                    const error = getErrorMessage({ statusCode: response.status, problem: response.problem});
+                    setErrorTitle(error.title);
+                    setErrorMessage(error.message);
+                    logErrorMessage(response);
+                    setShowErrorDialog(true);
+               } else {
+                    await queryClient.invalidateQueries({ queryKey: ['browse_categories', library.baseUrl, language, maxNum] });
+                    await queryClient.invalidateQueries({ queryKey: ['browse_categories_list', library.baseUrl, language] });
+               }
+          });
           setLoading(false);
      };
 
@@ -303,10 +300,17 @@ export const DiscoverHomeScreen = () => {
      const onLoadAllCategories = async () => {
           updateMaxCategories(9999);
           setLoading(true);
-          await reloadBrowseCategories(9999, library.baseUrl).then((result) => {
-               updateBrowseCategories(result);
-               queryClient.setQueryData(['browse_categories', library.baseUrl, language, maxNum], result);
-               queryClient.setQueryData(['browse_categories', library.baseUrl, language, 9999], result);
+          await reloadBrowseCategories(9999, library.baseUrl).then((response) => {
+               if(response.ok) {
+                    const categories = formatBrowseCategories(response.data.result);
+                    updateBrowseCategories(categories);
+                    queryClient.setQueryData(['browse_categories', library.baseUrl, language, maxNum], categories);
+                    queryClient.setQueryData(['browse_categories', library.baseUrl, language, 9999], categories);
+               } else {
+                    logDebugMessage("Error fetching browse categories");
+                    logDebugMessage(response);
+                    getErrorMessage(response.code ?? 0, response.problem);
+               }
           });
           setLoading(false);
      };
@@ -389,6 +393,9 @@ export const DiscoverHomeScreen = () => {
                          return <DisplayBrowseCategory textColor={textColor} language={language} key={index} categoryLabel={item.title} categoryKey={item.key} id={item.id} records={item.records} isHidden={item.isHidden} categorySource={item.source} renderRecords={renderRecord} header={renderHeader} hideCategory={onHideCategory} libraryUrl={library.baseUrl} loadMore={renderLoadMore} discoveryVersion={library.version} onPressCategory={handleOnPressCategory} categoryList={category} />;
                     })}
                     <ButtonOptions language={language} onPressSettings={onPressSettings} onRefreshCategories={onRefreshCategories} discoveryVersion={library.discoveryVersion} maxNum={maxNum} onLoadAllCategories={onLoadAllCategories} />
+                    {showErrorDialog && (
+                         <DisplayErrorAlertDialog title={errorTitle} message={errorMessage} />
+                    )}
                </Box>
           </ScrollView>
      );

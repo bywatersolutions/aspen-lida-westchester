@@ -1,20 +1,21 @@
 import * as Device from 'expo-device';
 import * as Linking from 'expo-linking';
 import _ from 'lodash';
-import { Alert, Box, Center, HStack, Pressable, Text, VStack } from 'native-base';
+import { Alert, Box, Center, HStack, Pressable, Text, VStack, ScrollView } from 'native-base';
 import React from 'react';
 import { Platform } from 'react-native';
 import { checkVersion } from 'react-native-check-version';
-import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../../context/initialContext';
+import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext, ThemeContext } from '../../../context/initialContext';
 // custom components and helper files
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { GLOBALS } from '../../../util/globals';
 
 export const SupportScreen = () => {
-     const { accounts } = React.useContext(UserContext);
+     const { accounts, userDebugMessage } = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { location } = React.useContext(LibraryBranchContext);
      const { language } = React.useContext(LanguageContext);
+     const { textColor } = React.useContext(ThemeContext);
      const [status, setStatus] = React.useState({
           needsUpdate: false,
           url: null,
@@ -44,6 +45,8 @@ export const SupportScreen = () => {
                console.log(supported);
           }
      };
+
+     const enableDebugPanel = false;
 
      return (
           <Box safeArea={5}>
@@ -112,6 +115,20 @@ export const SupportScreen = () => {
                               {numLinkedAccounts}
                          </Text>
                     </HStack>
+                    {enableDebugPanel ? (
+                         <VStack justifyContent="space-between">
+                              <Text fontSize="xs" bold>
+                                   Support Log
+                              </Text>
+                              <ScrollView >
+                                   <Box>
+                                        <Text color={textColor} mt="$5" fontSize="xs" mb="$5">
+                                            {userDebugMessage.join('\n')}
+                                        </Text>
+                                   </Box>
+                              </ScrollView>
+                         </VStack>
+                    ) : null}
                </VStack>
                {status.needsUpdate ? (
                     <Center mt={5}>

@@ -38,6 +38,8 @@ export const UserContext = React.createContext({
      updateNotificationSettings: () => {},
      expoToken: false,
      aspenToken: false,
+     userDebugMessage: '',
+     updateUserDebugMessage: () => {},
      resetUser: () => {},
      updateExpoToken: () => {},
      updateAspenToken: () => {},
@@ -385,6 +387,7 @@ export const UserProvider = ({ children }) => {
      const [appPreferences, setAppPreferences] = useState([]);
      const [expoToken, setExpoToken] = useState(false);
      const [aspenToken, setAspenToken] = useState(false);
+     const [userDebugMessage, setUserDebugMessage] = useState([]);
      const [seenNotificationOnboardPrompt, setSeenNotificationOnboardPrompt] = useState(true);
      const [notificationHistory, setNotificationHistory] = useState([]);
      const [inbox, setInbox] = useState([]);
@@ -433,62 +436,62 @@ export const UserProvider = ({ children }) => {
 
      const updateLists = (data) => {
           setLists(data);
-          logDebugMessage('updated lists in UserContext');
+          //logDebugMessage('updated lists in UserContext');
      };
 
      const updateLinkedAccounts = (data) => {
           setLinkedAccounts(data);
-          logDebugMessage('updated linked accounts in UserContext');
+          //logDebugMessage('updated linked accounts in UserContext');
      };
 
      const updateLinkedViewerAccounts = (data) => {
           setLinkedViewerAccounts(data);
-          logDebugMessage('updated linked viewer accounts in UserContext');
+          //logDebugMessage('updated linked viewer accounts in UserContext');
      };
 
      const updateLanguage = (data) => {
           setLanguage(data);
-          logDebugMessage('updated language in UserContext');
+          //logDebugMessage('updated language in UserContext');
      };
 
      const updateLanguageDisplayName = (data) => {
           setLanguageDisplayName(data);
-          logDebugMessage('updated language display in UserContext');
+          //logDebugMessage('updated language display in UserContext');
      };
 
      const updatePickupLocations = (data) => {
           setPickupLocations(data);
-          logDebugMessage('updated pickup locations in UserContext');
+          //logDebugMessage('updated pickup locations in UserContext');
      };
 
      const updateSublocations = (data) => {
           setSublocations(data);
-          logDebugMessage('updated sublocations in UserContext');
+          //logDebugMessage('updated sublocations in UserContext');
      };
 
      const updateReadingHistory = (data) => {
           setReadingHistory(data);
-          logDebugMessage('updated reading history in UserContext');
+          //logDebugMessage('updated reading history in UserContext');
      };
 
      const updateSavedEvents = (data) => {
           setSavedEvents(data);
-          logDebugMessage('updated saved events in UserContext');
+          //logDebugMessage('updated saved events in UserContext');
      };
 
      const updateLibraryCards = (data) => {
           setCards(data);
-          logDebugMessage('updated library cards in UserContext');
+          //logDebugMessage('updated library cards in UserContext');
      };
 
      const updatePreferredPickupLocationIsValid = (data) => {
           setPreferredPickupLocationIsValid(data);
-          logDebugMessage('updated preferredPickupLocationIsValid in UserContext');
+          //logDebugMessage('updated preferredPickupLocationIsValid in UserContext');
      };
 
      const updatePreferredPickupLocationWarning = (data) => {
           setPreferredPickupLocationWarning(data);
-          logDebugMessage('updated preferredPickupLocationWarning to ' + data + ' in UserContext');
+          //logDebugMessage('updated preferredPickupLocationWarning to ' + data + ' in UserContext');
      };
 
      const updateNotificationSettings = async (data, language, userOnboardStatus) => {
@@ -599,12 +602,12 @@ export const UserProvider = ({ children }) => {
           }
 
           //maybe set allowNotifications at this point for initial load?
-          logDebugMessage('updated notification settings in UserContext');
+          //logDebugMessage('updated notification settings in UserContext');
      };
 
      const updateSeenNotificationOnboardPrompt = (data) => {
           setSeenNotificationOnboardPrompt(data);
-          logDebugMessage('updated seenNotificationOnboardPrompt UserContext');
+          //logDebugMessage('updated seenNotificationOnboardPrompt UserContext');
      };
 
      const updateAppPreferences = (data) => {
@@ -614,42 +617,53 @@ export const UserProvider = ({ children }) => {
 
      const updateExpoToken = (data) => {
           setExpoToken(data);
-          logDebugMessage('updated expo token UserContext');
+          //logDebugMessage('updated expo token UserContext');
      };
 
      const updateAspenToken = (data) => {
           setAspenToken(data);
-          logDebugMessage('updated aspen token UserContext');
+          //logDebugMessage('updated aspen token UserContext');
      };
+
+     const updateUserDebugMessage = (data) => {
+          setUserDebugMessage(userDebugMessage => {
+               newArray = [data, ...userDebugMessage];
+               if (newArray.length > 50) {
+                    // Return only the first 50 elements (indices 0 through 49)
+                    return newArray.slice(0, 50);
+               }
+               return newArray;
+          });
+     }
 
      const updateNotificationOnboard = (data) => {
           setNotificationOnboard(data);
-          logDebugMessage('updated notification onboard status in UserContext');
+          //logDebugMessage('updated notification onboard status in UserContext');
      };
 
      const updateNotificationHistory = (data) => {
           setNotificationHistory(data);
-          logDebugMessage('updated notification history in UserContext');
+          //logDebugMessage('updated notification history in UserContext');
      };
 
      const updateInbox = (data) => {
           setInbox(data);
-          logDebugMessage('updated notification inbox in UserContext');
+          //logDebugMessage('updated notification inbox in UserContext');
      };
 
      const updateUserCheckoutSortMethod = (data) => {
           setUserCheckoutSortMethod(data);
-          logDebugMessage('Updated user checkout sort to ' + data);
+          //logDebugMessage('Updated user checkout sort to ' + data);
      };
 
      const updateUserHoldReadySortMethod = (data) => {
           setUserHoldReadySortMethod(data);
-          logDebugMessage('Updated user checkout sort to ' + data);
+          //logDebugMessage('Updated user checkout sort to ' + data);
      };
 
      const updateUserHoldPendingSortMethod = (data) => {
           setUserHoldPendingSortMethod(data);
-          logDebugMessage('Updated user checkout sort to ' + data);
+          //logDebugMessage('Updated user checkout sort to ' + data);
      };
 
      return (
@@ -682,6 +696,8 @@ export const UserProvider = ({ children }) => {
                     aspenToken,
                     updateExpoToken,
                     updateAspenToken,
+                    userDebugMessage,
+                    updateUserDebugMessage,
                     notificationOnboard,
                     updateNotificationOnboard,
                     seenNotificationOnboardPrompt,

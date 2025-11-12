@@ -24,7 +24,7 @@ export const Settings_NotificationOptions = () => {
      const [notifySavedSearch, setNotifySavedSearch] = React.useState(false);
      const [notifyCustom, setNotifyCustom] = React.useState(false);
      const [notifyAccount, setNotifyAccount] = React.useState(false);
-     const { user, updateUser, notificationSettings, updateNotificationSettings, expoToken, aspenToken } = React.useContext(UserContext);
+     const { user, updateUser, notificationSettings, updateNotificationSettings, expoToken, aspenToken, userDebugMessage, updateUserDebugMessage} = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const [toggled, setToggle] = React.useState(aspenToken);
      const toggleSwitch = () => setToggle((previousState) => !previousState);
@@ -54,6 +54,7 @@ export const Settings_NotificationOptions = () => {
      const updateAspenToken = async () => {
           setLoading(true);
           if (!toggled) {
+               logWarnMessage('Toggled is false in updateAspenToken');
                await registerForPushNotificationsAsync(library.baseUrl).then(async (result) => {
                     if (!result) {
                          setToggle(false);
@@ -61,24 +62,36 @@ export const Settings_NotificationOptions = () => {
                          setLoading(false);
                          if (Platform.OS === 'android') {
                               if (Device.osVersion < 13) {
+                                   updateUserDebugMessage("Showing permissions prompt because platform is android prior to version 13");
                                    setShouldRequestPermissions(true);
+                              }else{
+                                   updateUserDebugMessage("Not showing permissions prompt because platform is android");
+                                   setShouldRequestPermissions(false);
                               }
-                         }
-
-                         if (Platform.OS === 'ios') {
+                         }else if (Platform.OS === 'ios') {
+                              updateUserDebugMessage("Showing permissions prompt because platform is ios");
                               setShouldRequestPermissions(true);
+                         } else {
+                              updateUserDebugMessage("Not showing permissions prompt because platform is not android or ios");
                          }
                          return false;
                     } else {
-                         await refreshProfile(library.baseUrl).then(async (result) => {
-                              updateUser(result);
-                              await getPreferences();
-                         });
+                         updateUserDebugMessage("Got a result from registerForPushNotificationsAsync, showing preferences");
+                         try {
+                              await refreshProfile(library.baseUrl).then(async (result) => {
+                                   updateUser(result);
+                                   await getPreferences();
+                              });
+                         } catch (error) {
+                              updateUserDebugMessage("Error refreshing profile");
+                              updateUserDebugMessage(error);
+                         }
                          setLoading(false);
                          return true;
                     }
                });
           } else {
+               logWarnMessage('Toggled is true in updateAspenToken');
                await deletePushToken(library.baseUrl, expoToken, true);
                await refreshProfile(library.baseUrl).then(async (result) => {
                     updateUser(result);
@@ -93,9 +106,12 @@ export const Settings_NotificationOptions = () => {
      };
 
      const getPreferences = async () => {
+          updateUserDebugMessage("Getting Preferences");
           setLoading(true);
           if (_.isObject(notificationSettings)) {
+               updateUserDebugMessage("Notification Settings are an object");
                const currentPreferences = Object.values(notificationSettings);
+               updateUserDebugMessage("There are " + currentPreferences.length + " preferences");
                for await (const pref of currentPreferences) {
                     logDebugMessage(pref.option);
                     const i = _.findIndex(currentPreferences, ['option', pref.option]);
@@ -124,6 +140,8 @@ export const Settings_NotificationOptions = () => {
                          }
                     }
                }
+          }else{
+               updateUserDebugMessage("Notification Settings were not an object");
           }
           setLoading(false);
      };

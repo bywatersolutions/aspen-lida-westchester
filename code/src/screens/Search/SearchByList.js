@@ -1,27 +1,20 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { create } from 'apisauce';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { Image } from 'expo-image';
 import _ from 'lodash';
-import { Badge, Box, Button, FlatList, HStack, Icon, Pressable, Stack, Text, VStack } from 'native-base';
+import { Box, FlatList } from 'native-base';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadError } from '../../components/loadError';
 
 // custom components and helper files
-import { LoadingSpinner, loadingSpinner } from '../../components/loadingSpinner';
-import { LanguageContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
-import { getCleanTitle } from '../../helpers/item';
-import { navigateStack } from '../../helpers/RootNavigator';
-import { getTermFromDictionary } from '../../translations/TranslationService';
-import { removeTitlesFromList } from '../../util/api/list';
+import { LoadingSpinner } from '../../components/loadingSpinner';
+import { LanguageContext, LibrarySystemContext } from '../../context/initialContext';
 import { createAuthTokens, getHeaders } from '../../util/apiAuth';
 import { GLOBALS } from '../../util/globals';
-import { formatDiscoveryVersion } from '../../util/loadLibrary';
-import AddToList from './AddToList';
 import { DisplayResult } from './DisplayResult';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -31,7 +24,6 @@ export const SearchResultsForList = () => {
      const navigation = useNavigation();
      const prevRoute = useRoute().params?.prevRoute ?? 'HomeScreen';
      const screenTitle = useRoute().params?.title ?? '';
-     //console.log(useRoute().params);
      const [page, setPage] = React.useState(1);
      const { library } = React.useContext(LibrarySystemContext);
      const { language } = React.useContext(LanguageContext);
@@ -42,7 +34,16 @@ export const SearchResultsForList = () => {
           isUserList = true;
      }
 
-     const { status, data, error, isFetching } = useQuery(['searchResultsForList', url, page, id, language], () => fetchSearchResults(id, page, url, language));
+     const { status, data, error, isFetching, isPreviousData } = useQuery({
+          queryKey: ['searchResultsForList', url, page, id, language],
+          queryFn: () => fetchSearchResults(id, page, url, language),
+          keepPreviousData: true,
+          staleTime: 1000,
+          onError: (error) => {
+               logDebugMessage("Error searching by list");
+               logErrorMessage(error);
+          }
+     });
 
      const NoResults = () => {
           return null;
@@ -65,7 +66,6 @@ export const SearchResultsForList = () => {
 
 async function fetchSearchResults(id, page, url, language) {
      let listId = id;
-     console.log(listId);
      if (_.isString(listId)) {
           if (listId.includes('system_user_list')) {
                const myArray = id.split('_');
@@ -73,21 +73,26 @@ async function fetchSearchResults(id, page, url, language) {
           }
      }
 
-     const { data } = await axios.get('/SearchAPI?method=getListResults', {
+     const api = create({
           baseURL: url + '/API',
           timeout: GLOBALS.timeoutAverage,
           headers: getHeaders(true),
           auth: createAuthTokens(),
-          params: {
-               id: listId,
-               limit: 25,
-               page: page,
-               language,
-          },
      });
 
+     const response = await api.get('/SearchAPI?method=getListResults', {
+          id: listId,
+          limit: 25,
+          page: page,
+          language,
+     });
+
+     if (!response.ok || !response.data) {
+          logErrorMessage(response);
+     }
+
      return {
-          id: data.result?.id ?? listId,
-          items: Object.values(data.result?.items),
+          id: response.data.result?.id ?? listId,
+          items: Object.values(response.data.result?.items),
      };
 }

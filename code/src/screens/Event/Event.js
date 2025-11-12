@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import * as Calendar from 'expo-calendar';
 import * as WebBrowser from 'expo-web-browser';
-
 import _ from 'lodash';
 import moment from 'moment';
 import {
@@ -49,9 +48,10 @@ import {
 import { navigateStack } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { getEventDetails, saveEvent } from '../../util/api/event';
-import { decodeHTML, stripHTML } from '../../util/apiAuth';
+import { decodeHTML, getErrorMessage, stripHTML } from '../../util/apiAuth';
 import { PATRON } from '../../util/loadPatron';
 import AddToList from '../Search/AddToList';
+import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -66,16 +66,33 @@ export const EventScreen = () => {
      const { systemMessages, updateSystemMessages } = React.useContext(SystemMessagesContext);
      const { textColor, theme, colorMode } = React.useContext(ThemeContext);
      const [hasValidImage, setHasValidImage] = React.useState(false);
-     const { status, data, error, isFetching } = useQuery(['event', id, source, language, library.baseUrl], () => getEventDetails(id, source, language, library.baseUrl));
+     const [eventData, setEventData] = React.useState([]);
+     const [errorMessage, setErrorMessage] = React.useState('');
+
+     const { status, data, error, isFetching } = useQuery(['event', id, source, language, library.baseUrl], () => getEventDetails(id, source, language, library.baseUrl), {
+          onSuccess: (data) => {
+               if(data.ok) {
+                    setEventData(data.data);
+                    setErrorMessage('');
+               } else {
+                    logDebugMessage("Error fetching event details");
+                    logDebugMessage(data);
+                    const error = getErrorMessage(data.code ?? 0, data.problem);
+                    setErrorMessage(error.message);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching event details");
+               logErrorMessage(error);
+          }
+     });
 
      React.useEffect(() => {
-          if (!_.isEmpty(data) && !_.isUndefined(data.results)) {
+          if (!_.isEmpty(data) && !_.isUndefined(data.data.results)) {
                const update = async () => {
-                    if (!_.isUndefined(data.results.cover)) {
-                         if (data.results.cover) {
-                              console.log('url: ' + data.results.cover);
-                              const urlResult = checkImageUrl(data.results.cover);
-                              console.log('result: ' + urlResult);
+                    if (!_.isUndefined(data.data.results.cover)) {
+                         if (data.data.results.cover) {
+                              const urlResult = checkImageUrl(data.data.results.cover);
                               setHasValidImage(urlResult);
                          }
                     }
@@ -97,14 +114,16 @@ export const EventScreen = () => {
 
      return (
           <ScrollView>
-               {status === 'loading' || isFetching ? (
+               {(eventData.length === 0 || status === 'loading' || isFetching) && errorMessage === ''? (
                     <Box pt={50}><LoadingSpinner message="Fetching data..." /></Box>
                ) : status === 'error' ? (
                     <Box pt={50}>{loadError(error, '')}</Box>
+               ) : errorMessage !== '' ? (
+                    <Box pt={50}>{loadError(errorMessage, '')}</Box>
                ) : (
                     <>
                          {_.size(systemMessages) > 0 ? <Box safeArea={2}>{showSystemMessage()}</Box> : null}
-                         <DisplayEvent data={data.results} source={source} />
+                         <DisplayEvent data={eventData} source={source} />
                     </>
                )}
           </ScrollView>
@@ -131,9 +150,8 @@ const DisplayEvent = (payload) => {
 
           await WebBrowser.openBrowserAsync(event.url, browserParams)
                .then((res) => {
-                    console.log(res);
                     if (res.type === 'cancel' || res.type === 'dismiss') {
-                         console.log('User closed or dismissed window.');
+                         logInfoMessage('User closed or dismissed window.');
                          WebBrowser.dismissBrowser();
                          WebBrowser.coolDownAsync();
                     }
@@ -145,20 +163,19 @@ const DisplayEvent = (payload) => {
                               WebBrowser.coolDownAsync();
                               await WebBrowser.openBrowserAsync(event.url, browserParams)
                                    .then((response) => {
-                                        console.log(response);
                                         if (response.type === 'cancel') {
-                                             console.log('User closed window.');
+                                             logInfoMessage('User closed window.');
                                         }
                                    })
                                    .catch(async (error) => {
-                                        console.log('Unable to close previous browser session.');
+                                        logDebugMessage('Unable to close previous browser session.');
+                                        logDebugMessage(error);
                                    });
                          } catch (error) {
-                              console.log('Really borked.');
+                              logDebugMessage(error);
                          }
                     } else {
                          popToast(getTermFromDictionary('en', 'error_no_open_resource'), getTermFromDictionary('en', 'error_device_block_browser'), 'error');
-                         console.log(err);
                     }
                });
      };
@@ -365,7 +382,7 @@ const getAddToCalendar = (start, end, location, event) => {
                     });
                }
 
-               console.log('calendarId: ' + calendarId);
+               logInfoMessage('calendarId: ' + calendarId);
                setCalendarId(id);
                setConfirmAdd(true);
                setModalBodyHeading(getTermFromDictionary(language, 'add_to_calendar'));
@@ -396,7 +413,6 @@ const getAddToCalendar = (start, end, location, event) => {
                          allDay: event.isAllDay ?? false,
                          url: event.url,
                     }).then(async (result) => {
-                         console.log(result);
                          const toast = useToast();
                          return toast.show({
                               duration: 5000,
@@ -426,7 +442,7 @@ const getAddToCalendar = (start, end, location, event) => {
                          });
                     });
                } catch (e) {
-                    console.log(e);
+                   logDebugMessage(e);
                }
           }
      };
@@ -645,9 +661,7 @@ const getRegistrationModal = (event) => {
 async function checkImageUrl(url) {
      fetch(url).then((response) => {
           if (!_.isUndefined(response.status)) {
-               console.log(response.status);
                if (response.status === 200 || response.status === 201) {
-                    console.log('its valid');
                     return true;
                }
           }

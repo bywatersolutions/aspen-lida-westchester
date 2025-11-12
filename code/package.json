@@ -120,7 +120,7 @@
       "react-hooks/exhaustive-deps": "warn"
     }
   },
-  "packageManager": "yarn@1.22.19",
+  "packageManager": "yarn@4.10.3",
   "resolutions": {
     "react-native-svg": "15.11.2"
   }

@@ -9,7 +9,7 @@ import { ChevronLeftIcon, Box, extendTheme, HStack, Icon, IconButton, Text, useC
 import React, { useState } from 'react';
 import { ThemeContext } from '../context/initialContext';
 
-import { createAuthTokens, getHeaders } from '../util/apiAuth';
+import { createAuthTokens, getErrorMessage, getHeaders } from '../util/apiAuth';
 import { GLOBALS } from '../util/globals';
 import { getAppSettings, LIBRARY } from '../util/loadLibrary';
 
@@ -18,59 +18,6 @@ import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from
 export const BackIcon = (props) => {
      const { theme } = React.useContext(ThemeContext);
      return <ChevronLeftIcon size="md" ml={1} {...props} color={theme['colors']['primary']['baseContrast']} />;
-};
-
-export async function getThemeData() {
-     let theme = [];
-     const discovery = create({
-          baseURL: GLOBALS.url + '/API',
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-          params: {
-               id: GLOBALS.themeId,
-          },
-     });
-     const response = await discovery.get('/SystemAPI?method=getThemeInfo');
-     if (response.ok) {
-          if (!_.isUndefined(response.data.result.theme)) {
-               const result = response.data.result.theme;
-               const COLOR_SCHEMES = [result.primaryBackgroundColor, result.secondaryBackgroundColor, result.tertiaryBackgroundColor];
-               theme = COLOR_SCHEMES.map(generateSwatches);
-          } else {
-               const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
-               theme = COLOR_SCHEMES.map(generateSwatches);
-          }
-     }
-     return theme;
-}
-
-const getThemeId = () => {
-     const [value, setValue] = useState();
-     const discovery = create({
-          baseURL: GLOBALS.url + '/API',
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-          params: {
-               id: GLOBALS.libraryId,
-          },
-     });
-     discovery
-          .get('/SystemAPI?method=getLibraryInfo')
-          .then((response) => {
-               const data = response.data.result.success;
-               let themeId = 1;
-               if (!_.isUndefined(data)) {
-                    themeId = data.themeId;
-               }
-               setValue(themeId);
-          })
-          .catch((err) => {
-               logErrorMessage(err);
-          });
-
-     return value;
 };
 
 export async function getThemeInfo(url = null) {
@@ -104,13 +51,17 @@ export async function getThemeInfo(url = null) {
           } else {
                const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
                const palettes = COLOR_SCHEMES.map(generateSwatches);
-               logInfoMessage('Backup theme loaded.');
+               logInfoMessage('Backup theme loaded due to unexpected response.');
+               getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+               logErrorMessage(response);
                return palettes;
           }
      } else {
           const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
           const palettes = COLOR_SCHEMES.map(generateSwatches);
-          logInfoMessage('Backup theme loaded.');
+          logInfoMessage('Backup theme loaded due to server or client issue.');
+          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
+          logErrorMessage(response);
           return palettes;
      }
 }

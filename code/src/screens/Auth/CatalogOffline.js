@@ -4,6 +4,7 @@ import { AuthContext } from '../../components/navigation';
 import _ from 'lodash';
 import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
+import { logInfoMessage } from '../../util/logging';
 
 export const CatalogOffline = () => {
      const { language } = React.useContext(LanguageContext);
@@ -14,7 +15,7 @@ export const CatalogOffline = () => {
      const onClose = () => setIsOpen(false);
      const cancelRef = React.useRef(null);
 
-     console.log('CatalogOffline: ' + catalogStatus);
+     logInfoMessage('CatalogOffline: ' + catalogStatus);
 
      if (catalogStatus > 0 && !_.isUndefined(theme)) {
           return (

@@ -14,7 +14,7 @@ import { getRecords } from '../../util/api/item';
 import { loadError } from '../../components/loadError';
 import { navigate, navigateStack } from '../../helpers/RootNavigator';
 import { refreshProfile } from '../../util/api/user';
-import { stripHTML } from '../../util/apiAuth';
+import { getErrorMessage, stripHTML } from '../../util/apiAuth';
 import { placeHold } from '../../util/recordActions';
 import { getStatusIndicator } from './StatusIndicator';
 import { ActionButton } from '../../components/Action/ActionButton';
@@ -216,8 +216,14 @@ export const Editions = () => {
                                                             await confirmHold(holdConfirmationResponse.recordId, holdConfirmationResponse.confirmationId, language, library.baseUrl).then(async (result) => {
                                                                  setResponse(result);
                                                                  queryClient.invalidateQueries({ queryKey: ['holds', library.baseUrl, language] });
-                                                                 await refreshProfile(library.baseUrl).then((result) => {
-                                                                      updateUser(result);
+                                                                 await refreshProfile(library.baseUrl).then((data) => {
+                                                                      if(data.ok) {
+                                                                           updateUser(data.data.result.profile);
+                                                                      } else {
+                                                                           logWarnMessage('Could not refresh profile after placing hold from volume selection.');
+                                                                           logDebugMessage(data);
+                                                                           getErrorMessage(data.code ?? 0, data.problem);
+                                                                      }
                                                                  });
 
                                                                  setHoldConfirmationIsOpen(false);

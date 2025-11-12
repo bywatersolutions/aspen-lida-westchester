@@ -12,9 +12,10 @@ import { Heading, Box, Button, ButtonText, ButtonGroup, Center, FlatList, HStack
 import { navigate } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { fetchSavedEvents } from '../../../util/api/event';
-import { stripHTML } from '../../../util/apiAuth';
+import { getErrorMessage, stripHTML } from '../../../util/apiAuth';
 import { CommonActions } from '@react-navigation/native';
-import { fetchNotificationHistory } from '../../../util/api/user';
+import { fetchNotificationHistory, formatNotificationHistory } from '../../../util/api/user';
+import { logDebugMessage, logErrorMessage } from '../../../util/logging';
 
 export const MyNotificationHistory = () => {
      const navigation = useNavigation();
@@ -52,16 +53,27 @@ export const MyNotificationHistory = () => {
           keepPreviousData: true,
           staleTime: 1000,
           onSuccess: (data) => {
-               updateNotificationHistory(data);
-               updateInbox(data?.inbox ?? []);
-               if (data.totalPages) {
-                    let tmp = getTermFromDictionary(language, 'page_of_page');
-                    tmp = tmp.replace('%1%', page);
-                    tmp = tmp.replace('%2%', data.totalPages);
-                    setPaginationLabel(tmp);
+               if(data.ok) {
+                    const notificationHistory = formatNotificationHistory(data.data.result);
+                    updateInbox(notificationHistory.inbox ?? []);
+                    updateNotificationHistory(notificationHistory);
+                    if (notificationHistory.totalPages) {
+                         let tmp = getTermFromDictionary(language, 'page_of_page');
+                         tmp = tmp.replace('%1%', page);
+                         tmp = tmp.replace('%2%', notificationHistory.totalPages);
+                         setPaginationLabel(tmp);
+                    }
+               } else {
+                    logDebugMessage("Error fetching notification history");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
                }
           },
           onSettle: (data) => setLoading(false),
+          onError: (error) => {
+               logDebugMessage("Error fetching notification history");
+               logErrorMessage(error);
+          }
      });
 
      const showSystemMessage = () => {

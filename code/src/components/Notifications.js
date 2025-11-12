@@ -14,16 +14,17 @@ import { createAuthTokens, getHeaders, postData, problemCodeMap, stripHTML } fro
 import { GLOBALS } from '../util/globals';
 import { popAlert, popToast } from './loadError';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage, logSentryMessage } from '../util/logging.js';
 
-export async function registerForPushNotificationsAsync(url) {
+export async function registerForPushNotificationsAsync(url, updateUserDebugMessage) {
      try {
+          updateUserDebugMessage("Registering for push notifications async");
           // For simulator
           if (!Device.isDevice) {
-               logDebugMessage("Running on simulator - using development notification setup");
+               updateUserDebugMessage("Running on simulator - using development notification setup");
                const { status } = await Notifications.getPermissionsAsync();
                if (status === 'granted') {
-                    return 'ExponentPushToken[simulator-test-token]';
+                    return 'ExponentPushToken[testToken' + Device.modelName + ']';
                }
                return false;
           }
@@ -34,14 +35,14 @@ export async function registerForPushNotificationsAsync(url) {
 
           // Only ask for permissions if not already granted
           if (existingStatus !== 'granted') {
-               logDebugMessage("Requesting notification permissions...");
+               updateUserDebugMessage("Requesting notification permissions...");
                // Call requestPermissionsAsync without any parameters
                const { status } = await Notifications.requestPermissionsAsync();
                finalStatus = status;
           }
 
           if (finalStatus !== 'granted') {
-               logWarnMessage('Failed to get push notification permissions');
+               logErrorMessage('Failed to get push notification permissions');
                return false;
           }
 
@@ -59,11 +60,14 @@ export async function registerForPushNotificationsAsync(url) {
           return response.data;
      } catch (error) {
           logErrorMessage("Error in registerForPushNotificationsAsync:", error);
+          updateUserDebugMessage("Error in registerForPushNotificationsAsync");
+          updateUserDebugMessage(error);
           return false;
      }
 }
 
-export async function savePushToken(url, pushToken) {
+export async function savePushToken(url, pushToken, updateUserDebugMessage) {
+     updateUserDebugMessage("Saving Push Token " + pushToken);
      let postBody = await postData();
      postBody.append('pushToken', pushToken);
      postBody.append('deviceModel', Device.modelName);
@@ -74,10 +78,17 @@ export async function savePushToken(url, pushToken) {
           auth: createAuthTokens(),
      });
      const response = await api.post('/UserAPI?method=saveNotificationPushToken', postBody);
+     if(!response.ok) {
+            logErrorMessage("Could not save push token");
+            logDebugMessage(response);
+            updateUserDebugMessage("Could not save push token");
+            updateUserDebugMessage(response);
+     }
      return response.ok;
 }
 
 export async function getPushToken(libraryUrl) {
+     logDebugMessage("Getting push token");
      let postBody = await postData();
      const api = create({
           baseURL: libraryUrl + '/API',
@@ -88,8 +99,11 @@ export async function getPushToken(libraryUrl) {
      const response = await api.post('/UserAPI?method=getNotificationPushToken', postBody);
      if (response.ok) {
           if (response.data.result.success) {
+               logDebugMessage("Got Push Token " + response.data.result.tokens);
                return response.data.result.tokens;
           } else {
+               logWarnMessage("No push tokens found");
+               logDebugMessage(response);
                return [];
           }
      } else {
@@ -100,6 +114,7 @@ export async function getPushToken(libraryUrl) {
 }
 
 export async function deletePushToken(libraryUrl, pushToken, shouldAlert = false) {
+     logDebugMessage("Deleting push token");
      let postBody = await postData();
      postBody.append('pushToken', pushToken);
      const api = create({
@@ -109,6 +124,10 @@ export async function deletePushToken(libraryUrl, pushToken, shouldAlert = false
           auth: createAuthTokens(),
      });
      const response = await api.post('/UserAPI?method=deleteNotificationPushToken', postBody);
+     if(!response.ok) {
+          logErrorMessage("Could not delete push token");
+          logDebugMessage(response);
+     }
      return response.ok;
 }
 
@@ -181,7 +200,7 @@ export async function getNotificationPreferences(libraryUrl, pushToken) {
           headers: getHeaders(true),
           auth: createAuthTokens(),
      });
-     logDebugMessage("Loading notification preferences");
+     logDebugMessage("Loading notification preferences " + pushToken);
      const response = await api.post('/UserAPI?method=getNotificationPreferences', postBody);
      if (response.ok) {
           try {
@@ -213,10 +232,11 @@ export async function getNotificationPreference(url, pushToken, type) {
                type: type,
           },
      });
-     logDebugMessage("Getting notification preference")
+     logDebugMessage("Getting notification preference for type " + type);
      const response = await api.post('/UserAPI?method=getNotificationPreference', postBody);
      if (response.ok) {
-          if (response.data.result.success === true) {
+          if (response.data?.result?.success === true) {
+               logDebugMessage(response.data.result);
                return response.data.result;
           } else {
                popAlert(response.data.result.title ?? 'Unknown Error', response.data.result.message, 'error');

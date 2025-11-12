@@ -10,6 +10,7 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 
 // custom components and helper files
 import { PATRON } from '../../util/loadPatron';
+import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 const ContactButtons = (data) => {
      const { library } = React.useContext(LibrarySystemContext);
@@ -46,9 +47,9 @@ const ContactButtons = (data) => {
           if (location.homeLink === '/') {
                await WebBrowser.openBrowserAsync(location.baseUrl, browserParams)
                     .then((res) => {
-                         console.log(res);
+                         logDebugMessage(res);
                          if (res.type === 'cancel' || res.type === 'dismiss') {
-                              console.log('User closed or dismissed window.');
+                              logDebugMessage('User closed or dismissed window.');
                               WebBrowser.dismissBrowser();
                               WebBrowser.coolDownAsync();
                          }
@@ -60,28 +61,29 @@ const ContactButtons = (data) => {
                                    WebBrowser.coolDownAsync();
                                    await WebBrowser.openBrowserAsync(location.baseUrl, browserParams)
                                         .then((response) => {
-                                             console.log(response);
+                                             logDebugMessage(response);
                                              if (response.type === 'cancel') {
-                                                  console.log('User closed window.');
+                                                  logDebugMessage('User closed window.');
                                              }
                                         })
                                         .catch(async (error) => {
-                                             console.log('Unable to close previous browser session.');
+                                             logDebugMessage('Unable to close previous browser session.');
                                         });
                               } catch (error) {
-                                   console.log('Really borked.');
+                                   logDebugMessage('Really borked.');
+                                   logError(error);
                               }
                          } else {
                               popToast(getTermFromDictionary('en', 'error_no_open_resource'), getTermFromDictionary('en', 'error_device_block_browser'), 'error');
-                              console.log(err);
+                              logErrorMessage(err);
                          }
                     });
           } else {
                await WebBrowser.openBrowserAsync(location.homeLink, browserParams)
                     .then((res) => {
-                         console.log(res);
+                         logDebugMessage(res);
                          if (res.type === 'cancel' || res.type === 'dismiss') {
-                              console.log('User closed or dismissed window.');
+                              logDebugMessage('User closed or dismissed window.');
                               WebBrowser.dismissBrowser();
                               WebBrowser.coolDownAsync();
                          }
@@ -93,20 +95,21 @@ const ContactButtons = (data) => {
                                    WebBrowser.coolDownAsync();
                                    await WebBrowser.openBrowserAsync(location.homeLink, browserParams)
                                         .then((response) => {
-                                             console.log(response);
+                                             logDebugMessage(response);
                                              if (response.type === 'cancel') {
-                                                  console.log('User closed window.');
+                                                  logDebugMessage('User closed window.');
                                              }
                                         })
                                         .catch(async (error) => {
-                                             console.log('Unable to close previous browser session.');
+                                             logDebugMessage('Unable to close previous browser session.');
                                         });
                               } catch (error) {
-                                   console.log('Really borked.');
+                                   logDebugMessage('Really borked.');
+                                   logErrorMessage(error);
                               }
                          } else {
                               popToast(getTermFromDictionary('en', 'error_no_open_resource'), getTermFromDictionary('en', 'error_device_block_browser'), 'error');
-                              console.log(err);
+                              logErrorMessage(err);
                          }
                     });
           }

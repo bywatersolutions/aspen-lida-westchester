@@ -54,11 +54,12 @@ import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeCont
 import { getAuthor, getCleanTitle, getDateLastUsed, getFormat, getTitle } from '../../../helpers/item';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import { deleteAllReadingHistory, deleteSelectedReadingHistory, fetchReadingHistory, optIntoReadingHistory, optOutOfReadingHistory } from '../../../util/api/user';
+import { deleteAllReadingHistory, deleteSelectedReadingHistory, fetchReadingHistory, formatReadingHistory, optIntoReadingHistory, optOutOfReadingHistory } from '../../../util/api/user';
 import AddToList from '../../Search/AddToList';
 import { ActionsheetIcon } from '@gluestack-ui/themed';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';
+import { getErrorMessage } from '../../../util/apiAuth';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -98,16 +99,26 @@ export const MyReadingHistory = () => {
           keepPreviousData: true,
           staleTime: 1000,
           onSuccess: (data) => {
-               updateReadingHistory(data);
-               if (data.totalPages) {
-                    let tmp = getTermFromDictionary(language, 'page_of_page');
-                    tmp = tmp.replace('%1%', page);
-                    tmp = tmp.replace('%2%', data.totalPages);
-                    logDebugMessage(tmp);
-                    setPaginationLabel(tmp);
+               if(data.ok) {
+                    const readingHistory = formatReadingHistory(data.data.result);
+                    updateReadingHistory(readingHistory);
+                    if (readingHistory.totalPages) {
+                         let tmp = getTermFromDictionary(language, 'page_of_page');
+                         tmp = tmp.replace('%1%', page);
+                         tmp = tmp.replace('%2%', readingHistory.totalPages);
+                         setPaginationLabel(tmp);
+                    }
+               } else {
+                    logDebugMessage("Error fetching reading history for user");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code, data.problem)
                }
           },
           onSettle: (data) => setLoading(false),
+          onError: (error) => {
+               logDebugMessage("Error fetching reading history for user");
+               logErrorMessage(error);
+          }
      });
 
      const state = queryClient.getQueryState(['reading_history']);
@@ -217,9 +228,10 @@ export const MyReadingHistory = () => {
      const search = async () => {
           logDebugMessage('updateSearchTerm for reading history: ' + filter);
           setLoading(true);
+          setPage(1);
           setSearchTerm(filter);
-          await queryClient.invalidateQueries({ queryKey: ['reading_history', user.id, library.baseUrl, page, sort, searchTerm] });
-          await queryClient.refetchQueries({ queryKey: ['reading_history', user.id, library.baseUrl, page, sort, filter] });
+          await queryClient.invalidateQueries({ queryKey: ['reading_history', user.id, library.baseUrl, 1, sort, searchTerm] });
+          await queryClient.refetchQueries({ queryKey: ['reading_history', user.id, library.baseUrl, 1, sort, filter] });
           setLoading(false);
      }
 

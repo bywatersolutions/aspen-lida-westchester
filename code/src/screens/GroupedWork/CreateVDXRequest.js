@@ -3,14 +3,12 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { Box, Button, Checkbox, CheckIcon, FormControl, Input, Select, Text, TextArea, ScrollView } from 'native-base';
 import React from 'react';
 import { Platform } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadingSpinner } from '../../components/loadingSpinner';
 import { submitVdxRequest } from '../../util/recordActions';
-import { HoldsContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
+import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
 import { loadError } from '../../components/loadError';
 import { getVdxForm } from '../../util/loadLibrary';
-import { reloadProfile } from '../../util/api/user';
-import { reloadHolds } from '../../util/loadPatron';
 
 export const CreateVDXRequest = () => {
      const route = useRoute();
@@ -37,11 +35,12 @@ export const CreateVDXRequest = () => {
 };
 
 const Request = (payload) => {
+     const queryClient = useQueryClient();
      const navigation = useNavigation();
      const { config, workId, workTitle, workOclcNumber, workPublisher, workAuthor, workIsbn } = payload;
      const { library } = React.useContext(LibrarySystemContext);
-     const { updateUser } = React.useContext(UserContext);
-     const { updateHolds } = React.useContext(HoldsContext);
+     const { user } = React.useContext(UserContext);
+     const { language } = React.useContext(LanguageContext);
 
      let publisherValue = '';
      if (!_.isUndefined(workPublisher)) {
@@ -77,12 +76,8 @@ const Request = (payload) => {
                setIsSubmitting(false);
                if (result.success) {
                     navigation.goBack();
-                    await reloadHolds(library.baseUrl).then((result) => {
-                         updateHolds(result);
-                    });
-                    await reloadProfile(library.baseUrl).then((result) => {
-                         updateUser(result);
-                    });
+                    queryClient.invalidateQueries({ queryKey: ['holds', user.id, library.baseUrl, language] });
+                    queryClient.invalidateQueries({ queryKey: ['user', library.baseUrl, language] });
                }
           });
      };

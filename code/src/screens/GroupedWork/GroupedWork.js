@@ -15,10 +15,10 @@ import { GroupedWorkContext, LanguageContext, LibrarySystemContext, SystemMessag
 import { startSearch } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { getFirstRecord, getVariations } from '../../util/api/item';
-import { getLinkedAccounts } from '../../util/api/user';
+import { formatLinkedAccounts, getLinkedAccounts } from '../../util/api/user';
 import { getGroupedWork } from '../../util/api/work';
-import {decodeHTML, passUserToDiscovery} from '../../util/apiAuth';
-import { getPickupLocations, getPickupSublocations } from '../../util/loadLibrary';
+import { decodeHTML, getErrorMessage, passUserToDiscovery } from '../../util/apiAuth';
+import { formatPickupLocations, getPickupLocations, getPickupSublocations } from '../../util/loadLibrary';
 import AddToList from '../Search/AddToList';
 import Variations from './Variations';
 
@@ -46,31 +46,44 @@ export const GroupedWorkScreen = () => {
                     if (isSubscribed) {
                          updateGroupedWork(data);
                          updateFormat(data.format);
-                         await getLinkedAccounts(user, cards, library.barcodeStyle, library.baseUrl, language).then((result) => {
-                              if (accounts !== result.accounts) {
-                                   updateLinkedAccounts(result.accounts);
-                              }
-                              if (cards !== result.cards) {
-                                   updateLibraryCards(result.cards);
+                         await getLinkedAccounts(library.baseUrl, language).then((data) => {
+                              if(data.ok) {
+                                   const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library.barcodeStyle, data.data.result.linkedAccounts);
+                                   if (accounts !== linkedAccounts.accounts) {
+                                        updateLinkedAccounts(linkedAccounts.accounts);
+                                   }
+                                   if (cards !== linkedAccounts.cards) {
+                                        updateLibraryCards(linkedAccounts.cards);
+                                   }
+                              } else {
+                                   logDebugMessage("Error fetching linked accounts in GroupedWork");
+                                   logDebugMessage(data);
+                                   getErrorMessage(data.code ?? 0, data.problem);
                               }
                          });
                          await getPickupLocations(library.baseUrl, id).then((result) => {
                               logDebugMessage('Updating pickup locations after getPickupLocations call');
-                              logDebugMessage(result);
-                              if (locations !== result.locations) {
-                                   updatePickupLocations(result.locations);
-                              }
-                              logDebugMessage("Preferred pickup location is valid? " + result.preferredPickupLocationIsValid);
-                              if (preferredPickupLocationIsValid !== result.preferredPickupLocationIsValid) {
-                                   updatePreferredPickupLocationIsValid(result.preferredPickupLocationIsValid);
-                              }
-                              if (preferredPickupLocationWarning !== result.preferredPickupLocationWarning) {
-                                   logDebugMessage("Preferred pickup location warning is " + result.preferredPickupLocationWarning);
-                                   updatePreferredPickupLocationWarning(result.preferredPickupLocationWarning);
-                              }else{
-                                   logDebugMessage("Preferred pickup location warning did not change");
-                                   logDebugMessage("  preferredPickupLocationWarning = " + preferredPickupLocationWarning);
-                                   logDebugMessage("  result.preferredPickupLocationWarning = " + result.preferredPickupLocationWarning);
+                              if(result.ok) {
+                                   const pickupLocations = formatPickupLocations(result.data.result);
+                                   if (locations !== pickupLocations.locations) {
+                                        updatePickupLocations(pickupLocations.locations);
+                                   }
+                                   logDebugMessage("Preferred pickup location is valid? " + pickupLocations.preferredPickupLocationIsValid);
+                                   if (preferredPickupLocationIsValid !== pickupLocations.preferredPickupLocationIsValid) {
+                                        updatePreferredPickupLocationIsValid(pickupLocations.preferredPickupLocationIsValid);
+                                   }
+                                   if (preferredPickupLocationWarning !== pickupLocations.preferredPickupLocationWarning) {
+                                        logDebugMessage("Preferred pickup location warning is " + pickupLocations.preferredPickupLocationWarning);
+                                        updatePreferredPickupLocationWarning(pickupLocations.preferredPickupLocationWarning);
+                                   }else{
+                                        logDebugMessage("Preferred pickup location warning did not change");
+                                        logDebugMessage("  preferredPickupLocationWarning = " + preferredPickupLocationWarning);
+                                        logDebugMessage("  result.preferredPickupLocationWarning = " + pickupLocations.preferredPickupLocationWarning);
+                                   }
+                              } else {
+                                   logDebugMessage("Error fetching pickup locations in GroupedWork");
+                                   logDebugMessage(data);
+                                   getErrorMessage(data.code ?? 0, data.problem);
                               }
                          });
                          await getPickupSublocations(library.baseUrl).then((result) => {
