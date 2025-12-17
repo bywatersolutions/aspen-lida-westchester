@@ -6,8 +6,12 @@ import React from 'react';
 import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { Image } from 'expo-image';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const DisplayBrowseCategory = (props) => {
+     const { theme } = React.useContext(ThemeContext);
+     const { language } = React.useContext(LanguageContext);
+
      const category = props.category;
      const subCategories = category.subCategories ?? [];
      const records = category.records ?? [];
@@ -34,40 +38,30 @@ const DisplayBrowseCategory = (props) => {
 
      return (
           <SafeAreaView>
-               <View>
-                    <HStack space="$3" alignItems="center" justifyContent="space-between">
+               <View pb="$3">
+                    <HStack space="$3" alignItems="center" justifyContent="space-between" pb="$2">
                          <DisplayBrowseCategoryTitle category={category.label} id={category.textId} />
+                         {subCategories.length > 0 ? (
+                              <Button variant="outline" size="xs" borderColor={theme['colors']['primary']['500']} sx={{ paddingHorizontal: 6, paddingVertical: 0, height: 24 }}>
+                                   <ButtonIcon as={MaterialIcons} name="close" color={theme['colors']['primary']['500']} mr="$1" />
+                                   <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'hide_all')}</ButtonText>
+                              </Button>
+                         ) : (
+                              <Button variant="outline" size="xs" borderColor={theme['colors']['primary']['500']} sx={{ paddingHorizontal: 6, paddingVertical: 0, height: 24 }}>
+                                   <ButtonIcon as={MaterialIcons} name="close" color={theme['colors']['primary']['500']} mr="$1" />
+                                   <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'hide')}</ButtonText>
+                              </Button>
+                         )}
                     </HStack>
                     {subCategories.length > 0 ? (
                          <>
-                         <ScrollView horizontal>
-                              <DisplaySubCategoryBar subCategories={subCategories} selectedIndex={selectedSubCategoryIndex}
-                                                     onSelect={handleSelectSubCategory} />
-                         </ScrollView>
-                         {showSubCategoryRecords && (
-                              <FlatList
-                                   pb="$8"
-                                   data={subCategoryRecords}
-                                   keyExtractor={(item, index) => item.key?.toString() ?? index.toString()}
-                                   horizontal
-                                   renderItem={({ item }) => (
-                                        <DisplayBrowseCategoryRecord record={item} />
-                                   )}
-                                   ListFooterComponent={subCategoryHasMore ? <DisplayMoreResultsButton /> : null}
-                              />
-                         )}
+                              <ScrollView horizontal>
+                                   <DisplaySubCategoryBar subCategories={subCategories} selectedIndex={selectedSubCategoryIndex} onSelect={handleSelectSubCategory} />
+                              </ScrollView>
+                              {showSubCategoryRecords && <FlatList pb="$8" data={subCategoryRecords} keyExtractor={(item, index) => item.key?.toString() ?? index.toString()} horizontal renderItem={({ item }) => <DisplayBrowseCategoryRecord record={item} />} ListFooterComponent={subCategoryHasMore ? <DisplayMoreResultsButton /> : null} />}
                          </>
                     ) : records.length > 0 ? (
-                         <FlatList
-                              pb="$8"
-                              data={displayedData}
-                              keyExtractor={(item, index) => item.id?.toString() ?? index.toString()}
-                              horizontal
-                              renderItem={({ item }) => (
-                                   <DisplayBrowseCategoryRecord record={item} />
-                              )}
-                              ListFooterComponent={hasMore ? <DisplayMoreResultsButton /> : null}
-                         />
+                         <FlatList pb="$8" data={displayedData} keyExtractor={(item, index) => item.id?.toString() ?? index.toString()} horizontal renderItem={({ item }) => <DisplayBrowseCategoryRecord record={item} />} ListFooterComponent={hasMore ? <DisplayMoreResultsButton /> : null} />
                     ) : null}
                </View>
           </SafeAreaView>
@@ -75,17 +69,19 @@ const DisplayBrowseCategory = (props) => {
 };
 
 const DisplayBrowseCategoryTitle = ({category, id}) => {
+     const { colorMode, theme } = React.useContext(ThemeContext);
      return (
           <Text
+               color={colorMode === 'light' ? theme['colors']['gray']['800'] : theme['colors']['coolGray']['200']}
                bold
                maxWidth="80%"
                mb="$1"
                sx={{
                '@base': {
-                    fontSize: 16,
+                    fontSize: 20,
                },
                '@lg': {
-                    fontSize: 22,
+                    fontSize: 26,
                },
           }}>
                {category}
@@ -95,7 +91,7 @@ const DisplayBrowseCategoryTitle = ({category, id}) => {
 
 const DisplayBrowseCategoryRecord = ({record}) => {
      const { library } = React.useContext(LibrarySystemContext);
-     const { theme, textColor, colorMode } = React.useContext(ThemeContext);
+     const { theme } = React.useContext(ThemeContext);
      const { language } = React.useContext(LanguageContext);
 
      let type = 'grouped_work';
@@ -187,11 +183,15 @@ const DisplaySubCategoryBar = ({ subCategories, selectedIndex, onSelect }) => {
      return (
          <ButtonGroup vertical space="sm" pb="$2">
                 {subCategories.map((subCategory, index) => (
-                     <Button size="xs" key={index} variant={selectedIndex === index ? 'solid' : 'outline'}
+                     <Button key={index}
+                             bgColor={selectedIndex === index ? theme['colors']['primary']['500'] : theme['colors']['primary']['200'] }
+                             variant="solid"
+                             sx={{ paddingHorizontal: 12, height: 34 }}
                              onPress={() => onSelect(index)}>
-                          <ButtonText fontWeight="$medium">
+                          <ButtonText fontWeight="$medium" color={theme['colors']['primary']['500-text']} >
                                {subCategory.label}
                           </ButtonText>
+                          <ButtonIcon as={MaterialIcons} name="close" size="sm" color={theme['colors']['primary']['500-text']} ml="$4" />
                      </Button>
                 ))}
          </ButtonGroup>
@@ -200,6 +200,7 @@ const DisplaySubCategoryBar = ({ subCategories, selectedIndex, onSelect }) => {
 
 const DisplayMoreResultsButton = ({ onPress }) => {
      const { theme, textColor, colorMode } = React.useContext(ThemeContext);
+     const { language } = React.useContext(LanguageContext);
 
      return (
           <Pressable
@@ -207,7 +208,7 @@ const DisplayMoreResultsButton = ({ onPress }) => {
                alignItems="center"
                justifyContent="center"
                mr="$3"
-               bgColor={theme['colors']['primary']['100']}
+               bgColor={theme['colors']['primary']['500']}
                style={{
                     borderRadius: 4,
                }}
@@ -221,7 +222,7 @@ const DisplayMoreResultsButton = ({ onPress }) => {
                          height: 250,
                     },
                }}>
-               <Text bold>More</Text>
+               <Text bold color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'view_more')}</Text>
           </Pressable>
      )
 }
