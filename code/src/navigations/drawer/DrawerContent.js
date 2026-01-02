@@ -26,7 +26,7 @@ import { UseColorMode } from '../../themes/theme';
 import { getTermFromDictionary, getTranslationsWithValues, LanguageSwitcher } from '../../translations/TranslationService';
 import { fetchSavedEvents } from '../../util/api/event';
 import { getCatalogStatus } from '../../util/api/library';
-import { formatLists, getLists } from '../../util/api/list';
+import { formatLists, getListGroups, getLists } from '../../util/api/list';
 import { getLocations } from '../../util/api/location';
 import { fetchNotificationHistory, fetchReadingHistory, fetchSavedSearches, getLinkedAccounts, getPatronCheckedOutItems, sortCheckouts, getPatronHolds, sortHolds, getViewerAccounts, refreshProfile, reloadProfile, revalidateUser, validateSession, formatReadingHistory, formatNotificationHistory, formatLinkedAccounts, formatHolds } from '../../util/api/user';
 import { getErrorMessage, passUserToDiscovery, stripHTML } from '../../util/apiAuth';
@@ -65,7 +65,7 @@ export const DrawerContent = () => {
      const linkTo = useLinkTo();
      const queryClient = useQueryClient();
      const insets = useSafeAreaInsets();
-     const { user, accounts, viewers, cards, lists, updateUser, updateLanguage, updatePickupLocations, updateLinkedAccounts, updatePreferredPickupLocationIsValid, updatePreferredPickupLocationWarning, updateLists, updateSavedEvents, updateLibraryCards, updateLinkedViewerAccounts, updateReadingHistory, notificationSettings, expoToken, updateNotificationOnboard, notificationOnboard, notificationHistory, updateNotificationHistory, userHoldPendingSortMethod, userHoldReadySortMethod, userCheckoutSortMethod } = React.useContext(UserContext);
+     const { user, accounts, viewers, cards, lists, updateUser, updateLanguage, updatePickupLocations, updateLinkedAccounts, updatePreferredPickupLocationIsValid, updatePreferredPickupLocationWarning, updateLists, updateSavedEvents, updateLibraryCards, updateLinkedViewerAccounts, updateReadingHistory, notificationSettings, expoToken, updateNotificationOnboard, notificationOnboard, notificationHistory, updateNotificationHistory, userHoldPendingSortMethod, userHoldReadySortMethod, userCheckoutSortMethod, updateListGroups } = React.useContext(UserContext);
      const { library, catalogStatus, updateCatalogStatus } = React.useContext(LibrarySystemContext);
      const [notifications, setNotifications] = React.useState([]);
      const [messages, setILSMessages] = React.useState([]);
@@ -253,6 +253,31 @@ export const DrawerContent = () => {
           },
           onError: (error) => {
                logDebugMessage("Error fetching user lists");
+               logErrorMessage(error);
+          }
+     });
+
+     useQuery(['list_groups', user.id, library.baseUrl, language], () => getListGroups(library.baseUrl), {
+          refetchInterval: 60 * 1000 * 15,
+          refetchIntervalInBackground: true,
+          notifyOnChangeProps: ['data'],
+          refetchOnWindowFocus: 'always',
+          placeholderData: [],
+          onSuccess: (data) => {
+               if(data.ok) {
+                    const groups = {
+                         groups: data.data?.result?.groups ?? [],
+                         unassigned: data.data?.result?.unassigned ?? []
+                    };
+                    updateListGroups(groups);
+               } else {
+                    logDebugMessage("Error fetching user list groups");
+                    logDebugMessage(data);
+                    getErrorMessage(data.code ?? 0, data.problem);
+               }
+          },
+          onError: (error) => {
+               logDebugMessage("Error fetching user list groups");
                logErrorMessage(error);
           }
      });
