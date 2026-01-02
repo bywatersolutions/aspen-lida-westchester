@@ -15,7 +15,7 @@ import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { formatLists, getListDetails, getListGroups, getLists, getListTitles } from '../../../util/api/list';
 import CreateList from './CreateList';
-import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../../util/logging';
 import { getErrorMessage } from '../../../util/apiAuth';
 import CreateListGroup from './CreateListGroup';
 
@@ -37,6 +37,11 @@ export const MyLists = () => {
      const { theme, textColor, colorMode } = React.useContext(ThemeContext);
 
      const isFocused = useIsFocused();
+
+     let hasListGroups = false;
+     if(user.numListGroups) {
+          hasListGroups = user.numListGroups > 0;
+     }
 
      React.useEffect(() => {
           if (isFocused) {
@@ -87,7 +92,7 @@ export const MyLists = () => {
                          groups: data.data?.result?.groups ?? [],
                          unassigned: data.data?.result?.unassigned ?? []
                     };
-                    console.log(groups);
+                    logInfoMessage(groups);
                     updateListGroups(groups)
                } else {
                     logDebugMessage("Error fetching user list groups");
@@ -205,6 +210,10 @@ export const MyLists = () => {
           }
      };
 
+     const renderListGroup = (group) => {
+          return null;
+     }
+
      const showSystemMessage = () => {
           if (_.isArray(systemMessages)) {
                return systemMessages.map((obj, index, collection) => {
@@ -231,7 +240,14 @@ export const MyLists = () => {
                     {showSystemMessage()}
                     <CreateList setLoading={setLoading} />
                     <CreateListGroup />
-                    <FlatList mt="$2" data={lists} ListEmptyComponent={listEmptyComponent} renderItem={({ item }) => renderList(item, library.baseUrl)} keyExtractor={(item, index) => index.toString()} />
+                    {hasListGroups ? (
+                         <>
+                              <FlatList mt="$2" data={listGroups.groups} renderItem={({ item }) => renderListGroup(item, library.baseUrl)} keyExtractor={(item, index) => index.toString()} />
+                              <FlatList mt="$2" data={listGroups.unassigned} renderItem={({ item }) => renderList(item, library.baseUrl)} keyExtractor={(item, index) => index.toString()} />
+                         </>
+                    ) : (
+                         <FlatList mt="$2" data={lists} ListEmptyComponent={listEmptyComponent} renderItem={({ item }) => renderList(item, library.baseUrl)} keyExtractor={(item, index) => index.toString()} />
+                    )}
                </Box>
           </SafeAreaView>
      );
