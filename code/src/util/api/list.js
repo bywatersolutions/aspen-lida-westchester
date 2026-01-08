@@ -143,7 +143,7 @@ export async function createListFromTitle(title, description, access, items, url
      }
 }
 
-export async function editList(listId, title, description, access, url) {
+export async function editList(listId, title, description, access, url, listGroupId = null) {
      const postBody = await postData();
      const api = create({
           baseURL: url + '/API',
@@ -155,6 +155,7 @@ export async function editList(listId, title, description, access, url) {
                title,
                description,
                public: access,
+               listGroupId
           },
      });
      const response = await api.post('/ListAPI?method=editList', postBody);
