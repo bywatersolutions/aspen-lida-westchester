@@ -3,11 +3,13 @@ import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Dimensions } from 'react-native';
 
-import { LibrarySystemContext, ThemeContext } from '../../context/initialContext';
+import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { logErrorMessage } from '../../util/logging';
 import * as WebBrowser from 'expo-web-browser';
+import { popAlert } from '../../components/loadError';
+import { getTermFromDictionary } from '../../translations/TranslationService';
 
 const HomeScreenLinkGrid = ({links}) => {
      const { width } = Dimensions.get('window');
@@ -45,6 +47,7 @@ const HomeScreenLinkGrid = ({links}) => {
 const Link = ({link}) => {
      const { theme, textColor, colorMode } = React.useContext(ThemeContext);
      const { library } = React.useContext(LibrarySystemContext);
+     const { language } = React.useContext(LanguageContext);
      const navigation = useNavigation();
 
      const handleOpenLink = () => {
@@ -57,6 +60,7 @@ const Link = ({link}) => {
                }
           } catch (e) {
                logErrorMessage('Error opening link: ' + e);
+               popAlert(getTermFromDictionary(language, 'error'), getTermFromDictionary(language, 'error_no_open_resource'), 'error');
           }
      }
 
@@ -127,6 +131,7 @@ const Link = ({link}) => {
                }
           } catch (e) {
                logErrorMessage('Navigation error: ' + e.message);
+               popAlert(getTermFromDictionary(language, 'error'), getTermFromDictionary(language, 'error_no_open_resource'), 'error');
           }
      }
 
