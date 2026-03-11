@@ -214,15 +214,15 @@ const Format = (data) => {
      const isSelected = data.isSelected;
      const updateFormat = data.updateFormat;
      const btnStyle = isSelected === key ? 'solid' : 'outline';
-     const { theme } = React.useContext(ThemeContext);
+     const { theme, colorMode } = React.useContext(ThemeContext);
 
      if (isSelected === key) {
           updateFormat(key);
      }
 
      return (
-          <Button size="sm" bg={btnStyle === 'outline' ? 'transparent' : theme['colors']['secondary']['400']} borderColor={theme['colors']['secondary']['400']} mb="$1" mr="$1" variant={btnStyle} onPress={() => updateFormat(key)}>
-               <ButtonText color={btnStyle === 'outline' ? theme['colors']['secondary']['400'] : theme['colors']['secondary']['400-text']}>{format.label}</ButtonText>
+          <Button size="sm" bg={btnStyle === 'outline' ? 'transparent' : theme['colors']['secondary']['400']} borderColor={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']} mb="$1" mr="$1" variant={btnStyle} onPress={() => updateFormat(key)}>
+               <ButtonText color={btnStyle === 'outline' ? (colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']) : theme['colors']['secondary']['400-text']}>{format.label}</ButtonText>
           </Button>
      );
 };

@@ -532,32 +532,21 @@ export const MyHolds = () => {
           };
 
           return (
-               <Box
-                    p="$2"
-                    bgColor={colorMode === 'light' ? theme['colors']['coolGray']['100'] : theme['colors']['coolGray']['700']}
-                    borderBottomWidth="$1"
-                    borderColor={colorMode === 'light' ? theme['colors']['coolGray']['200'] : theme['colors']['gray']['600']}
-                    flexWrap="nowrap">
+               <Box p="$2" bgColor={colorMode === 'light' ? theme['colors']['coolGray']['100'] : theme['colors']['coolGray']['700']} borderBottomWidth="$1" borderColor={colorMode === 'light' ? theme['colors']['coolGray']['200'] : theme['colors']['gray']['600']} flexWrap="nowrap">
                     {showSystemMessage()}
                     <ScrollView horizontal>
                          <HStack space="sm">
                               <Button
                                    size="sm"
-                                   borderColor={theme['colors']['primary']['500']}
+                                   borderColor={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}
                                    variant="outline"
                                    onPress={() => {
                                         refreshHolds();
                                    }}>
-                                   <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'holds_reload')}</ButtonText>
+                                   <ButtonText color={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}>{getTermFromDictionary(language, 'holds_reload')}</ButtonText>
                               </Button>
                               <FormControl w={245}>
-                                   <Select
-                                        name="holdSource"
-                                        selectedValue={holdSource}
-                                        defaultValue={holdSource}
-                                        initialLabel="Test"
-                                        accessibilityLabel="Filter By Source"
-                                        onValueChange={(itemValue) => toggleHoldSource(itemValue)}>
+                                   <Select name="holdSource" selectedValue={holdSource} defaultValue={holdSource} initialLabel="Test" accessibilityLabel="Filter By Source" onValueChange={(itemValue) => toggleHoldSource(itemValue)}>
                                         <SelectTrigger variant="outline" size="sm">
                                              <SelectInput pt="$2" fontSize="$sm" color={textColor} value={holdSourceLabel()} />
                                              <SelectIcon mr="$3">
@@ -566,20 +555,17 @@ export const MyHolds = () => {
                                         </SelectTrigger>
                                         <SelectPortal>
                                              <SelectBackdrop />
-                                             <SelectContent
-                                                  bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                  pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                             >
+                                             <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
                                                   <SelectDragIndicatorWrapper>
                                                        <SelectDragIndicator />
                                                   </SelectDragIndicatorWrapper>
-                                                  <SelectItem label={getTermFromDictionary(language, 'filter_by_all') + ' (' + (user.numHolds ?? 0) + ')'} value="all" key={0}  bgColor={holdSource == "all" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "all" ? theme['colors']['tertiary']['500-text'] : textColor } }}/>
-                                                  <SelectItem label={getTermFromDictionary(language, 'filter_by_ils') + ' (' + (user.numHoldsRequestedIls ?? 0) + ')'} value="ils" key={1}  bgColor={holdSource == "ils" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "ils" ? theme['colors']['tertiary']['500-text'] : textColor } }}/>
-                                                  {user.isValidForOverdrive ? <SelectItem label={filterByLibby + ' (' + (user.numHoldsOverDrive ?? 0) + ')'} value="overdrive" key={2}  bgColor={holdSource == "overdrive" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "overdrive" ? theme['colors']['tertiary']['500-text'] : textColor } }} /> : null}
-                                                  {user.isValidForHoopla ? <SelectItem label={getTermFromDictionary(language, 'filter_by_hoopla') + ' (' + (user.numHolds_Hoopla ?? 0) + ')'} value="hoopla" key={3}  bgColor={holdSource == "hoopla" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "hoopla" ? theme['colors']['tertiary']['500-text'] : textColor } }}/> : null}
-                                                  {user.isValidForCloudLibrary ? <SelectItem label={getTermFromDictionary(language, 'filter_by_cloud_library') + ' (' + (user.numHolds_cloudLibrary ?? 0) + ')'} value="cloud_library" key={4}  bgColor={holdSource == "cloud_library" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "cloud_library" ? theme['colors']['tertiary']['500-text'] : textColor } }}/> : null}
-                                                  {user.isValidForAxis360 ? <SelectItem label={getTermFromDictionary(language, 'filter_by_boundless') + ' (' + (user.numHolds_axis360 ?? 0) + ')'} value="axis360" key={5}  bgColor={holdSource == "axis360" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "axis360" ? theme['colors']['tertiary']['500-text'] : textColor } }}/> : null}
-                                                  {user.isValidForPalaceProject ? <SelectItem label={getTermFromDictionary(language, 'filter_by_palace_project') + ' (' + (user.numHolds_PalaceProject ?? 0) + ')'} value="palace_project" key={6}  bgColor={holdSource == "palace_project" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == "palace_project" ? theme['colors']['tertiary']['500-text'] : textColor } }}/> : null}
+                                                  <SelectItem label={getTermFromDictionary(language, 'filter_by_all') + ' (' + (user.numHolds ?? 0) + ')'} value="all" key={0} bgColor={holdSource == 'all' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'all' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                  <SelectItem label={getTermFromDictionary(language, 'filter_by_ils') + ' (' + (user.numHoldsRequestedIls ?? 0) + ')'} value="ils" key={1} bgColor={holdSource == 'ils' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'ils' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                  {user.isValidForOverdrive ? <SelectItem label={filterByLibby + ' (' + (user.numHoldsOverDrive ?? 0) + ')'} value="overdrive" key={2} bgColor={holdSource == 'overdrive' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'overdrive' ? theme['colors']['tertiary']['500-text'] : textColor } }} /> : null}
+                                                  {user.isValidForHoopla ? <SelectItem label={getTermFromDictionary(language, 'filter_by_hoopla') + ' (' + (user.numHolds_Hoopla ?? 0) + ')'} value="hoopla" key={3} bgColor={holdSource == 'hoopla' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'hoopla' ? theme['colors']['tertiary']['500-text'] : textColor } }} /> : null}
+                                                  {user.isValidForCloudLibrary ? <SelectItem label={getTermFromDictionary(language, 'filter_by_cloud_library') + ' (' + (user.numHolds_cloudLibrary ?? 0) + ')'} value="cloud_library" key={4} bgColor={holdSource == 'cloud_library' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'cloud_library' ? theme['colors']['tertiary']['500-text'] : textColor } }} /> : null}
+                                                  {user.isValidForAxis360 ? <SelectItem label={getTermFromDictionary(language, 'filter_by_boundless') + ' (' + (user.numHolds_axis360 ?? 0) + ')'} value="axis360" key={5} bgColor={holdSource == 'axis360' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'axis360' ? theme['colors']['tertiary']['500-text'] : textColor } }} /> : null}
+                                                  {user.isValidForPalaceProject ? <SelectItem label={getTermFromDictionary(language, 'filter_by_palace_project') + ' (' + (user.numHolds_PalaceProject ?? 0) + ')'} value="palace_project" key={6} bgColor={holdSource == 'palace_project' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: holdSource == 'palace_project' ? theme['colors']['tertiary']['500-text'] : textColor } }} /> : null}
                                              </SelectContent>
                                         </SelectPortal>
                                    </Select>

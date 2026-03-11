@@ -137,28 +137,16 @@ const AddToList = (props) => {
                          setOpen(false);
                          setScreen('add-new');
                     }}>
-                    <Box
-                         rounded="md"
-                         p="$2"
-                         bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                    >
+                    <Box rounded="md" p="$2" bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}>
                          <VStack space="md">
                               {screen === 'add-new' && !_.isEmpty(lists) ? (
                                    <>
-                                        <HStack
-                                             p="$4"
-                                             justifyContent="space-between"
-                                             alignItems="flex-start"
-                                           >
-                                             <Text bold color={textColor}>{getTermFromDictionary(language, 'add_to_list')}</Text>
+                                        <HStack p="$4" justifyContent="space-between" alignItems="flex-start">
+                                             <Text bold color={textColor}>
+                                                  {getTermFromDictionary(language, 'add_to_list')}
+                                             </Text>
                                              <Pressable onPress={() => setOpen(false)}>
-                                                  <CloseIcon
-                                                       zIndex={1}
-                                                       color={textColor}
-                                                       p="$2"
-                                                       bg="transparent"
-                                                       borderRadius="sm"
-                                                  />
+                                                  <CloseIcon zIndex={1} color={textColor} p="$2" bg="transparent" borderRadius="sm" />
                                              </Pressable>
                                         </HStack>
                                         <Box p="$4">
@@ -180,12 +168,9 @@ const AddToList = (props) => {
                                                                            <Icon color={textColor} as={ChevronDownIcon} />
                                                                       </SelectIcon>
                                                                  </SelectTrigger>
-                                                                 <SelectPortal useRNModal={true} >
+                                                                 <SelectPortal useRNModal={true}>
                                                                       <SelectBackdrop />
-                                                                      <SelectContent
-                                                                           bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                                           pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                                                      >
+                                                                      <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
                                                                            <SelectDragIndicatorWrapper>
                                                                                 <SelectDragIndicator />
                                                                            </SelectDragIndicatorWrapper>
@@ -211,19 +196,15 @@ const AddToList = (props) => {
                                              </FormControl>
                                         </Box>
 
-                                        <ButtonGroup
-                                             p="$4"
-                                             flexDirection="row"
-                                             justifyContent="flex-end"
-                                             flexWrap="wrap">
+                                        <ButtonGroup p="$4" flexDirection="row" justifyContent="flex-end" flexWrap="wrap">
                                              <Button
-                                                  borderColor={theme['colors']['primary']['500']}
+                                                  borderColor={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}
                                                   variant="outline"
                                                   onPress={() => {
                                                        setOpen(false);
                                                        setScreen('add-new');
                                                   }}>
-                                                  <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'cancel')}</ButtonText>
+                                                  <ButtonText color={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}>{getTermFromDictionary(language, 'cancel')}</ButtonText>
                                              </Button>
                                              {!_.isEmpty(lists) ? (
                                                   <Button
@@ -241,43 +222,44 @@ const AddToList = (props) => {
                                                        <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'save_to_list')}</ButtonText>
                                                   </Button>
                                              ) : (
-                                                  <Button bgColor={theme['colors']['primary']['500']}><ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'create_new_list')}</ButtonText></Button>
+                                                  <Button bgColor={theme['colors']['primary']['500']}>
+                                                       <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'create_new_list')}</ButtonText>
+                                                  </Button>
                                              )}
                                         </ButtonGroup>
                                    </>
                               ) : (
                                    <>
-                                        <HStack
-                                             justifyContent="space-between"
-                                             alignItems="flex-start"
-                                             p="$4"
-                                        >
-                                             <Text bold color={textColor}>{getTermFromDictionary(language, 'create_new_list_item')}</Text>
+                                        <HStack justifyContent="space-between" alignItems="flex-start" p="$4">
+                                             <Text bold color={textColor}>
+                                                  {getTermFromDictionary(language, 'create_new_list_item')}
+                                             </Text>
                                              <Pressable onPress={() => setOpen(false)}>
-                                                  <CloseIcon
-                                                       zIndex={1}
-                                                       colorScheme="coolGray"
-                                                       p="$2"
-                                                       bg="transparent"
-                                                       borderRadius="sm"
-                                                       color={textColor}
-                                                  />
+                                                  <CloseIcon zIndex={1} colorScheme="coolGray" p="$2" bg="transparent" borderRadius="sm" color={textColor} />
                                              </Pressable>
                                         </HStack>
                                         <Box p="$4">
                                              <VStack space="md">
                                                   <FormControl>
-                                                       <FormControlLabel><FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'title')}</FormControlLabelText></FormControlLabel>
+                                                       <FormControlLabel>
+                                                            <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'title')}</FormControlLabelText>
+                                                       </FormControlLabel>
                                                        <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
-                                                            <InputField id="title" onChangeText={(text) => saveTitle(text)} returnKeyType="next" color={textColor}/>
+                                                            <InputField id="title" onChangeText={(text) => saveTitle(text)} returnKeyType="next" color={textColor} />
                                                        </Input>
                                                   </FormControl>
                                                   <FormControl>
-                                                       <FormControlLabel><FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'description')}</FormControlLabelText></FormControlLabel>
-                                                       <Textarea id="description" onChangeText={(text) => saveDescription(text)} returnKeyType="next" borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><TextareaInput color={textColor}/></Textarea>
+                                                       <FormControlLabel>
+                                                            <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'description')}</FormControlLabelText>
+                                                       </FormControlLabel>
+                                                       <Textarea id="description" onChangeText={(text) => saveDescription(text)} returnKeyType="next" borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
+                                                            <TextareaInput color={textColor} />
+                                                       </Textarea>
                                                   </FormControl>
                                                   <FormControl>
-                                                       <FormControlLabel><FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'access')}</FormControlLabelText></FormControlLabel>
+                                                       <FormControlLabel>
+                                                            <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'access')}</FormControlLabelText>
+                                                       </FormControlLabel>
                                                        <RadioGroup
                                                             defaultValue="1"
                                                             onChange={(nextValue) => {
@@ -303,33 +285,20 @@ const AddToList = (props) => {
                                                        <FormControlLabel>
                                                             <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'should_add_to_list_group')}</FormControlLabelText>
                                                        </FormControlLabel>
-                                                       <Select
-                                                            name="should_add_to_list_group"
-                                                            selectedValue={addToGroup}
-                                                            accessibilityLabel={getTermFromDictionary(language, 'should_add_to_list_group')}
-                                                            mt="$1"
-                                                            mb="$2"
-                                                            onValueChange={(itemValue) => setAddToGroup(itemValue)}>
+                                                       <Select name="should_add_to_list_group" selectedValue={addToGroup} accessibilityLabel={getTermFromDictionary(language, 'should_add_to_list_group')} mt="$1" mb="$2" onValueChange={(itemValue) => setAddToGroup(itemValue)}>
                                                             <SelectTrigger variant="outline" size="md">
-                                                                 {addToGroup !== "" ? (
-                                                                      <SelectInput color={textColor} value={addToGroup === "new" ? getTermFromDictionary(language, 'add_to_list_group_new') : addToGroup === "existing" ? getTermFromDictionary(language, 'add_to_list_group_existing') : getTermFromDictionary(language, 'add_to_list_group_no')} />
-                                                                 ) : (
-                                                                      <SelectInput value={getTermFromDictionary(language, 'add_to_list_group_no')} color={textColor} />
-                                                                 )}
+                                                                 {addToGroup !== '' ? <SelectInput color={textColor} value={addToGroup === 'new' ? getTermFromDictionary(language, 'add_to_list_group_new') : addToGroup === 'existing' ? getTermFromDictionary(language, 'add_to_list_group_existing') : getTermFromDictionary(language, 'add_to_list_group_no')} /> : <SelectInput value={getTermFromDictionary(language, 'add_to_list_group_no')} color={textColor} />}
                                                                  <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
                                                             </SelectTrigger>
                                                             <SelectPortal useRNModal={true}>
                                                                  <SelectBackdrop />
-                                                                 <SelectContent
-                                                                      bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                                      pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                                                 >
+                                                                 <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
                                                                       <SelectDragIndicatorWrapper>
                                                                            <SelectDragIndicator />
                                                                       </SelectDragIndicatorWrapper>
-                                                                      <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_no')} value="no" key={1} bgColor={addToGroup === "no" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === "no" ? theme['colors']['tertiary']['500-text'] : textColor } }}  />
-                                                                      <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_new')} value="new" key={2} bgColor={addToGroup === "new" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === "new" ? theme['colors']['tertiary']['500-text'] : textColor } }}  />
-                                                                      {hasListGroups && (<SelectItem label={getTermFromDictionary(language, 'add_to_list_group_existing')} value="existing" key={3} bgColor={addToGroup === "existing" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === "existing" ? theme['colors']['tertiary']['500-text'] : textColor } }} />)}
+                                                                      <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_no')} value="no" key={1} bgColor={addToGroup === 'no' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === 'no' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                                      <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_new')} value="new" key={2} bgColor={addToGroup === 'new' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === 'new' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                                      {hasListGroups && <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_existing')} value="existing" key={3} bgColor={addToGroup === 'existing' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === 'existing' ? theme['colors']['tertiary']['500-text'] : textColor } }} />}
                                                                  </SelectContent>
                                                             </SelectPortal>
                                                        </Select>
@@ -349,31 +318,18 @@ const AddToList = (props) => {
                                                                       <FormControlLabel>
                                                                            <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'should_nest_list_group')}</FormControlLabelText>
                                                                       </FormControlLabel>
-                                                                      <Select
-                                                                           name="should_nest_list_group"
-                                                                           selectedValue={nestedGroup}
-                                                                           accessibilityLabel={getTermFromDictionary(language, 'should_nest_list_group')}
-                                                                           mt="$1"
-                                                                           mb="$2"
-                                                                           onValueChange={(itemValue) => setNestedGroup(itemValue)}>
+                                                                      <Select name="should_nest_list_group" selectedValue={nestedGroup} accessibilityLabel={getTermFromDictionary(language, 'should_nest_list_group')} mt="$1" mb="$2" onValueChange={(itemValue) => setNestedGroup(itemValue)}>
                                                                            <SelectTrigger variant="outline" size="md">
-                                                                                {nestedGroup !== "no" && nestedGroup !== "" ? (
-                                                                                     <SelectInput color={textColor} value={nestedGroup} />
-                                                                                ) : (
-                                                                                     <SelectInput value={getTermFromDictionary(language, 'nest_within_group_no')} color={textColor} />
-                                                                                )}
+                                                                                {nestedGroup !== 'no' && nestedGroup !== '' ? <SelectInput color={textColor} value={nestedGroup} /> : <SelectInput value={getTermFromDictionary(language, 'nest_within_group_no')} color={textColor} />}
                                                                                 <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
                                                                            </SelectTrigger>
                                                                            <SelectPortal useRNModal={true}>
                                                                                 <SelectBackdrop />
-                                                                                <SelectContent
-                                                                                     bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                                                     pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                                                                >
+                                                                                <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
                                                                                      <SelectDragIndicatorWrapper>
                                                                                           <SelectDragIndicator />
                                                                                      </SelectDragIndicatorWrapper>
-                                                                                     <SelectItem label={getTermFromDictionary(language, 'nest_within_group_no')} value="no" key={1} bgColor={nestedGroup === "no" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === "no" ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                                                     <SelectItem label={getTermFromDictionary(language, 'nest_within_group_no')} value="no" key={1} bgColor={nestedGroup === 'no' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === 'no' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
                                                                                      {_.map(Object.values(listGroups.groups), function (item, index, array) {
                                                                                           return <SelectItem key={index} value={item.id} label={item.title} bgColor={nestedGroup === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
                                                                                      })}
@@ -397,22 +353,19 @@ const AddToList = (props) => {
                                                                  }}>
                                                                  <SelectTrigger variant="outline" size="md">
                                                                       {existingGroupId && existingGroupId !== -1 ? (
-                                                                                _.map(Object.values(listGroups.groups), function (group, selectedIndex, array) {
-                                                                                     if (group.id === existingGroupId) {
-                                                                                          return <SelectInput placeholder={group.title} value={group.id} color={textColor} />;
-                                                                                     }
-                                                                                })
-                                                                           ) :
+                                                                           _.map(Object.values(listGroups.groups), function (group, selectedIndex, array) {
+                                                                                if (group.id === existingGroupId) {
+                                                                                     return <SelectInput placeholder={group.title} value={group.id} color={textColor} />;
+                                                                                }
+                                                                           })
+                                                                      ) : (
                                                                            <SelectInput value={listGroups.groups[0].id} color={textColor} />
-                                                                      }
+                                                                      )}
                                                                       <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
                                                                  </SelectTrigger>
-                                                                 <SelectPortal useRNModal={true} >
+                                                                 <SelectPortal useRNModal={true}>
                                                                       <SelectBackdrop />
-                                                                      <SelectContent
-                                                                           bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                                           pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                                                      >
+                                                                      <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
                                                                            <SelectDragIndicatorWrapper>
                                                                                 <SelectDragIndicator />
                                                                            </SelectDragIndicatorWrapper>
@@ -426,20 +379,15 @@ const AddToList = (props) => {
                                                   )}
                                              </VStack>
                                         </Box>
-                                        <ButtonGroup
-                                             p="$4"
-                                             flexDirection="row"
-                                             justifyContent="flex-end"
-                                             flexWrap="wrap"
-                                        >
+                                        <ButtonGroup p="$4" flexDirection="row" justifyContent="flex-end" flexWrap="wrap">
                                              <Button
                                                   variant="outline"
-                                                  borderColor={theme['colors']['primary']['500']}
+                                                  borderColor={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}
                                                   onPress={() => {
                                                        setOpen(false);
                                                        setScreen('add-new');
                                                   }}>
-                                                  <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'cancel')}</ButtonText>
+                                                  <ButtonText color={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}>{getTermFromDictionary(language, 'cancel')}</ButtonText>
                                              </Button>
                                              <Button
                                                   bgColor={theme['colors']['primary']['500']}

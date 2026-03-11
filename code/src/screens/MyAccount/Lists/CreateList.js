@@ -99,9 +99,11 @@ const CreateList = (props) => {
                </Button>
                <Modal isOpen={showModal} onClose={toggle} size="full" avoidKeyboard>
                     <ModalBackdrop />
-                    <ModalContent maxWidth="90%"  bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}>
+                    <ModalContent maxWidth="90%" bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}>
                          <ModalHeader>
-                              <Heading size="md" color={textColor}>{getTermFromDictionary(language, 'create_new_list')}</Heading>
+                              <Heading size="md" color={textColor}>
+                                   {getTermFromDictionary(language, 'create_new_list')}
+                              </Heading>
                               <ModalCloseButton hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}>
                                    <Icon as={CloseIcon} color={textColor} />
                               </ModalCloseButton>
@@ -119,7 +121,9 @@ const CreateList = (props) => {
                                    <FormControlLabel>
                                         <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'description')}</FormControlLabelText>
                                    </FormControlLabel>
-                                   <Textarea id="description" onChangeText={(text) => setDescription(text)} defaultValue={description} returnKeyType="next" borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}><TextareaInput color={textColor} /></Textarea>
+                                   <Textarea id="description" onChangeText={(text) => setDescription(text)} defaultValue={description} returnKeyType="next" borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
+                                        <TextareaInput color={textColor} />
+                                   </Textarea>
                               </FormControl>
                               <FormControl pb="$5">
                                    <FormControlLabel>
@@ -151,134 +155,113 @@ const CreateList = (props) => {
                                    <FormControlLabel>
                                         <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'should_add_to_list_group')}</FormControlLabelText>
                                    </FormControlLabel>
-                                   <Select
-                                        name="should_add_to_list_group"
-                                        selectedValue={addToGroup}
-                                        accessibilityLabel={getTermFromDictionary(language, 'should_add_to_list_group')}
-                                        onValueChange={(itemValue) => setAddToGroup(itemValue)}>
+                                   <Select name="should_add_to_list_group" selectedValue={addToGroup} accessibilityLabel={getTermFromDictionary(language, 'should_add_to_list_group')} onValueChange={(itemValue) => setAddToGroup(itemValue)}>
                                         <SelectTrigger variant="outline" size="md">
-                                             {addToGroup !== "" ? (
-                                                  <SelectInput color={textColor} value={addToGroup === "new" ? getTermFromDictionary(language, 'add_to_list_group_new') : addToGroup === "existing" ? getTermFromDictionary(language, 'add_to_list_group_existing') : getTermFromDictionary(language, 'add_to_list_group_no')} />
-                                             ) : (
-                                                  <SelectInput value={getTermFromDictionary(language, 'add_to_list_group_no')} color={textColor} />
-                                             )}
+                                             {addToGroup !== '' ? <SelectInput color={textColor} value={addToGroup === 'new' ? getTermFromDictionary(language, 'add_to_list_group_new') : addToGroup === 'existing' ? getTermFromDictionary(language, 'add_to_list_group_existing') : getTermFromDictionary(language, 'add_to_list_group_no')} /> : <SelectInput value={getTermFromDictionary(language, 'add_to_list_group_no')} color={textColor} />}
                                              <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
                                         </SelectTrigger>
                                         <SelectPortal>
                                              <SelectBackdrop />
-                                             <SelectContent
-                                                  bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                  pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                             >
+                                             <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
                                                   <SelectDragIndicatorWrapper>
                                                        <SelectDragIndicator />
                                                   </SelectDragIndicatorWrapper>
-                                                  <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_no')} value="no" key={1} bgColor={addToGroup === "no" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === "no" ? theme['colors']['tertiary']['500-text'] : textColor } }} />
-                                                  <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_new')} value="new" key={2} bgColor={addToGroup === "new" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === "new" ? theme['colors']['tertiary']['500-text'] : textColor } }} />
-                                                  {hasListGroups && (<SelectItem label={getTermFromDictionary(language, 'add_to_list_group_existing')} value="existing" key={3} bgColor={addToGroup === "existing" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === "existing" ? theme['colors']['tertiary']['500-text'] : textColor } }} />)}
+                                                  <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_no')} value="no" key={1} bgColor={addToGroup === 'no' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === 'no' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                  <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_new')} value="new" key={2} bgColor={addToGroup === 'new' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === 'new' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                  {hasListGroups && <SelectItem label={getTermFromDictionary(language, 'add_to_list_group_existing')} value="existing" key={3} bgColor={addToGroup === 'existing' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: addToGroup === 'existing' ? theme['colors']['tertiary']['500-text'] : textColor } }} />}
                                              </SelectContent>
                                         </SelectPortal>
                                    </Select>
                               </FormControl>
                               {addToGroup === 'new' && (
                                    <>
-                                   <FormControl pb="$2">
-                                        <FormControlLabel>
-                                             <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'new_list_group_name')}</FormControlLabelText>
-                                        </FormControlLabel>
-                                        <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
-                                             <InputField id="newGroupName" onChangeText={(text) => setNewGroupName(text)} defaultValue={newGroupName} color={textColor} />
-                                        </Input>
-                                   </FormControl>
-                                   {hasListGroups && (
-                                   <FormControl pb="$2">
-                                        <FormControlLabel>
-                                             <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'should_nest_list_group')}</FormControlLabelText>
-                                        </FormControlLabel>
-                                        <Select
-                                             name="should_nest_list_group"
-                                             selectedValue={nestedGroup}
-                                             accessibilityLabel={getTermFromDictionary(language, 'should_nest_list_group')}
-                                             onValueChange={(itemValue) => setNestedGroup(itemValue)}>
-                                             <SelectTrigger variant="outline" size="md">
-                                                  {nestedGroup !== "no" && nestedGroup !== "" ? (
-                                                       _.map(Object.values(listGroups.groups), function (group, selectedIndex, array) {
-                                                            if (group.id === nestedGroup) {
-                                                                 return <SelectInput value={group.title} color={textColor} />;
-                                                            }
-                                                       })
-                                                  ) : (
-                                                       <SelectInput value={getTermFromDictionary(language, 'nest_within_group_no')} color={textColor} />
-                                                  )}
-                                                  <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
-                                             </SelectTrigger>
-                                             <SelectPortal>
-                                                  <SelectBackdrop />
-                                                  <SelectContent
-                                                       bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                       pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                                  >
-                                                       <SelectDragIndicatorWrapper>
-                                                            <SelectDragIndicator />
-                                                       </SelectDragIndicatorWrapper>
-                                                       <SelectItem label={getTermFromDictionary(language, 'nest_within_group_no')} value="no" key={1} bgColor={nestedGroup === "no" ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === "no" ? theme['colors']['tertiary']['500-text'] : textColor } }} />
-                                                       {_.map(Object.values(listGroups.groups), function (item, index, array) {
-                                                            return <SelectItem key={index} value={item.id} label={item.title} bgColor={nestedGroup === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
-                                                       })}
-                                                  </SelectContent>
-                                             </SelectPortal>
-                                        </Select>
-                                   </FormControl>
-                                   )}
+                                        <FormControl pb="$2">
+                                             <FormControlLabel>
+                                                  <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'new_list_group_name')}</FormControlLabelText>
+                                             </FormControlLabel>
+                                             <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
+                                                  <InputField id="newGroupName" onChangeText={(text) => setNewGroupName(text)} defaultValue={newGroupName} color={textColor} />
+                                             </Input>
+                                        </FormControl>
+                                        {hasListGroups && (
+                                             <FormControl pb="$2">
+                                                  <FormControlLabel>
+                                                       <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'should_nest_list_group')}</FormControlLabelText>
+                                                  </FormControlLabel>
+                                                  <Select name="should_nest_list_group" selectedValue={nestedGroup} accessibilityLabel={getTermFromDictionary(language, 'should_nest_list_group')} onValueChange={(itemValue) => setNestedGroup(itemValue)}>
+                                                       <SelectTrigger variant="outline" size="md">
+                                                            {nestedGroup !== 'no' && nestedGroup !== '' ? (
+                                                                 _.map(Object.values(listGroups.groups), function (group, selectedIndex, array) {
+                                                                      if (group.id === nestedGroup) {
+                                                                           return <SelectInput value={group.title} color={textColor} />;
+                                                                      }
+                                                                 })
+                                                            ) : (
+                                                                 <SelectInput value={getTermFromDictionary(language, 'nest_within_group_no')} color={textColor} />
+                                                            )}
+                                                            <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
+                                                       </SelectTrigger>
+                                                       <SelectPortal>
+                                                            <SelectBackdrop />
+                                                            <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
+                                                                 <SelectDragIndicatorWrapper>
+                                                                      <SelectDragIndicator />
+                                                                 </SelectDragIndicatorWrapper>
+                                                                 <SelectItem label={getTermFromDictionary(language, 'nest_within_group_no')} value="no" key={1} bgColor={nestedGroup === 'no' ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === 'no' ? theme['colors']['tertiary']['500-text'] : textColor } }} />
+                                                                 {_.map(Object.values(listGroups.groups), function (item, index, array) {
+                                                                      return <SelectItem key={index} value={item.id} label={item.title} bgColor={nestedGroup === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: nestedGroup === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
+                                                                 })}
+                                                            </SelectContent>
+                                                       </SelectPortal>
+                                                  </Select>
+                                             </FormControl>
+                                        )}
                                    </>
                               )}
                               {addToGroup === 'existing' && hasListGroups && (
-                              <FormControl pb="$5">
-                                   <FormControlLabel>
-                                        <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'choose_existing_list_group')}</FormControlLabelText>
-                                   </FormControlLabel>
-                                   <Select
-                                        selectedValue={existingGroupId}
-                                        defaultValue={existingGroupId}
-                                        onValueChange={(itemValue) => {
-                                             setExistingGroupId(itemValue);
-                                             setNestedGroup(itemValue);
-                                             console.log(itemValue);
-                                        }}>
-                                        <SelectTrigger variant="outline" size="md">
-                                             {existingGroupId && existingGroupId !== -1 ? (
+                                   <FormControl pb="$5">
+                                        <FormControlLabel>
+                                             <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'choose_existing_list_group')}</FormControlLabelText>
+                                        </FormControlLabel>
+                                        <Select
+                                             selectedValue={existingGroupId}
+                                             defaultValue={existingGroupId}
+                                             onValueChange={(itemValue) => {
+                                                  setExistingGroupId(itemValue);
+                                                  setNestedGroup(itemValue);
+                                                  console.log(itemValue);
+                                             }}>
+                                             <SelectTrigger variant="outline" size="md">
+                                                  {existingGroupId && existingGroupId !== -1 ? (
                                                        _.map(Object.values(listGroups.groups), function (group, selectedIndex, array) {
                                                             if (group.id === existingGroupId) {
                                                                  return <SelectInput value={group.title} color={textColor} />;
                                                             }
                                                        })
-                                                  ) :
-                                                  <SelectInput value={listGroups.groups[0].id} color={textColor} />
-                                             }
-                                             <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
-                                        </SelectTrigger>
-                                        <SelectPortal useRNModal={true} >
-                                             <SelectBackdrop />
-                                             <SelectContent
-                                                  bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                                                  pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}
-                                             >
-                                                  <SelectDragIndicatorWrapper>
-                                                       <SelectDragIndicator />
-                                                  </SelectDragIndicatorWrapper>
-                                                  {_.map(Object.values(listGroups.groups), function (item, index, array) {
-                                                       return <SelectItem key={index} value={item.id} label={item.title} bgColor={existingGroupId === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: existingGroupId === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
-                                                  })}
-                                             </SelectContent>
-                                        </SelectPortal>
-                                   </Select>
-                              </FormControl>
+                                                  ) : (
+                                                       <SelectInput value={listGroups.groups[0].id} color={textColor} />
+                                                  )}
+                                                  <SelectIcon mr="$3" as={ChevronDownIcon} color={textColor} />
+                                             </SelectTrigger>
+                                             <SelectPortal useRNModal={true}>
+                                                  <SelectBackdrop />
+                                                  <SelectContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} pb={Platform.OS === 'android' ? insets.bottom + 16 : '$4'}>
+                                                       <SelectDragIndicatorWrapper>
+                                                            <SelectDragIndicator />
+                                                       </SelectDragIndicatorWrapper>
+                                                       {_.map(Object.values(listGroups.groups), function (item, index, array) {
+                                                            return <SelectItem key={index} value={item.id} label={item.title} bgColor={existingGroupId === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: existingGroupId === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
+                                                       })}
+                                                  </SelectContent>
+                                             </SelectPortal>
+                                        </Select>
+                                   </FormControl>
                               )}
                          </ModalBody>
                          <ModalFooter>
                               <ButtonGroup>
-                                   <Button variant="outline" onPress={toggle} borderColor={theme['colors']['primary']['500']}>
-                                        <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'close_window')}</ButtonText>
+                                   <Button variant="outline" onPress={toggle} borderColor={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}>
+                                        <ButtonText color={colorMode === 'light' ? theme['colors']['coolGray']['700'] : theme['colors']['warmGray']['100']}>{getTermFromDictionary(language, 'close_window')}</ButtonText>
                                    </Button>
                                    <Button
                                         bgColor={theme['colors']['primary']['500']}
