@@ -25,7 +25,7 @@ export const SelectThawDate = (props) => {
      const [showIndefiniteWarning, setShowIndefiniteWarning] = React.useState(false);
      const [freezeIndefinite, setFreezeIndefinite] = React.useState(false);
      //not including textColor here because its already passed into this component
-     const {theme, colorMode } = React.useContext(ThemeContext);
+     const {theme } = React.useContext(ThemeContext);
 
      const showDatePicker = () => {
           if(libraryContext.reactivateDateNotRequired ?? false)
