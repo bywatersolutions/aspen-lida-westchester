@@ -1,0 +1,15 @@
+{
+  "name": "WLS Mobile",
+  "slug": "westchester",
+  "easId": "3ce858e4-fa20-471b-8b78-0bb6e163f5f4",
+  "reverseDns": "org.aspendiscovery.westchester",
+  "discoveryUrl": "https://opac.westchesterlibraries.org/",
+  "greenhouseUrl": "https://opac.westchesterlibraries.org/",
+  "libraryId": "4",
+  "themeId": "1",
+  "background": "#ffffff",
+  "sentryProject": "aspen-lida-westchester",
+  "sentryDsn": "https://6b2389dd30ab0e266b4bf50eb86a8d2b@o994439.ingest.us.sentry.io/4508400641310720",
+  "ascAppId": "6739545649",
+  "logLevel": "0"
+}
