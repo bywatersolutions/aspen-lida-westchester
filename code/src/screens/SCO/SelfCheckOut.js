@@ -70,6 +70,8 @@ export const SelfCheckOut = () => {
      const [hasError, setHasError] = React.useState(false);
      const [errorBody, setErrorBody] = React.useState(null);
      const [errorTitle, setErrorTitle] = React.useState(null);
+     const [itemNotFound, setItemNotFound] = React.useState(false);
+     const [tempBarcode, setTempBarcode] = React.useState(null);
 
      if (_.find(cards, ['ils_barcode', activeAccount])) {
           activeAccount = _.find(cards, ['ils_barcode', activeAccount]);
@@ -114,6 +116,8 @@ export const SelfCheckOut = () => {
                                         setHasError(true);
                                         setErrorBody(result.message ?? getTermFromDictionary(language, 'unknown_error_checking_out'));
                                         setErrorTitle(result.title ?? getTermFromDictionary(language, 'unable_to_checkout_title'));
+                                        setItemNotFound(result.itemNotFound ?? false);
+                                        setTempBarcode(result.barcode ?? null);
                                         setIsOpen(true);
                                         logErrorMessage(result);
                                    } else {
@@ -369,12 +373,39 @@ export const SelfCheckOut = () => {
                               </AlertDialogHeader>
                               <AlertDialogBody>
                                    <Text color={textColor}>{errorBody}</Text>
+                                   {itemNotFound && tempBarcode ? (
+                                        <>
+                                             <FormControl>
+                                                  <FormControlLabel>
+                                                       <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'does_barcode_match_item')}</FormControlLabelText>
+                                                  </FormControlLabel>
+                                                  <Input borderColor={colorMode === 'light' ? theme['colors']['coolGray']['500'] : theme['colors']['gray']['300']}>
+                                                       <InputField id="barcode" autoCapitalize="none" autoCorrect={false} onChangeText={(text) => setTempBarcode(text)} defaultValue={tempBarcode} color={textColor} />
+                                                  </Input>
+                                             </FormControl>
+                                        </>
+                                   ) : null}
                               </AlertDialogBody>
                               <AlertDialogFooter>
                                    <ButtonGroup space="sm">
                                         <Button variant="outline" borderColor={theme['colors']['primary']['500']} onPress={() => setIsOpen(false)}>
                                              <ButtonText color={theme['colors']['primary']['500']}>{getTermFromDictionary(language, 'button_ok')}</ButtonText>
                                         </Button>
+                                        {itemNotFound && tempBarcode ? (
+                                             <Button
+                                                  bgColor={theme['colors']['primary']['500']}
+                                                  onPress={() => {
+                                                       navigation.replace('SelfCheckOut', {
+                                                            barcode: tempBarcode,
+                                                            type: null,
+                                                            activeAccount,
+                                                            startNew: false,
+                                                            items,
+                                                       });
+                                                  }}>
+                                                  <ButtonText textColor={theme['colors']['primary']['500-text']}>{getTermFromDictionary(language, 'try_again')}</ButtonText>
+                                             </Button>
+                                        ) : null}
                                    </ButtonGroup>
                               </AlertDialogFooter>
                          </AlertDialogContent>

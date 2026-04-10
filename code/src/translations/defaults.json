@@ -682,5 +682,6 @@
   "list_group": "List Group",
   "no_list_group": "No Group",
   "select_new_parent": "Select a List Group",
-  "notice_about_item": "Notice About Item"
+  "notice_about_item": "Notice About Item",
+  "does_barcode_match_item": "Does this barcode match whats on the item?"
 }
