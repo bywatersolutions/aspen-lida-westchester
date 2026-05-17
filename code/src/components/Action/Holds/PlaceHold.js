@@ -45,7 +45,7 @@ export const PlaceHold = (props) => {
           userHasAlternateLibraryCard,
           shouldPromptAlternateLibraryCard
      } = props;
-     const { user, accounts, locations} = React.useContext(UserContext);
+     const { user, accounts, locations, preferredPickupLocationIsValid} = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { location } = React.useContext(LibraryBranchContext);
      const [loading, setLoading] = React.useState(false);
@@ -80,7 +80,7 @@ export const PlaceHold = (props) => {
      let promptForHoldNotifications = user.promptForHoldNotifications ?? false;
 
      let loadHoldPrompt = false;
-     if (!user.preferredPickupLocationIsValid) {
+     if (!preferredPickupLocationIsValid) {
           logDebugMessage("Showing Hold Prompt because the user's preferred pickup location is invalid");
           loadHoldPrompt = true;
      }else if (volumeInfo.numItemsWithVolumes >= 1 && _.isEmpty(volumeId)) {
