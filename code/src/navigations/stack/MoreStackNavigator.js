@@ -1,14 +1,15 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { LanguageContext } from '../../context/initialContext';
+import { BackIcon } from '../../themes/theme';
+import { getTermFromDictionary } from '../../translations/TranslationService';
+import TitleWithLogo from '../../components/TitleWithLogo';
 import { AllLocations } from '../../screens/Library/AllLocations';
 import { Location } from '../../screens/Library/Location';
-
 import { MyLibrary } from '../../screens/Library/MyLibrary';
 import { MoreMenu } from '../../screens/More/MoreMenu';
 import { Settings_BrowseCategories } from '../../screens/MyAccount/Settings/BrowseCategories';
 import { Settings_LanguageScreen } from '../../screens/MyAccount/Settings/Language';
-import { Settings_NotificationOptions } from '../../screens/MyAccount/Settings/NotificationOptions';
 import { CalendarPermissionDescription } from '../../screens/MyAccount/Settings/Permission/Calendar';
 import { CameraPermissionDescription } from '../../screens/MyAccount/Settings/Permission/Camera';
 import { GeolocationPermissionDescription } from '../../screens/MyAccount/Settings/Permission/Geolocation';
@@ -17,11 +18,8 @@ import { ScreenBrightnessPermissionDescription } from '../../screens/MyAccount/S
 import { PermissionsDashboard } from '../../screens/MyAccount/Settings/Permissions';
 import { PreferencesScreen } from '../../screens/MyAccount/Settings/Preferences';
 import { SupportScreen } from '../../screens/MyAccount/Settings/Support';
-import { BackIcon } from '../../themes/theme';
-import { getTermFromDictionary } from '../../translations/TranslationService';
-
-import TitleWithLogo from '../../components/TitleWithLogo'
 import {Settings_PickupLocations} from "../../screens/MyAccount/Settings/PickupLocations";
+import { APIErrorLog } from '../../screens/MyAccount/Settings/Logs/APIErrorLog';
 
 const MoreStackNavigator = () => {
      const { language } = React.useContext(LanguageContext);
@@ -143,6 +141,16 @@ const MoreStackNavigator = () => {
                                    return <TitleWithLogo title={title} />;
                               },
                               //title: getTermFromDictionary(language, 'support')
+                         }}
+                    />
+                    <Stack.Screen
+                         name="MyDevice_APIErrorLog"
+                         component={APIErrorLog}
+                         options={{
+                              header: () => {
+                                   const title = getTermFromDictionary(language, 'api_error_log');
+                                   return <TitleWithLogo title={title} />;
+                              },
                          }}
                     />
                </Stack.Group>

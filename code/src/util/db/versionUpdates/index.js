@@ -1,3 +1,4 @@
+import * as m260600 from './26.06.00';
 
 /**
  * Compare two release keys in the format of "major.minor.patch" and sort them in ascending order.
@@ -21,4 +22,4 @@ export function compareReleaseKeys(a, b) {
      return 0;
 }
 
-export const versionUpdates = [""].sort(compareReleaseKeys);
+export const versionUpdates = [m260600].sort(compareReleaseKeys);

@@ -6,11 +6,12 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { checkVersion } from 'react-native-check-version';
 import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext, ThemeContext } from '../../../context/initialContext';
-// custom components and helper files
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { GLOBALS } from '../../../util/globals';
+import { useNavigation } from '@react-navigation/native';
 
 export const SupportScreen = () => {
+     const navigation = useNavigation();
      const { accounts, userDebugMessage } = React.useContext(UserContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { location } = React.useContext(LibraryBranchContext);
@@ -120,16 +121,23 @@ export const SupportScreen = () => {
                               <Text fontSize="xs" bold>
                                    Support Log
                               </Text>
-                              <ScrollView >
+                              <ScrollView>
                                    <Box>
                                         <Text color={textColor} mt="$5" fontSize="xs" mb="$5">
-                                            {userDebugMessage.join('\n')}
+                                             {userDebugMessage.join('\n')}
                                         </Text>
                                    </Box>
                               </ScrollView>
                          </VStack>
                     ) : null}
                </VStack>
+               <Center>
+                    <Pressable mt={3} onPress={() => navigation.navigate('MyDevice_APIErrorLog')}>
+                         <Text bold textAlign="center">
+                              {getTermFromDictionary(language, 'api_error_log')}
+                         </Text>
+                    </Pressable>
+               </Center>
                {status.needsUpdate ? (
                     <Center mt={5}>
                          <Alert variant="left-accent" w="100%" status="warning">
