@@ -37,7 +37,6 @@ import {
 } from '@gluestack-ui/themed';
 import React from 'react';
 import { Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadError, popToast } from '../../../components/loadError';
 
 // custom components and helper files

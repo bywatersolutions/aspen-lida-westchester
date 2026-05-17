@@ -5,18 +5,18 @@ import _ from 'lodash';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogCloseButton, AlertDialogBody, AlertDialogFooter, Box, Button, ButtonGroup, ButtonText, ButtonIcon, Center, CheckIcon, FlatList, FormControl, HStack, Icon, ScrollView, Select, SelectTrigger, SelectInput, SelectIcon, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem, Text, VStack, CloseIcon, Heading, ChevronDownIcon } from '@gluestack-ui/themed';
 import React from 'react';
 import { Platform } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // custom components and helper files
 import { loadingSpinner } from '../../../components/loadingSpinner';
 import { DisplaySystemMessage } from '../../../components/Notifications';
 import { CheckoutsContext, LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import { confirmRenewAllCheckouts, confirmRenewCheckout, renewAllCheckouts } from '../../../util/accountActions';
-import { getPatronCheckedOutItems, setSortPreferences, sortCheckouts } from '../../../util/api/user';
-import { getErrorMessage, stripHTML } from '../../../util/apiAuth';
+import { confirmRenewAllCheckouts, confirmRenewCheckout, renewAllCheckouts, getPatronCheckedOutItems, setSortPreferences } from '../../../util/api/user';
+import { sortCheckouts } from '../../../util/api/userHelper';
+import { stripHTML } from '../../../helpers/helpers';
 import { MyCheckout } from './MyCheckout';
-import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { logDebugMessage, logErrorMessage, getErrorMessage } from '../../../util/logging';
 
 export const MyCheckouts = () => {
      const isFetchingCheckouts = useIsFetching({ queryKey: ['checkouts'] });

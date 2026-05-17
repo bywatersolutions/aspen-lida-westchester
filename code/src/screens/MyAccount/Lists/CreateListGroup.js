@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { Center, Button, ButtonIcon, ButtonText, CloseIcon, FormControl, FormControlLabel, FormControlLabelText, Heading, Icon, Input, InputField, Modal, ModalBackdrop, ModalCloseButton, ModalHeader, ModalContent, ModalBody, ButtonGroup, ModalFooter, SelectTrigger, SelectInput, SelectIcon, ChevronDownIcon, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem, Select } from '@gluestack-ui/themed';

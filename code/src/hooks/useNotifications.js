@@ -3,9 +3,9 @@ import * as Notifications from 'expo-notifications';
 import { AppState, Platform, Linking } from 'react-native';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import _ from 'lodash';
-import { createChannelsAndCategories, deletePushToken, getNotificationPreference, registerForPushNotificationsAsync, savePushToken, setNotificationPreference } from '../components/Notifications';
-import { logSentryMessage, logErrorMessage, logWarnMessage, logDebugMessage } from '../util/logging';
+import { createChannelsAndCategories, registerForPushNotificationsAsync } from '../components/Notifications';
+import { deletePushToken, getNotificationPreference, savePushToken, setNotificationPreference } from '../util/api/user';
+import { logSentryMessage } from '../util/logging';
 
 // Configure default notification behavior
 Notifications.setNotificationHandler({

@@ -1,7 +1,6 @@
 import React from 'react';
-import _ from 'lodash';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { Heading, Box, Button, ButtonText, ButtonGroup, ScrollView, Text, VStack } from '@gluestack-ui/themed';
+import { Heading, Box, ScrollView, Text, VStack } from '@gluestack-ui/themed';
 
 export const NotificationHistoryMessageModal = () => {
      const navigation = useNavigation();

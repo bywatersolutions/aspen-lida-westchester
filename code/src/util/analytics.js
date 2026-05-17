@@ -1,37 +1,30 @@
-import { createAuthTokens, getHeaders, postData } from "./apiAuth";
-import { GLOBALS } from "./globals";
-import { create } from "apisauce";
+import { createApiClient } from './api/apiFactory';
+import { GLOBALS } from './globals';
 
-export async function trackAppLaunches(url) {
-	try {
-		const postBody = await postData();
-		const api = create({
-			baseURL: url + '/API',
-			timeout: GLOBALS.timeoutAverage,
-			headers: getHeaders(true),
-			auth: createAuthTokens(),
-		});
-		const response = await api.post('/UserAPI?method=trackAppLaunches', postBody);
-		return response.ok;
-	} catch (error) {
-		console.error('Failed to track app launch: ', error);
-		return false;
-	}
+export async function trackAppLaunches(url = null) {
+     try {
+          const client = createApiClient({
+               url,
+               timeout: GLOBALS.timeoutAverage,
+          });
+          const response = await client.post('/UserAPI?method=trackAppLaunches', {});
+          return response.ok;
+     } catch (error) {
+          console.error('Failed to track app launch: ', error);
+          return false;
+     }
 }
 
-export async function trackAppResume(url) {
-	try {
-		const postBody = await postData();
-		const api = create({
-			baseURL: url + '/API',
-			timeout: GLOBALS.timeoutAverage,
-			headers: getHeaders(true),
-			auth: createAuthTokens(),
-		});
-		const response = await api.post('/UserAPI?method=trackAppResume', postBody);
-		return response.ok;
-	} catch (error) {
-		console.error('Failed to track app resume: ', error);
-		return false;
-	}
+export async function trackAppResume(url = null) {
+     try {
+          const client = createApiClient({
+               url,
+               timeout: GLOBALS.timeoutAverage,
+          });
+          const response = await client.post('/UserAPI?method=trackAppResume', {});
+          return response.ok;
+     } catch (error) {
+          console.error('Failed to track app resume: ', error);
+          return false;
+     }
 }

@@ -1,4 +1,3 @@
-import { create } from 'apisauce';
 import _ from 'lodash';
 import {
      Button,
@@ -24,11 +23,10 @@ import React from 'react';
 import { loadingSpinner } from '../../components/loadingSpinner';
 import { LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../translations/TranslationService';
-import { createAuthTokens, getErrorMessage, getHeaders, postData, stripHTML } from '../../util/apiAuth';
-import { GLOBALS } from '../../util/globals';
-import { LIBRARY } from '../../util/loadLibrary';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { logDebugMessage } from '../../util/logging';
+import { stripHTML } from '../../helpers/helpers';
+import { LIBRARY } from '../../util/globals';
+import { logDebugMessage, getErrorMessage } from '../../util/logging';
+import { resetPassword } from '../../util/api/user';
 
 export const ResetPassword = (props) => {
      const { library } = React.useContext(LibrarySystemContext)
@@ -991,45 +989,3 @@ const MillenniumResetPassword = (props) => {
           </>
      );
 };
-
-async function resetPassword(username = '', email = '', resendEmail = false, ils = null, url) {
-     const postBody = await postData();
-     let params = {};
-     if (ils === 'koha') {
-          params = {
-               username: username,
-               email: email,
-               resendEmail: resendEmail,
-          };
-     } else if (ils === 'sirsi') {
-          params = {
-               barcode: username,
-          };
-     } else if (ils === 'evergreen' || ils === 'horizon') {
-          params = {
-               username: username,
-               email: email,
-               resendEmail: resendEmail,
-          };
-     } else if (ils === 'millennium') {
-          params = {
-               barcode: username,
-          };
-     } else if (ils === 'symphony') {
-          params = {
-               barcode: username,
-          };
-     } else {
-          params = {
-               reset_username: username,
-          };
-     }
-
-     const discovery = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-     });
-     return await discovery.get('/UserAPI?method=resetPassword', params);
-}

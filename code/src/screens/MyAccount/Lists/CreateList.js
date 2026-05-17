@@ -43,7 +43,7 @@ import {
      Select,
 } from '@gluestack-ui/themed';
 import React, { useState } from 'react';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { popAlert } from '../../../components/loadError';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';

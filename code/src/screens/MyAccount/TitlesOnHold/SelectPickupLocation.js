@@ -35,7 +35,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Modal from 'react-native-modal';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 
-import { changeHoldPickUpLocation } from '../../../util/accountActions';
+import { changeHoldPickUpLocation } from '../../../util/api/user';
 import {SelectExistingHoldSubLocation} from './SelectExistingHoldSubLocation';
 import {ScrollView} from "native-base";
 

@@ -1,10 +1,8 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { create } from 'apisauce';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
-import {includes, isUndefined} from 'lodash';
 import {
      Button,
      ButtonText,
@@ -12,7 +10,6 @@ import {
      FormControl,
      FormControlLabel,
      FormControlLabelText,
-     Icon,
      Input,
      InputField, InputIcon,
      InputSlot,
@@ -25,16 +22,15 @@ import { DisplayMessage } from '../../components/Notifications';
 import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { getCatalogStatus } from '../../util/api/library';
-import { getLocationInfo } from '../../util/api/location';
+import { getLocationInfo, getCatalogStatus } from '../../util/api/system';
 import { loginToLiDA } from '../../util/api/user';
-import { createAuthTokens, getErrorMessage, getHeaders, stripHTML } from '../../util/apiAuth';
-import { GLOBALS } from '../../util/globals';
-import { formatDiscoveryVersion, LIBRARY } from '../../util/loadLibrary';
-import { PATRON } from '../../util/loadPatron';
+import { stripHTML } from '../../helpers/helpers';
+import { GLOBALS, LIBRARY, PATRON } from '../../util/globals';
+import { formatDiscoveryVersion } from '../../helpers/helpers';
 import { ResetExpiredPin } from './ResetExpiredPin';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage } from '../../util/logging.js';
+import { logDebugMessage, logInfoMessage, logWarnMessage, getErrorMessage } from '../../util/logging.js';
+import { createApiClient } from '../../util/api/apiFactory';
 
 export const GetLoginForm = (props) => {
      const {theme, textColor, colorMode} = React.useContext(ThemeContext);
@@ -205,7 +201,7 @@ export const GetLoginForm = (props) => {
           await AsyncStorage.setItem('@lastStoredVersion', Constants.expoConfig.version);
           const autoPickUserHomeLocation = parseInt(LIBRARY.appSettings?.autoPickUserHomeLocation ?? 0);
 
-          if (PATRON.homeLocationId && !includes(GLOBALS.slug, 'aspen-lida') && autoPickUserHomeLocation === 1) {
+          if (PATRON.homeLocationId && !GLOBALS.slug.includes('aspen-lida') && autoPickUserHomeLocation === 1) {
                logDebugMessage('User has a home location set (' + PATRON.homeLocationId + ') and autoPickUserHomeLocation is enabled, attempting to use that location as default');
                await getLocationInfo(LIBRARY.url, PATRON.homeLocationId).then(async (response) => {
                     const patronHomeLocation = response.data.result.location;
@@ -332,14 +328,9 @@ export const GetLoginForm = (props) => {
 };
 
 async function checkAspenDiscovery(url, id) {
-     const discovery = create({
-          baseURL: url + '/API',
+     const client = createApiClient({
+          url,
           timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(false),
-          auth: createAuthTokens(),
-          params: {
-               id: id,
-          },
      });
-     return await discovery.get('/SystemAPI?method=getLibraryInfo');
+     return await client.get('/SystemAPI?method=getLibraryInfo', { id });
 }

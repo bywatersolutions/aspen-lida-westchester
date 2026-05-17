@@ -14,10 +14,9 @@ import { navigateStack } from '../../helpers/RootNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import _ from 'lodash';
 import { loadingSpinner } from '../../components/loadingSpinner';
-import { checkoutItem } from '../../util/recordActions';
+import { checkoutItem } from '../../util/api/user';
 import { useQueryClient } from '@tanstack/react-query';
 import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
-import { getErrorMessage } from '../../util/apiAuth';
 
 export const SelfCheckOut = () => {
      const queryClient = useQueryClient();

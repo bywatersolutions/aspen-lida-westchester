@@ -6,12 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { loadingSpinner } from '../../components/loadingSpinner';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { getSelfRegistrationForm, submitSelfRegistration } from '../../util/api/library';
+import { getSelfRegistrationForm, submitSelfRegistration } from '../../util/api/registration';
 import { ThemeContext } from '../../context/initialContext';
 
 import { ScrollView, Box, Button, ButtonGroup, ButtonText, FormControl, FormControlHelper, FormControlHelperText, Icon, Input, Text, Select, SelectTrigger, SelectInput, SelectIcon, ChevronDownIcon, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem, CheckIcon, FormControlLabel, FormControlLabelText, InputField } from '@gluestack-ui/themed';
-import { logDebugMessage } from '../../util/logging';
-import { getErrorMessage } from '../../util/apiAuth';
+import { logDebugMessage, getErrorMessage } from '../../util/logging';
 
 export const SelfRegistration = () => {
 	const {theme, textColor, colorMode} = React.useContext(ThemeContext);

@@ -9,7 +9,7 @@ import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { addTitlesToList, createListFromTitle } from '../../util/api/list';
 
-import { PATRON } from '../../util/loadPatron';
+import { PATRON } from '../../util/globals';
 import {
      Box,
      Center,

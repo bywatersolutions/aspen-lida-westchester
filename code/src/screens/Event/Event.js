@@ -48,10 +48,10 @@ import {
 import { navigateStack } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { getEventDetails, saveEvent } from '../../util/api/event';
-import { decodeHTML, getErrorMessage, stripHTML } from '../../util/apiAuth';
-import { PATRON } from '../../util/loadPatron';
+import { decodeHTML, stripHTML } from '../../helpers/helpers';
+import { PATRON } from '../../util/globals';
 import AddToList from '../Search/AddToList';
-import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
+import { logDebugMessage, logErrorMessage, logInfoMessage, getErrorMessage } from '../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 

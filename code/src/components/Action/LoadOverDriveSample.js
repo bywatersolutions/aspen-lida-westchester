@@ -3,7 +3,7 @@ import { ButtonSpinner, Button, ButtonText } from '@gluestack-ui/themed';
 
 // custom components and helper files
 import { LibrarySystemContext, ThemeContext, UserContext } from '../../context/initialContext';
-import { completeAction } from '../../util/recordActions';
+import { completeAction } from '../../util/api/userHelper';
 
 export const LoadOverDriveSample = (props) => {
      const { user } = React.useContext(UserContext);

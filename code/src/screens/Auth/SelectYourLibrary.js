@@ -22,16 +22,15 @@ import {
      VStack, ModalBackdrop, CloseIcon, ModalBody, InputIcon, InputSlot,
 } from '@gluestack-ui/themed';
 import React from 'react';
-import { Platform, Dimensions, KeyboardAvoidingView } from 'react-native';
+import { Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PermissionsPrompt } from '../../components/PermissionsPrompt';
 
 // custom components and helper files
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { PATRON } from '../../util/loadPatron';
-import { useKeyboard } from '../../util/useKeyboard';
+import { PATRON } from '../../util/globals';
+import { useKeyboard } from '../../hooks/hooks';
 import { ThemeContext } from '../../context/initialContext';
-import { XIcon } from 'lucide-react-native';
 
 export const SelectYourLibrary = (payload) => {
      const isKeyboardOpen = useKeyboard();

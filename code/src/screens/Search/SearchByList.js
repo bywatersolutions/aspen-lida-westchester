@@ -1,7 +1,5 @@
-import { create } from 'apisauce';
-
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import { Box, FlatList, Center, Heading } from 'native-base';
 import React from 'react';
@@ -11,12 +9,10 @@ import { loadError } from '../../components/loadError';
 // custom components and helper files
 import { LoadingSpinner } from '../../components/loadingSpinner';
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext } from '../../context/initialContext';
-import { createAuthTokens, getHeaders } from '../../util/apiAuth';
-import { GLOBALS } from '../../util/globals';
 import { DisplayResult } from './DisplayResult';
-import { logDebugMessage, logErrorMessage } from '../../util/logging';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { DisplaySystemMessage } from '../../components/Notifications';
+import { fetchSearchResultsForList } from '../../util/api/search';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -52,13 +48,13 @@ export const SearchResultsForList = () => {
 
      const { status, data, error, isFetching, isPreviousData } = useQuery({
           queryKey: ['searchResultsForList', url, page, id, language],
-          queryFn: () => fetchSearchResults(id, page, url, language),
+          queryFn: () => fetchSearchResultsForList(id, page, url, language),
           keepPreviousData: true,
           staleTime: 1000,
           onError: (error) => {
-               logDebugMessage("Error searching by list");
+               logDebugMessage('Error searching by list');
                logErrorMessage(error);
-          }
+          },
      });
 
      const showSystemMessage = () => {
@@ -98,36 +94,3 @@ export const SearchResultsForList = () => {
           </SafeAreaView>
      );
 };
-
-async function fetchSearchResults(id, page, url, language) {
-     let listId = id;
-     if (_.isString(listId)) {
-          if (listId.includes('system_user_list')) {
-               const myArray = id.split('_');
-               listId = myArray[myArray.length - 1];
-          }
-     }
-
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-     });
-
-     const response = await api.get('/SearchAPI?method=getListResults', {
-          id: listId,
-          limit: 25,
-          page: page,
-          language,
-     });
-
-     if (!response.ok || !response.data) {
-          logErrorMessage(response);
-     }
-
-     return {
-          id: response.data.result?.id ?? listId,
-          items: Object.values(response.data.result?.items),
-     };
-}

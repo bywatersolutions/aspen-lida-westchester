@@ -5,10 +5,10 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { popAlert } from '../../../components/loadError';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
-import { navigate, navigateStack } from '../../../helpers/RootNavigator';
+import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { deleteList, editList, getListDetails } from '../../../util/api/list';
-import { PATRON } from '../../../util/loadPatron';
+import { PATRON } from '../../../util/globals';
 import {
      AlertDialog,
      AlertDialogContent,

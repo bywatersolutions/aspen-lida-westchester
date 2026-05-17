@@ -3,9 +3,9 @@ import * as Device from 'expo-device';
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { getTermFromDictionary } from '../translations/TranslationService';
-import { BRANCH, formatDiscoveryVersion } from '../util/loadLibrary';
-import { PATRON } from '../util/loadPatron';
+import { BRANCH, PATRON } from '../util/globals';
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
+import { formatDiscoveryVersion } from '../helpers/helpers';
 
 export const ThemeContext = React.createContext({
      theme: [],

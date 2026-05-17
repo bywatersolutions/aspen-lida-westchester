@@ -4,7 +4,7 @@ import { LanguageContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
 // custom components and helper files
-import { decodeHTML, stripHTML } from '../../util/apiAuth';
+import { decodeHTML, stripHTML } from '../../helpers/helpers';
 
 const AdditionalInformation = (data) => {
      const location = data.data;

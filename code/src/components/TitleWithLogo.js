@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { LibrarySystemContext, ThemeContext } from '../context/initialContext';
-import { View, Image, StyleSheet, Text, useColorMode, HStack, VStack, Box, Pressable, Icon, ChevronLeftIcon } from '@gluestack-ui/themed';
+import { View, Image, Text, useColorMode, HStack, VStack, Box, Pressable, Icon, ChevronLeftIcon } from '@gluestack-ui/themed';
 import { Platform, useWindowDimensions } from 'react-native';
-import { decodeHTML } from '../util/apiAuth';
+import { decodeHTML } from '../helpers/helpers';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HeaderLogoBar = (props) => {

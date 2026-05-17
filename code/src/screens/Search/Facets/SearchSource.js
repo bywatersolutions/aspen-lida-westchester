@@ -6,7 +6,8 @@ import { ScrollView } from 'react-native';
 
 import { LanguageContext, LibrarySystemContext, SearchContext, ThemeContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
-import { getSearchIndexes, SEARCH } from '../../../util/search';
+import { getSearchIndexes } from '../../../util/api/search';
+import { SearchGlobal } from '../../../util/globals';
 
 // custom components and helper files
 
@@ -19,7 +20,7 @@ export const SearchSourceScreen = () => {
 
      const search = async () => {
           navigateStack('BrowseTab', 'SearchResults', {
-               term: SEARCH.term,
+               term: SearchGlobal.term,
                type: 'catalog',
                prevRoute: 'DiscoveryScreen',
                scannerSearch: false,
@@ -27,13 +28,13 @@ export const SearchSourceScreen = () => {
      };
 
      const updateSource = async (source) => {
-          SEARCH.sortMethod = 'relevance';
-          SEARCH.appliedFilters = [];
-          SEARCH.sortList = [];
-          SEARCH.availableFacets = [];
-          SEARCH.defaultFacets = [];
-          SEARCH.pendingFilters = [];
-          SEARCH.appendedParams = '';
+          SearchGlobal.sortMethod = 'relevance';
+          SearchGlobal.appliedFilters = [];
+          SearchGlobal.sortList = [];
+          SearchGlobal.availableFacets = [];
+          SearchGlobal.defaultFacets = [];
+          SearchGlobal.pendingFilters = [];
+          SearchGlobal.appendedParams = '';
           updateCurrentSource(source);
           if (source === 'events') {
                updateCurrentIndex('EventsKeyword');

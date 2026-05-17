@@ -7,13 +7,13 @@ import { useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 
 // custom components and helper files
-import { LanguageContext, LibraryBranchContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
-import { decodeHTML, getErrorMessage } from '../../../util/apiAuth';
-import { completeAction } from '../../../util/recordActions';
+import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
+import { decodeHTML } from '../../../helpers/helpers';
+import { completeAction } from '../../../util/api/userHelper';
 import { refreshProfile, updateAlternateLibraryCard } from '../../../util/api/user';
 import { HoldPrompt } from '../Holds/HoldPrompt';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { logDebugMessage, logWarnMessage } from '../../../util/logging';
+import { logDebugMessage, logWarnMessage, getErrorMessage } from '../../../util/logging';
 
 export const CheckOut = (props) => {
      const queryClient = useQueryClient();

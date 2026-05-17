@@ -8,9 +8,8 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { navigateStack } from '../../helpers/RootNavigator';
-import { updateBrowseCategoryStatus } from '../../util/loadPatron';
-import { getErrorMessage } from '../../util/apiAuth';
-import { logErrorMessage } from '../../util/logging';
+import { updateBrowseCategoryStatus } from '../../util/api/user';
+import { logErrorMessage, getErrorMessage } from '../../util/logging';
 import { useQueryClient } from '@tanstack/react-query';
 
 const DisplayBrowseCategory = ({category}) => {

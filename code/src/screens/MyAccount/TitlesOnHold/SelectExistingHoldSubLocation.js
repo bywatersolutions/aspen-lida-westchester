@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Box, CheckIcon, FormControl, Select, Text } from 'native-base';
+import { Box, CheckIcon, FormControl, Select } from 'native-base';
 
 import React from 'react';
 import { Platform } from 'react-native';

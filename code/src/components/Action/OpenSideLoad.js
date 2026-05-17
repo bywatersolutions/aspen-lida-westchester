@@ -1,9 +1,9 @@
 import { Button, ButtonText, ButtonSpinner } from '@gluestack-ui/themed';
 import React from 'react';
 import { ThemeContext } from '../../context/initialContext';
+import { openSideLoad } from '../../util/api/userHelper';
 
 // custom components and helper files
-import { openSideLoad } from '../../util/recordActions';
 
 export const OpenSideLoad = (props) => {
      const [loading, setLoading] = React.useState(false);

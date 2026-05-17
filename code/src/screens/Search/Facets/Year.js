@@ -7,7 +7,7 @@ import { ScrollView } from 'react-native';
 // custom components and helper files
 import { LoadingSpinner } from '../../../components/loadingSpinner';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { addAppliedFilter } from '../../../util/search';
+import { addAppliedFilter } from '../../../util/api/searchHelper';
 import { ThemeContext } from '../../../context/initialContext';
 
 export const Facet_Year = ({ data, category, updater, language }) => {

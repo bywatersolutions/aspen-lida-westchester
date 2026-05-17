@@ -1,136 +1,18 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useToken } from '@gluestack-style/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { create } from 'apisauce';
-import chroma from 'chroma-js';
 import { LinearGradient } from 'expo-linear-gradient';
-import _ from 'lodash';
 import { ChevronLeftIcon, Box, extendTheme, HStack, Icon, IconButton, Text, useColorMode, useColorModeValue } from 'native-base';
-import React, { useState } from 'react';
+import React from 'react';
 import { ThemeContext } from '../context/initialContext';
 
-import { createAuthTokens, getErrorMessage, getHeaders } from '../util/apiAuth';
-import { GLOBALS } from '../util/globals';
-import { getAppSettings, LIBRARY } from '../util/loadLibrary';
-
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
+import { logDebugMessage, logErrorMessage } from '../util/logging.js';
+import { getThemeInfo } from '../util/api/system';
 
 export const BackIcon = (props) => {
      const { theme } = React.useContext(ThemeContext);
      return <ChevronLeftIcon size="md" ml={1} {...props} color={theme['colors']['primary']['baseContrast']} />;
 };
-
-export async function getThemeInfo(url = null) {
-     let libraryUrl = LIBRARY.url ?? GLOBALS.url;
-     if (url !== null && url !== '') {
-          libraryUrl = url;
-     }
-     if (libraryUrl === '') {
-          logWarnMessage("No library URL provided, returning backup theme ");
-          const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
-          const palettes = COLOR_SCHEMES.map(generateSwatches);
-          return palettes;
-     }
-     await getAppSettings(libraryUrl, 10000, GLOBALS.slug);
-     const api = create({
-          baseURL: GLOBALS.url + '/API',
-          timeout: 10000,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-     });
-     const response = await api.get('/SystemAPI?method=getThemeInfo', {
-          id: GLOBALS.themeId ?? 1,
-     });
-     if (response.ok) {
-          const result = response.data.result.theme;
-          if (typeof result !== 'undefined') {
-               const COLOR_SCHEMES = [result.primaryBackgroundColor, result.secondaryBackgroundColor, result.tertiaryBackgroundColor];
-               const palettes = COLOR_SCHEMES.map(generateSwatches);
-               logDebugMessage('Theme downloaded and swatches generated.');
-               return palettes;
-          } else {
-               const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
-               const palettes = COLOR_SCHEMES.map(generateSwatches);
-               logInfoMessage('Backup theme loaded due to unexpected response.');
-               getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-               logErrorMessage(response);
-               return palettes;
-          }
-     } else {
-          const COLOR_SCHEMES = ['#3dbdd6', '#9acf87', '#c1adcc'];
-          const palettes = COLOR_SCHEMES.map(generateSwatches);
-          logInfoMessage('Backup theme loaded due to server or client issue.');
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-          return palettes;
-     }
-}
-
-const getColorNumber = (index) => (index === 0 ? 50 : index * 100);
-
-const getContrastText = (color) => {
-     let ratioOnWhite = chroma.contrast(color, '#ffffff');
-     let ratioOnBlack = chroma.contrast(color, '#000000');
-
-     if (ratioOnBlack > ratioOnWhite) {
-          return '#000000';
-     } else {
-          return '#ffffff';
-     }
-};
-
-function generateSwatches(swatch) {
-     const LIGHTNESS_MAP = [0.95, 0.85, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25, 0.15, 0.05];
-     const SATURATION_MAP = [0.32, 0.16, 0.08, 0.04, 0, 0, 0.04, 0.08, 0.16, 0.32];
-     const HUE_MAP = [0, 4, 8, 12, 16, 20, 24, 28, 32, 36];
-
-     let primaryColor = swatch.replace('#', '');
-     if (!chroma.valid(primaryColor)) {
-          primaryColor = '#C70833';
-     }
-     const lightnessGoal = chroma(primaryColor).get('hsl.l');
-
-     const closestLightness = LIGHTNESS_MAP.reduce((prev, curr) => (Math.abs(curr - lightnessGoal) < Math.abs(prev - lightnessGoal) ? curr : prev));
-
-     const baseColorIndex = LIGHTNESS_MAP.findIndex((l) => l === closestLightness);
-
-     const colors = LIGHTNESS_MAP.map((l) => chroma(primaryColor).set('hsl.l', l))
-          .map((color) => chroma(color))
-          .map((color, i) => {
-               const saturationDelta = SATURATION_MAP[i] - SATURATION_MAP[baseColorIndex];
-               return saturationDelta >= 0 ? color.saturate(saturationDelta) : color.desaturate(saturationDelta * -1);
-          });
-
-     const colorsHueUp = colors.map((color, i) => {
-          const hueDelta = HUE_MAP[i] - HUE_MAP[baseColorIndex];
-          return hueDelta >= 0 ? color.set('hsl.h', `+${hueDelta}`) : color.set('hsl.h', `+${(hueDelta * -1) / 2}`);
-     });
-
-     const colorsHueDown = colors.map((color, i) => {
-          const hueDelta = HUE_MAP[i] - HUE_MAP[baseColorIndex];
-          return hueDelta >= 0 ? color.set('hsl.h', `-${hueDelta}`) : color.set('hsl.h', `-${(hueDelta * -1) / 2}`);
-     });
-
-     const object = {};
-     const properties = colors.map((color, i) => {
-          const num = getColorNumber(i);
-          const baseIndex = getColorNumber(baseColorIndex);
-          if (baseIndex === num) {
-               var baseColor = color.hex();
-               var baseContrast = getContrastText(baseColor);
-          }
-          const numContrast = num + '-text';
-          const property = {
-               [num]: color.hex(),
-               [numContrast]: getContrastText(color),
-               base: baseColor,
-               baseContrast,
-          };
-          _.merge(object, property);
-     });
-
-     return object;
-}
 
 export async function createTheme(colorMode) {
      const response = await getThemeInfo();

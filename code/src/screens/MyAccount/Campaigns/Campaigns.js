@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { 
   Actionsheet, 
@@ -35,11 +35,8 @@ import {
 } from '@gluestack-ui/themed';
 import { fetchCampaigns, unenrollCampaign, enrollCampaign, optIntoCampaignEmails, optUserOutOfCampaignLeaderboard, optUserInToCampaignLeaderboard, addActivityProgress } from '../../../util/api/user';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-// import { UserInterfaceIdiom } from 'expo-constants';
 import { LanguageContext, LibrarySystemContext, UserContext, ThemeContext } from '../../../context/initialContext';
-// import { filter } from 'lodash';
 import { Image } from 'expo-image';
-// import { setCurrentClient } from '@sentry/react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import PlaceholderImg from '../../../assets/digital-reward-placeholder.png';

@@ -4,8 +4,7 @@ import {useColorModeValue, useToken} from 'native-base';
 import { LibrarySystemContext, UserContext, ThemeContext } from '../../context/initialContext';
 
 // custom components and helper files
-import { navigate, navigateStack } from '../../helpers/RootNavigator';
-import {passUserToDiscovery} from '../../util/apiAuth';
+import {passUserToDiscovery} from '../../util/api/user';
 
 export const MoreInfo = (props) => {
     const { theme } = React.useContext(ThemeContext);

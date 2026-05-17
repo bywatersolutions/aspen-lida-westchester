@@ -7,13 +7,15 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadingSpinner } from '../../../components/loadingSpinner';
-import { createChannelsAndCategories, deletePushToken, getNotificationPreference, registerForPushNotificationsAsync, setNotificationPreference } from '../../../components/Notifications';
+import { createChannelsAndCategories, registerForPushNotificationsAsync } from '../../../components/Notifications';
+import { deletePushToken, getNotificationPreference, setNotificationPreference } from '../../../util/api/user';
+
 import { PermissionsPrompt } from '../../../components/PermissionsPrompt';
 import { LanguageContext, LibrarySystemContext, UserContext } from '../../../context/initialContext';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { refreshProfile, reloadProfile } from '../../../util/api/user';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';
+import { logDebugMessage } from '../../../util/logging.js';
 
 export const Settings_NotificationOptions = () => {
      const isFetchingUserProfile = useIsFetching({ queryKey: ['user'] });

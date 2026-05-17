@@ -12,8 +12,7 @@ import { ChevronRight, ChevronUp, ChevronDown } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { useNotificationPermissions, useNotificationPreferences } from '../../../../hooks/useNotifications';
 import { refreshProfile } from '../../../../util/api/user';
-import { logDebugMessage, logWarnMessage } from '../../../../util/logging';
-import { getErrorMessage } from '../../../../util/apiAuth';
+import { logDebugMessage, logWarnMessage, getErrorMessage } from '../../../../util/logging';
 
 export const NotificationPermissionStatus = () => {
     const { language } = React.useContext(LanguageContext);

@@ -7,8 +7,8 @@ import { LanguageContext, LibrarySystemContext } from '../../context/initialCont
 import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
-import { formatDiscoveryVersion } from '../../util/loadLibrary';
-import { getDefaultFacets } from '../../util/search';
+import { formatDiscoveryVersion } from '../../helpers/helpers';
+import { getDefaultFacets } from '../../util/api/search';
 
 export const SearchHome = () => {
      const navigation = useNavigation();

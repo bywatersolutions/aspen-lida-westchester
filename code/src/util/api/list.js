@@ -1,73 +1,49 @@
-import { create } from 'apisauce';
-import _ from 'lodash';
-import { popAlert, popToast } from '../../components/loadError';
+import { popAlert } from '../../components/loadError';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { createAuthTokens, ENDPOINT, getErrorMessage, getHeaders, postData } from '../apiAuth';
-import { GLOBALS } from '../globals';
-import { PATRON } from '../loadPatron';
-import { logErrorMessage } from '../logging';
+import { GLOBALS, PATRON } from '../globals';
+import { createApiClient } from './apiFactory';
 
-const endpoint = ENDPOINT.list;
+/** *******************************************************************
+ * General
+ ******************************************************************* **/
 
 /**
  * Returns array of basic details about a given user list
  * @param {array} id
- * @param {string} url
+ * @param {?string} url
+ * @returns {Promise<array>}
  **/
-export async function getListDetails(id, url) {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url,
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(endpoint.isPost),
-          params: { id: id },
-          auth: createAuthTokens(),
-     });
-     const response = await discovery.post(`${endpoint.url}getListDetails`, postBody);
-     if (response.ok) {
-          return response.data?.result ?? [];
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return [];
-     }
+export async function getListDetails(id, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutFast });
+
+     const response = await client.post(
+          '/ListAPI?method=getListDetails',
+          {},
+          {
+               params: { id },
+          }
+     );
+
+     return response.ok ? (response.data?.result ?? []) : [];
 }
 
 /**
  * Returns all lists for a given user
- * @param {string} url
+ * @param {?string} url
  * @param {int} page
  * @param {int} limit
  * @param {int} includePagination
  **/
-export async function getLists(url, page= 1, limit = 20, includePagination = 1) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               page,
-               limit,
-               includePagination
-          }
-     });
-     return await api.post('/ListAPI?method=getUserLists&checkIfValid=false', postBody);
-}
+export async function getLists(url = null, page = 1, limit = 20, includePagination = 1) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
 
-export function formatLists(data) {
-     let lists = [];
-     if (!_.isUndefined(data)) {
-          if(data.lists) {
-               lists = _.sortBy(data.lists, ['title']);
-          } else {
-               lists = _.sortBy(data, ['title']);
+     return await client.post(
+          '/ListAPI?method=getUserLists&checkIfValid=false',
+          {},
+          {
+               params: { page, limit, includePagination },
           }
-     }
-     PATRON.lists = lists;
-     return lists;
+     );
 }
 
 /**
@@ -75,359 +51,393 @@ export function formatLists(data) {
  * @param {string} title
  * @param {string} description
  * @param {boolean} isPublic
- * @param {string} url
+ * @param {?string} url
  * @param {string} addToListGroup
  * @param {int} addToListGroupNestedId
  * @param {string} addToListGroupNewName
  * @param {int} existingListId
  **/
-export async function createList(title, description, isPublic = false, url, addToListGroup, addToListGroupNestedId, addToListGroupNewName, existingListId) {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url,
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               title,
-               description,
-               isPublic,
-               addToListGroupOption: addToListGroup,
-               addToListGroupNested: addToListGroupNestedId === '' ? existingListId : addToListGroupNestedId,
-               addToListGroupNewName: addToListGroupNewName,
-          },
-     });
-     const response = await discovery.post(`${endpoint.url}createList`, postBody);
-     console.log(response);
+export async function createList(title, description, isPublic = false, url = null, addToListGroup, addToListGroupNestedId, addToListGroupNewName, existingListId) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=createList',
+          {},
+          {
+               params: {
+                    title,
+                    description,
+                    isPublic,
+                    addToListGroupOption: addToListGroup,
+                    addToListGroupNested: addToListGroupNestedId === '' ? existingListId : addToListGroupNestedId,
+                    addToListGroupNewName,
+               },
+          }
+     );
+
      if (response.ok) {
-          if (response.data.result.listId) {
+          if (response.data?.result?.listId) {
                PATRON.listLastUsed = response.data.result.listId;
           }
-          return response.data.result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return false;
+          return response.data?.result;
      }
+
+     return false;
 }
 
-export async function createListFromTitle(title, description, access, items, url, source = 'GroupedWork', addToListGroup, addToListGroupNestedId, addToListGroupNewName) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               title,
-               description,
-               access,
-               source,
-               recordIds: items,
-               addToListGroupOption: addToListGroup,
-               addToListGroupNested: addToListGroupNestedId,
-               addToListGroupNewName: addToListGroupNewName,
-          },
-     });
-     const response = await api.post('/ListAPI?method=createList', postBody);
+/**
+ * Create a new list for a user based on a title, and optionally add to a list group
+ * @param title
+ * @param description
+ * @param access
+ * @param items
+ * @param url
+ * @param source
+ * @param addToListGroup
+ * @param addToListGroupNestedId
+ * @param addToListGroupNewName
+ * @returns {Promise<*|boolean>}
+ */
+export async function createListFromTitle(title, description, access, items, url = null, source = 'GroupedWork', addToListGroup, addToListGroupNestedId, addToListGroupNewName) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=createList',
+          {},
+          {
+               params: {
+                    title,
+                    description,
+                    access,
+                    source,
+                    recordIds: items,
+                    addToListGroupOption: addToListGroup,
+                    addToListGroupNested: addToListGroupNestedId,
+                    addToListGroupNewName,
+               },
+          }
+     );
+
      if (response.ok) {
-          if (response.data.result.listId) {
-               PATRON.listLastUsed = response.data.result.listId;
+          const result = response.data?.result;
+
+          if (result?.listId) {
+               PATRON.listLastUsed = result.listId;
           }
 
-          let status = 'success';
-          let alertTitle = 'Success';
-          if (!response.data.result.success) {
-               status = 'danger';
-               alertTitle = 'Error';
-          }
+          const status = result?.success ? 'success' : 'danger';
+          const alertTitle = result?.success ? 'Success' : 'Error';
+          const alertMessage = result?.numAdded ? `${result.numAdded} added to ${title}` : `Title added to ${title}`;
 
-          if (response.data.result.numAdded) {
-               popAlert(alertTitle, response.data.result.numAdded + ' added to ' + title, status);
-          } else {
-               popAlert(alertTitle, 'Title added to ' + title, status);
-          }
-          return response.data.result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return false;
+          popAlert(alertTitle, alertMessage, status);
+          return result;
      }
+
+     return false;
 }
 
-export async function editList(listId, title, description, access, url, listGroupId = null) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               id: listId,
-               title,
-               description,
-               public: access,
-               listGroupId
-          },
-     });
-     const response = await api.post('/ListAPI?method=editList', postBody);
+/**
+ * Edit an existing list for a user based on a title, and optionally move to a different list group
+ * @param listId
+ * @param title
+ * @param description
+ * @param access
+ * @param url
+ * @param listGroupId
+ * @returns {Promise<*>}
+ */
+export async function editList(listId, title, description, access, url = null, listGroupId = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=editList',
+          {},
+          {
+               params: { id: listId, title, description, public: access, listGroupId },
+          }
+     );
+
      if (response.ok) {
           PATRON.listLastUsed = listId;
           return response.data;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-     }
-}
-
-export async function addTitlesToList(id, itemId, url, source = 'GroupedWork', language = 'en') {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               listId: id,
-               recordIds: itemId,
-               source,
-          },
-     });
-     const response = await api.post('/ListAPI?method=addTitlesToList', postBody);
-     if (response.ok) {
-          PATRON.listLastUsed = id;
-          if (response.data.result.success) {
-               popAlert(getTermFromDictionary(language, 'added_successfully'), response.data.result.numAdded + ' added to list', 'success');
-          } else {
-               popAlert(getTermFromDictionary(language, 'error'), 'Unable to add item to list', 'error');
-          }
-          return response.data.result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-     }
-}
-
-export async function getListTitles(id, url, page, pageSize = 20, numTitles = 25, sort = 'dateAdded') {
-     let morePages = false;
-     let totalResults = 0;
-     let curPage = page;
-     let totalPages = 0;
-     let titles = [];
-     let message = null;
-
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               id: id,
-               page: page,
-               pageSize: pageSize,
-               numTitles: numTitles,
-               sort_by: sort,
-          },
-     });
-     const response = await api.post('/ListAPI?method=getListTitles', postBody);
-     if (response.ok) {
-          const data = response.data;
-          morePages = true;
-          if (data.result?.page_current === data.result?.page_total) {
-               morePages = false;
-          }
-          titles = data.result?.titles ?? [];
-          totalResults = data.result?.totalResults ?? 0;
-          curPage = data.result?.page_current ?? 0;
-          totalPages = data.result?.page_total ?? 0;
-          message = data.result?.message ?? null;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          message = error.message;
-     }
-
-     return {
-          listTitles: titles,
-          totalResults: totalResults,
-          curPage: curPage,
-          totalPages: totalPages,
-          hasMore: morePages,
-          sort: sort,
-          message: message,
-     };
-}
-
-export async function removeTitlesFromList(listId, title, url, source) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               listId,
-               source,
-               recordIds: title,
-          },
-     });
-     const response = await api.post('/ListAPI?method=removeTitlesFromList', postBody);
-     if (response.ok) {
-          PATRON.listLastUsed = listId;
-          return response.data.result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-     }
-}
-
-export async function deleteList(listId, url, optOutOfSoftDeletion = false) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               id: listId,
-               optOutOfSoftDeletion: optOutOfSoftDeletion
-          },
-     });
-     const response = await api.post('/ListAPI?method=deleteList', postBody);
-     if (response.ok) {
-          return response.data.result;
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
      }
 }
 
 /**
+ * Add titles to an existing list for a user
+ * @param id
+ * @param itemId
+ * @param url
+ * @param source
+ * @param language
+ * @returns {Promise<*>}
+ */
+export async function addTitlesToList(id, itemId, url = null, source = 'GroupedWork', language = 'en') {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=addTitlesToList',
+          {},
+          {
+               params: { listId: id, recordIds: itemId, source },
+          }
+     );
+
+     if (response.ok) {
+          PATRON.listLastUsed = id;
+          const result = response.data?.result;
+
+          if (result?.success) {
+               popAlert(getTermFromDictionary(language, 'added_successfully'), `${result.numAdded} added to list`, 'success');
+          } else {
+               popAlert(getTermFromDictionary(language, 'error'), 'Unable to add item to list', 'error');
+          }
+
+          return result;
+     }
+}
+
+/**
+ * Returns titles for a given list with pagination and sorting options
+ * @param id
+ * @param url
+ * @param page
+ * @param pageSize
+ * @param numTitles
+ * @param sort
+ * @returns {Promise<{listTitles: *[], totalResults: number, curPage: number, totalPages: number, hasMore: boolean, sort: string, message: null}|{listTitles, totalResults, curPage, totalPages, hasMore: boolean, sort: string, message}>}
+ */
+export async function getListTitles(id, url = null, page, pageSize = 20, numTitles = 25, sort = 'dateAdded') {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=getListTitles',
+          {},
+          {
+               params: { id, page, pageSize, numTitles, sort_by: sort },
+          }
+     );
+
+     if (response.ok) {
+          const result = response.data?.result ?? {};
+          return {
+               listTitles: result.titles ?? [],
+               totalResults: result.totalResults ?? 0,
+               curPage: result.page_current ?? 0,
+               totalPages: result.page_total ?? 0,
+               hasMore: result.page_current !== result.page_total,
+               sort,
+               message: result.message ?? null,
+          };
+     }
+
+     return {
+          listTitles: [],
+          totalResults: 0,
+          curPage: 0,
+          totalPages: 0,
+          hasMore: false,
+          sort,
+          message: null,
+     };
+}
+
+/**
+ * Remove titles from an existing list for a user
+ * @param listId
+ * @param title
+ * @param url
+ * @param source
+ * @returns {Promise<*>}
+ */
+export async function removeTitlesFromList(listId, title, url = null, source) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=removeTitlesFromList',
+          {},
+          {
+               params: { listId, source, recordIds: title },
+          }
+     );
+
+     if (response.ok) {
+          PATRON.listLastUsed = listId;
+          return response.data?.result;
+     }
+}
+
+/**
+ * Delete a list for a user with the option to hard delete instead of soft delete
+ * @param listId
+ * @param url
+ * @param optOutOfSoftDeletion
+ * @returns {Promise<*|undefined>}
+ */
+export async function deleteList(listId, url = null, optOutOfSoftDeletion = false) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     const response = await client.post(
+          '/ListAPI?method=deleteList',
+          {},
+          {
+               params: { id: listId, optOutOfSoftDeletion },
+          }
+     );
+
+     return response.ok ? response.data?.result : undefined;
+}
+
+/** *******************************************************************
+ * List Groups
+ ******************************************************************* **/
+
+/**
  * Returns all list groups for a given user
- * @param {string} url
- **/
-export async function getListGroups(url) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-     });
-     return await api.post('/ListAPI?method=getUserListGroups', postBody);
+ * @param url
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function getListGroups(url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     return await client.post('/ListAPI?method=getUserListGroups');
 }
 
 /**
  * Returns details about a given list group
- * @param {int} listGroupId
- * @param {string} url
- * @param {int} page
- * @param {int} limit
- * @param {int} includePagination
- **/
-export async function getListGroupDetails(listGroupId, url, page = 1, limit = 20, includePagination = 1) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               groupId: listGroupId,
-               page,
-               limit,
-               includePagination
-          },
-     });
-     return await api.post('/ListAPI?method=getListGroupDetails', postBody);
+ * @param listGroupId
+ * @param url
+ * @param page
+ * @param limit
+ * @param includePagination
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function getListGroupDetails(listGroupId, url = null, page = 1, limit = 20, includePagination = 1) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     return await client.post(
+          '/ListAPI?method=getListGroupDetails',
+          {},
+          {
+               params: { groupId: listGroupId, page, limit, includePagination },
+          }
+     );
 }
 
 /**
- * Creates a list group for a user
- * @param {string} title
- * @param {int} nestedGroupId
- * @param {string} url
- **/
-export async function createListGroup(title, nestedGroupId, url) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               title: title,
-               nestedGroupId: nestedGroupId
-          },
-     });
-     return await api.post('/ListAPI?method=createListGroup', postBody);
+ * Creates a new list group for a user with the option to nest within an existing list group
+ * @param title
+ * @param nestedGroupId
+ * @param url
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function createListGroup(title, nestedGroupId, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     return await client.post(
+          '/ListAPI?method=createListGroup',
+          {},
+          {
+               params: { title, nestedGroupId },
+          }
+     );
 }
 
 /**
- * Deletes the given list group for a user
- * @param {int} listGroupId
- * @param {string} url
- **/
-export async function deleteListGroup(listGroupId, url) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               groupId: listGroupId
-          },
-     });
-     return await api.post('/ListAPI?method=deleteListGroup', postBody);
+ * Deletes a list group for a user
+ * @param listGroupId
+ * @param url
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function deleteListGroup(listGroupId, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     return await client.post(
+          '/ListAPI?method=deleteListGroup',
+          {},
+          {
+               params: { groupId: listGroupId },
+          }
+     );
 }
 
 /**
- * Edits the title for a given list group
- * @param {int} listGroupId
- * @param {string} newTitle
- * @param {string} url
- **/
-export async function editListGroup(listGroupId, newTitle, url) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               groupId: listGroupId,
-               listGroupNameNew: newTitle
-          },
-     });
-     return await api.post('/ListAPI?method=editListGroup', postBody);
+ * Edits a given list group
+ * @param listGroupId
+ * @param newTitle
+ * @param url
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function editListGroup(listGroupId, newTitle, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     return await client.post(
+          '/ListAPI?method=editListGroup',
+          {},
+          {
+               params: { groupId: listGroupId, listGroupNameNew: newTitle },
+          }
+     );
 }
 
 /**
- * Edits the parent list group for a given list group
- * @param {int} listGroupId
- * @param {int} newParentListGroupId
- * @param {string} url
- **/
-export async function editListGroupParent(listGroupId, newParentListGroupId, url) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               groupId: listGroupId,
-               listGroupMove: newParentListGroupId
-          },
-     });
-     return await api.post('/ListAPI?method=editListGroupParent', postBody);
+ * Edits the parent list group for a given nested list group
+ * @param listGroupId
+ * @param newParentListGroupId
+ * @param url
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function editListGroupParent(listGroupId, newParentListGroupId, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage });
+
+     return await client.post(
+          '/ListAPI?method=editListGroupParent',
+          {},
+          {
+               params: { groupId: listGroupId, listGroupMove: newParentListGroupId },
+          }
+     );
+}
+
+/** *******************************************************************
+ * Saved Searches
+ ******************************************************************* **/
+
+/**
+ * Returns all saved searches for a given user
+ * @param url
+ * @param language
+ * @returns {Promise<{ok: boolean, status: number, statusText: string, headers: {[p: string]: string}, data: Blob | string, config: {}}|{ok: boolean, status, problem: string, data, config: {}}|undefined>}
+ */
+export async function fetchSavedSearches(url = null, language = 'en') {
+     const client = createApiClient({ url, language });
+
+     return await client.post(
+          '/ListAPI?method=getSavedSearchesForLiDA',
+          {},
+          {
+               params: { checkIfValid: false, language },
+          }
+     );
+}
+
+/**
+ * Returns details about a given saved search
+ * @param id
+ * @param language
+ * @param url
+ * @returns {Promise<*|*[]>}
+ */
+export async function getSavedSearch(id, language = 'en', url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage, language });
+
+     const response = await client.post(
+          '/ListAPI?method=getSavedSearchTitles',
+          {},
+          {
+               params: { searchId: id, numTitles: 30, language },
+          }
+     );
+
+     return response.ok ? (response.data?.result ?? []) : [];
 }

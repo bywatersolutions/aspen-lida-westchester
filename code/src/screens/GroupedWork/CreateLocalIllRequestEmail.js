@@ -1,6 +1,4 @@
-import _ from 'lodash';
 import { useRoute, useNavigation } from '@react-navigation/native';
-//import { Box, Button, Checkbox, CheckIcon, FormControl, Input, Select, Text, TextArea, ScrollView } from 'native-base';
 import {
      Button,
      ButtonGroup,
@@ -20,12 +18,10 @@ import {
      VStack,
 } from '@gluestack-ui/themed';
 import React from 'react';
-import { submitLocalIllRequestEmail } from '../../util/recordActions';
+import { submitLocalIllRequestEmail } from '../../util/api/user';
 import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { popAlert } from '../../components/loadError';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
 
 export const CreateLocalIllRequestEmail = () => {
      const route = useRoute();

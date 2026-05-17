@@ -26,10 +26,9 @@ import {  ActionsheetIcon,
           ModalCloseButton,
           ModalContent, 
           ModalFooter, 
-          ModalHeader, 
-          useToken } from '@gluestack-ui/themed';
+          ModalHeader } from '@gluestack-ui/themed';
 import { LanguageContext } from '../../../context/initialContext';
-import { freezeHold, freezeHolds } from '../../../util/accountActions';
+import { freezeHold, freezeHolds } from '../../../util/api/user';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 
 export const SelectThawDate = (props) => {

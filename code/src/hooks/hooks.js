@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
 import { Keyboard } from 'react-native';
 
+/**
+ * Custom hook to track keyboard visibility updating state based on keyboard show/hide events and cleaning up listeners on unmount.
+ * @returns {boolean}
+ */
 export function useKeyboard() {
-     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+     const [isKeyboardVisible, setKeyboardVisible] = React.useState(false);
 
-     useEffect(() => {
+     React.useEffect(() => {
           const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
                setKeyboardVisible(true);
           });

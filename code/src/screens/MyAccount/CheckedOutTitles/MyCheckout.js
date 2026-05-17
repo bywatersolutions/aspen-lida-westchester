@@ -1,4 +1,4 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import _ from 'lodash';
 import {
@@ -16,9 +16,8 @@ import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from
 import { getAuthor, getCheckedOutTo, getCleanTitle, getDueDate, getFormat, getRenewalCount, getTitle, isOverdue, willAutoRenew, getCollectionName } from '../../../helpers/item';
 import { navigate, navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import { renewCheckout, returnCheckout, viewOnlineItem, viewOverDriveItem } from '../../../util/accountActions';
-import { stripHTML } from '../../../util/apiAuth';
-import { formatDiscoveryVersion } from '../../../util/loadLibrary';
+import { renewCheckout, returnCheckout, viewOnlineItem, viewOverDriveItem } from '../../../util/api/user';
+import { stripHTML, formatDiscoveryVersion } from '../../../helpers/helpers';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 

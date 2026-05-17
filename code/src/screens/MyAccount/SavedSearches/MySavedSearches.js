@@ -8,14 +8,12 @@ import _ from 'lodash';
 // custom components and helper files
 import { loadingSpinner } from '../../../components/loadingSpinner';
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
-import { fetchSavedSearches, getSavedSearch } from '../../../util/api/user';
+import { fetchSavedSearches, getSavedSearch } from '../../../util/api/list';
 import { loadError } from '../../../components/loadError';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { navigateStack } from '../../../helpers/RootNavigator';
-import { getListTitles } from '../../../util/api/list';
 import { DisplaySystemMessage } from '../../../components/Notifications';
-import { logDebugMessage, logErrorMessage } from '../../../util/logging';
-import { getErrorMessage } from '../../../util/apiAuth';
+import { logDebugMessage, logErrorMessage, getErrorMessage } from '../../../util/logging';
 
 export const MySavedSearches = () => {
      const navigation = useNavigation();

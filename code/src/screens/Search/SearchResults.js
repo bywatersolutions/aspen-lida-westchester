@@ -18,7 +18,6 @@ import {
 } from '@gluestack-ui/themed';
 import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { create } from 'apisauce';
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import _ from 'lodash';
@@ -29,21 +28,21 @@ import { useColorModeValue, useToken } from 'native-base';
 import React from 'react';
 import { ScrollView } from 'react-native';
 import { loadError, popToast } from '../../components/loadError';
-import { loadingSpinner, LoadingSpinner } from '../../components/loadingSpinner';
+import { LoadingSpinner } from '../../components/loadingSpinner';
 import { DisplaySystemMessage } from '../../components/Notifications';
 
-import { LanguageContext, LibraryBranchContext, LibrarySystemContext, SearchContext, SystemMessagesContext, UserContext, ThemeContext } from '../../context/initialContext';
+import { LanguageContext, LibraryBranchContext, LibrarySystemContext, SearchContext, SystemMessagesContext, ThemeContext } from '../../context/initialContext';
 import { getCleanTitle } from '../../helpers/item';
 import {navigate, navigateStack} from '../../helpers/RootNavigator';
-import { getTermFromDictionary, getTranslationsWithValues } from '../../translations/TranslationService';
-import { createAuthTokens, getHeaders, postData } from '../../util/apiAuth';
-import { GLOBALS } from '../../util/globals';
-import { formatDiscoveryVersion } from '../../util/loadLibrary';
-import { getAppliedFilters, getAvailableFacetsKeys, getSortList, SEARCH, setDefaultFacets } from '../../util/search';
-import { decodeHTML } from '../../util/apiAuth';
+import { getTermFromDictionary } from '../../translations/TranslationService';
+import { GLOBALS, SearchGlobal } from '../../util/globals';
+import { formatDiscoveryVersion, decodeHTML, isValidUrl } from '../../helpers/helpers';
+import { getAppliedFilters, getAvailableFacetsKeys, getSortList } from '../../util/api/search';
+import { setDefaultFacets } from '../../util/api/searchHelper';
+
 import AddToList from './AddToList';
 import { logDebugMessage, logErrorMessage } from '../../util/logging';
-import { isValidUrl } from '../../util/validation';
+import { createApiClient } from '../../util/api/apiFactory';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 
@@ -82,14 +81,14 @@ export const SearchResults = () => {
           console.log('Search term changed. Clearing previous search options...');
           setStoredTerm(term);
           setPage(1);
-          SEARCH.pendingFilters = [];
-          SEARCH.sortMethod = 'relevance';
-          SEARCH.appliedFilters = [];
-          SEARCH.sortList = [];
-          SEARCH.availableFacets = [];
-          SEARCH.defaultFacets = [];
-          SEARCH.pendingFilters = [];
-          SEARCH.appendedParams = '';
+          SearchGlobal.pendingFilters = [];
+          SearchGlobal.sortMethod = 'relevance';
+          SearchGlobal.appliedFilters = [];
+          SearchGlobal.sortList = [];
+          SearchGlobal.availableFacets = [];
+          SearchGlobal.defaultFacets = [];
+          SearchGlobal.pendingFilters = [];
+          SearchGlobal.appendedParams = '';
           params = [];
      }
 
@@ -567,7 +566,7 @@ const SearchBox = (props) => {
 
 const CreateFilterButtonDefaults = () => {
      const navigation = useNavigation();
-     const defaults = SEARCH.defaultFacets;
+     const defaults = SearchGlobal.defaultFacets;
      const { location } = React.useContext(LibraryBranchContext);
      const { library } = React.useContext(LibrarySystemContext);
      const { theme, colorMode, textColor } = React.useContext(ThemeContext);
@@ -629,7 +628,7 @@ const CreateFilterButtonDefaults = () => {
                                                   navigation: navigation,
                                                   key: obj['field'],
                                                   title: obj['label'],
-                                                  facets: SEARCH.availableFacets[obj['label']].facets,
+                                                  facets: SearchGlobal.availableFacets[obj['label']].facets,
                                                   pendingUpdates: [],
                                                   extra: obj,
                                              },
@@ -655,7 +654,7 @@ const CreateFilterButtonDefaults = () => {
                                              navigation: navigation,
                                              key: obj['field'],
                                              title: obj['label'],
-                                             facets: SEARCH.availableFacets[obj['label']].facets,
+                                             facets: SearchGlobal.availableFacets[obj['label']].facets,
                                              pendingUpdates: [],
                                              extra: obj,
                                         },
@@ -673,7 +672,7 @@ const CreateFilterButton = () => {
      const { currentSource } = React.useContext(SearchContext);
      const { theme, colorMode, textColor } = React.useContext(ThemeContext);
      const navigation = useNavigation();
-     const appliedFacets = SEARCH.appliedFilters;
+     const appliedFacets = SearchGlobal.appliedFilters;
      const sort = _.find(appliedFacets['Sort By'], {
           field: 'sort_by',
           value: 'relevance',
@@ -683,7 +682,7 @@ const CreateFilterButton = () => {
           return (
                <ButtonGroup space="sm" vertical>
                     {_.map(appliedFacets, function (item, index, collection) {
-                         const cluster = _.filter(SEARCH.availableFacets, ['field', item[0]['field']]);
+                         const cluster = _.filter(SearchGlobal.availableFacets, ['field', item[0]['field']]);
                          let labels = '';
                          _.forEach(item, function (value, key) {
                               let label = value['display'];
@@ -732,33 +731,32 @@ const CreateFilterButton = () => {
 };
 
 async function fetchSearchResults(term, page, scope, url, type, id, language, index, source, barcodeType) {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url + '/API',
+     const client = createApiClient({
+          url,
           timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               library: scope ?? null,
-               lookfor: term ?? null,
-               pageSize: 25,
-               page: page ?? 1,
-               type: type ?? 'catalog',
-               id: id,
-               language: language,
-               includeSortList: true,
-               source: source,
-               searchIndex: index,
-               barcodeType,
-          },
+          language,
      });
 
-     let data = [];
-     console.log('fetchSearchResults: ' + SEARCH.appendedParams);
-     const results = await discovery.post('/SearchAPI?method=searchLite' + SEARCH.appendedParams, postBody);
-     if (results.ok) {
-          data = results.data;
-     }
+     const params = {
+          library: scope ?? null,
+          lookfor: term ?? null,
+          pageSize: 25,
+          page: page ?? 1,
+          type: type ?? 'catalog',
+          id,
+          language,
+          includeSortList: true,
+          source,
+          searchIndex: index,
+          barcodeType,
+     };
+
+     logDebugMessage('fetchSearchResults: ' + SearchGlobal.appendedParams);
+
+     const endpoint = '/SearchAPI?method=searchLite' + SearchGlobal.appendedParams;
+     const results = await client.post(endpoint, {}, { params });
+
+     const data = results.ok ? (results.data ?? {}) : {};
 
      let morePages = true;
      if (data.result?.page_current === data.result?.page_total) {
@@ -767,10 +765,10 @@ async function fetchSearchResults(term, page, scope, url, type, id, language, in
           morePages = false;
      }
 
-     SEARCH.id = data?.result?.id ?? null;
-     SEARCH.sortMethod = data?.result?.sort ?? '';
-     SEARCH.term = data?.result?.lookfor ?? '';
-     SEARCH.availableFacets = data?.result?.options ?? [];
+     SearchGlobal.id = data?.result?.id ?? null;
+     SearchGlobal.sortMethod = data?.result?.sort ?? '';
+     SearchGlobal.term = data?.result?.lookfor ?? '';
+     SearchGlobal.availableFacets = data?.result?.options ?? [];
 
      await getSortList(url, language);
      await getAvailableFacetsKeys(url, language);
@@ -786,7 +784,7 @@ async function fetchSearchResults(term, page, scope, url, type, id, language, in
           hasMore: morePages,
           source: data?.result?.searchSource ?? 'local',
           index: data?.result?.searchIndex ?? 'Keyword',
-          term: term,
+          term,
           message: data.data?.message ?? null,
           error: data.data?.error?.message ?? false,
      };

@@ -11,13 +11,13 @@ import { Platform } from 'react-native';
 import { LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { getLibraryInfo } from '../../util/api/library';
+import { getLibraryInfo } from '../../util/api/system';
 
 // custom components and helper files
 import { GLOBALS } from '../../util/globals';
-import { fetchAllLibrariesFromGreenhouse, fetchNearbyLibrariesFromGreenhouse } from '../../util/greenhouse';
-import { LIBRARY } from '../../util/loadLibrary';
-import { PATRON } from '../../util/loadPatron';
+import { fetchAllLibrariesFromGreenhouse, fetchNearbyLibrariesFromGreenhouse } from '../../util/api/greenhouse';
+import { LIBRARY } from '../../util/globals';
+import { PATRON } from '../../util/globals';
 import { ForgotBarcode } from './ForgotBarcode';
 import { GetLoginForm } from './LoginForm';
 import { ResetPassword } from './ResetPassword';
@@ -28,8 +28,7 @@ import { createGlueTheme } from '../../themes/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { logDebugMessage, logInfoMessage } from '../../util/logging';
-import { getErrorMessage } from '../../util/apiAuth';
+import { logDebugMessage, logInfoMessage, getErrorMessage } from '../../util/logging';
 
 export const LoginScreen = () => {
      const [isLoading, setIsLoading] = React.useState(true);

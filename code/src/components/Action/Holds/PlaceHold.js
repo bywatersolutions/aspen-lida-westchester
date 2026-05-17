@@ -5,7 +5,7 @@ import React from 'react';
 
 // custom components and helper files
 import { HoldsContext, LibraryBranchContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
-import { completeAction } from '../../../util/recordActions';
+import { completeAction } from '../../../util/api/userHelper';
 import { HoldPrompt } from './HoldPrompt';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';

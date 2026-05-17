@@ -11,7 +11,7 @@ import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../conte
 import { getCleanTitle } from '../../helpers/item';
 import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { decodeHTML } from '../../util/apiAuth';
+import { decodeHTML } from '../../helpers/helpers';
 import AddToList from './AddToList';
 import { logDebugMessage, logErrorMessage } from '../../util/logging';
 

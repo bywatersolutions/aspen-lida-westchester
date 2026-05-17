@@ -11,11 +11,10 @@ import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeCont
 import { Heading, Box, Button, ButtonText, ButtonGroup, Center, FlatList, HStack, Icon, Pressable, ScrollView, Text, VStack } from '@gluestack-ui/themed';
 import { navigate } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { fetchSavedEvents } from '../../../util/api/event';
-import { getErrorMessage, stripHTML } from '../../../util/apiAuth';
-import { CommonActions } from '@react-navigation/native';
-import { fetchNotificationHistory, formatNotificationHistory } from '../../../util/api/user';
-import { logDebugMessage, logErrorMessage } from '../../../util/logging';
+import { stripHTML } from '../../../helpers/helpers';
+import { fetchNotificationHistory } from '../../../util/api/user';
+import { formatNotificationHistory } from '../../../util/api/userHelper';
+import { logDebugMessage, logErrorMessage, getErrorMessage } from '../../../util/logging';
 
 export const MyNotificationHistory = () => {
      const navigation = useNavigation();

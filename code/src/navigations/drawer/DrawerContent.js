@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useFocusEffect, useLinkTo } from '@react-navigation/native';
-import { useQuery, useQueryClient, onlineManager, focusManager } from '@tanstack/react-query';
+import { useQuery, onlineManager, focusManager } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
@@ -11,31 +11,29 @@ import * as SecureStore from 'expo-secure-store';
 import _, { values } from 'lodash';
 import { Badge, Box, Button, Container, Divider, HStack, Icon, Image, Pressable, Text, useColorModeValue, useToken, VStack } from 'native-base';
 import React from 'react';
-import navigation, { AuthContext } from '../../components/navigation';
+import { AuthContext } from '../../components/navigation';
 import { AppState, Platform, View } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { AppStateStatus } from "react-native";
 
 // custom components and helper files
 import { showILSMessage } from '../../components/Notifications';
-import { BrowseCategoryContext, CheckoutsContext, HoldsContext, LanguageContext, LibraryBranchContext, LibrarySystemContext, SystemMessagesContext, UserContext } from '../../context/initialContext';
-import { navigateAndSimpleReset, navigateStack } from '../../helpers/RootNavigator';
+import { BrowseCategoryContext, CheckoutsContext, HoldsContext, LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
+import { navigateStack } from '../../helpers/RootNavigator';
 import { CatalogOffline } from '../../screens/Auth/CatalogOffline';
 import { InvalidCredentials } from '../../screens/Auth/InvalidCredentials';
 import { UseColorMode } from '../../themes/theme';
 import { getTermFromDictionary, getTranslationsWithValues, LanguageSwitcher } from '../../translations/TranslationService';
-import { fetchSavedEvents } from '../../util/api/event';
-import { getCatalogStatus } from '../../util/api/library';
-import { formatLists, getListGroups, getLists } from '../../util/api/list';
-import { getLocations } from '../../util/api/location';
-import { fetchNotificationHistory, fetchSavedSearches, getLinkedAccounts, getPatronCheckedOutItems, sortCheckouts, getPatronHolds, sortHolds, getViewerAccounts, refreshProfile, reloadProfile, revalidateUser, validateSession, formatNotificationHistory, formatLinkedAccounts, formatHolds } from '../../util/api/user';
-import { getErrorMessage, passUserToDiscovery, stripHTML } from '../../util/apiAuth';
-import { GLOBALS } from '../../util/globals';
-import { formatDiscoveryVersion, formatPickupLocations, getHomeScreenFeed, getPickupLocations } from '../../util/loadLibrary';
-import { getBrowseCategoryListForUser, getILSMessages, PATRON } from '../../util/loadPatron';
+import { fetchSavedSearches, getListGroups, getLists } from '../../util/api/list';
+import { formatLists } from '../../util/api/listHelper';
+import { getLocations, getCatalogStatus } from '../../util/api/system';
+import { getILSMessages, getPickupLocations, fetchNotificationHistory, getLinkedAccounts, getPatronCheckedOutItems, getPatronHolds, getViewerAccounts, refreshProfile, reloadProfile, validateSession, passUserToDiscovery } from '../../util/api/user';
+import { sortCheckouts, sortHolds, formatNotificationHistory, formatLinkedAccounts, formatHolds, formatPickupLocations } from '../../util/api/userHelper';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
-import * as Sentry from '@sentry/react-native';
+import { GLOBALS, PATRON } from '../../util/globals';
+import { formatDiscoveryVersion, stripHTML } from '../../helpers/helpers';
+import { getHomeScreenFeed, getBrowseCategoryListForUser } from '../../util/api/search';
+
+import { logDebugMessage, logWarnMessage, logErrorMessage, getErrorMessage } from '../../util/logging.js';
 
 Notifications.setNotificationHandler({
      handleNotification: async () => ({
@@ -63,24 +61,17 @@ export const DrawerContent = () => {
      const [userLatitude, setUserLatitude] = React.useState(0);
      const [userLongitude, setUserLongitude] = React.useState(0);
      const linkTo = useLinkTo();
-     const queryClient = useQueryClient();
      const insets = useSafeAreaInsets();
      const { user, accounts, viewers, cards, lists, updateUser, updateLanguage, updatePickupLocations, updateLinkedAccounts, updatePreferredPickupLocationIsValid, updatePreferredPickupLocationWarning, updateLists, updateSavedEvents, updateLibraryCards, updateLinkedViewerAccounts, updateReadingHistory, notificationSettings, expoToken, updateNotificationOnboard, notificationOnboard, notificationHistory, updateNotificationHistory, userHoldPendingSortMethod, userHoldReadySortMethod, userCheckoutSortMethod, updateListGroups, updateSavedSearches } = React.useContext(UserContext);
      const { library, catalogStatus, updateCatalogStatus, updateHomeScreenLinks } = React.useContext(LibrarySystemContext);
      const [notifications, setNotifications] = React.useState([]);
      const [messages, setILSMessages] = React.useState([]);
-     const { category, list, maxNum, updateBrowseCategories, updateBrowseCategoryList, updateMaxCategories } = React.useContext(BrowseCategoryContext);
-     const { checkouts, updateCheckouts } = React.useContext(CheckoutsContext);
-     const { holds, updateHolds } = React.useContext(HoldsContext);
+     const { category, list, maxNum, updateBrowseCategories, updateBrowseCategoryList } = React.useContext(BrowseCategoryContext);
+     const { updateCheckouts } = React.useContext(CheckoutsContext);
+     const { updateHolds } = React.useContext(HoldsContext);
      const { language } = React.useContext(LanguageContext);
      const [invalidSession, setInvalidSession] = React.useState(false);
-     const discoveryVersion = formatDiscoveryVersion(library.discoveryVersion) ?? '23.03.00';
-     const { location, locations, updateLocations } = React.useContext(LibraryBranchContext);
-     const { systemMessages, updateSystemMessages } = React.useContext(SystemMessagesContext);
-     const [numFailedSessions, setNumFailedSessions] = React.useState(0);
-     const [unlimited, setUnlimitedCategories] = React.useState(false);
-     const [savedSearchesStorage, updateSavedSearchesStorage] = React.useState([]);
-     const [maxCategories, setMaxCategories] = React.useState(5);
+     const { updateLocations } = React.useContext(LibraryBranchContext);
 
      React.useEffect(() => {
           const subscription = Notifications.addNotificationReceivedListener((notification) => {

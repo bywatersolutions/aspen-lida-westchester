@@ -1,4 +1,3 @@
-import { create } from 'apisauce';
 import _ from 'lodash';
 import {
      Button,
@@ -23,11 +22,11 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { LibrarySystemContext, ThemeContext } from '../../context/initialContext';
 import { getTermFromDictionary, getTranslation, getTranslationsWithValues } from '../../translations/TranslationService';
-import { createAuthTokens, getErrorMessage, getHeaders, stripHTML } from '../../util/apiAuth';
-import { GLOBALS } from '../../util/globals';
-import { LIBRARY } from '../../util/loadLibrary';
-import { useKeyboard } from '../../util/useKeyboard';
-import { logDebugMessage } from '../../util/logging';
+import { stripHTML } from '../../helpers/helpers';
+import { LIBRARY } from '../../util/globals';
+import { useKeyboard } from '../../hooks/hooks';
+import { logDebugMessage, getErrorMessage } from '../../util/logging';
+import { forgotBarcode } from '../../util/api/user';
 
 export const ForgotBarcode = (props) => {
      const isKeyboardOpen = useKeyboard();
@@ -191,15 +190,3 @@ export const ForgotBarcode = (props) => {
           </Center>
      );
 };
-
-async function forgotBarcode(phone, url) {
-     const discovery = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
-     });
-     return await discovery.get('/RegistrationAPI?method=lookupAccountByPhoneNumber', {
-          phone: phone,
-     });
-}

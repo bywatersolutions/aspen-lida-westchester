@@ -17,10 +17,11 @@ import { PermissionsPrompt } from '../../../components/PermissionsPrompt';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import { formatLinkedAccounts, getLinkedAccounts, updateScreenBrightnessStatus } from '../../../util/api/user';
-import { formatDiscoveryVersion } from '../../../util/loadLibrary';
-import { logDebugMessage, logErrorMessage } from '../../../util/logging';
-import { getErrorMessage } from '../../../util/apiAuth';
+import { getLinkedAccounts, updateScreenBrightnessStatus } from '../../../util/api/user';
+import { formatLinkedAccounts } from '../../../util/api/userHelper';
+
+import { formatDiscoveryVersion } from '../../../helpers/helpers';
+import { logDebugMessage, logErrorMessage, getErrorMessage } from '../../../util/logging';
 
 export const MyLibraryCard = () => {
      const queryClient = useQueryClient();

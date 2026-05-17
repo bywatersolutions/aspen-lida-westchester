@@ -11,11 +11,10 @@ import { LoadingSpinner } from '../../../components/loadingSpinner';
 // custom components and helper files
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { DisplaySystemMessage } from '../../../components/Notifications';
-import { BackIcon } from '../../../themes/theme';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { refreshProfile, updateAlternateLibraryCard } from '../../../util/api/user';
-import { decodeHTML, getErrorMessage } from '../../../util/apiAuth';
-import { logDebugMessage, logWarnMessage } from '../../../util/logging';
+import { decodeHTML } from '../../../helpers/helpers';
+import { logDebugMessage, logWarnMessage, getErrorMessage } from '../../../util/logging';
 
 export const MyAlternateLibraryCard = () => {
      const navigation = useNavigation();

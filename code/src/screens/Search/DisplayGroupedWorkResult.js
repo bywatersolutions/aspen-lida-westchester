@@ -9,7 +9,7 @@ import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../conte
 import { getCleanTitle } from '../../helpers/item';
 import { navigate } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { getFormats } from '../../util/search';
+import { getFormats } from '../../util/api/searchHelper';
 import AddToList from './AddToList';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';

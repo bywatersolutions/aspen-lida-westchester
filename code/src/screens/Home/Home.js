@@ -1,28 +1,24 @@
 import { ScanBarcode, SearchIcon, XIcon, Settings, RotateCwIcon, ClockIcon } from 'lucide-react-native';
-import { Center, Box, Button, ButtonGroup, ButtonIcon, ButtonText, ButtonSpinner, HStack, Badge, BadgeText, FormControl, Input, InputField, InputSlot, InputIcon, Pressable, ScrollView, Text } from '@gluestack-ui/themed';
+import { Center, Box, Button, ButtonGroup, ButtonIcon, ButtonText, ButtonSpinner, FormControl, Input, InputField, InputSlot, InputIcon, ScrollView } from '@gluestack-ui/themed';
 import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import _ from 'lodash';
 import React from 'react';
-import { Image } from 'expo-image';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { compareVersions } from 'compare-versions';
 
 // custom components and helper files
 import { loadingSpinner } from '../../components/loadingSpinner';
 import { DisplayAndroidEndOfSupportMessage, DisplaySystemMessage } from '../../components/Notifications';
-import { NotificationsOnboard } from '../../components/NotificationsOnboard';
 import { BrowseCategoryContext, LanguageContext, LibrarySystemContext, SearchContext, SystemMessagesContext, ThemeContext, UserContext } from '../../context/initialContext';
-import { navigateStack, pushNavigateStack } from '../../helpers/RootNavigator';
+import { navigateStack } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
-import { formatDiscoveryVersion, getHomeScreenFeed } from '../../util/loadLibrary';
-import { updateBrowseCategoryStatus } from '../../util/loadPatron';
-import { getDefaultFacets, getSearchIndexes, getSearchSources } from '../../util/search';
+import { getHomeScreenFeed } from '../../util/api/search';
+import { formatDiscoveryVersion } from '../../helpers/helpers';
+import { getDefaultFacets, getSearchIndexes, getSearchSources } from '../../util/api/search';
 import DisplayBrowseCategory from './Category';
-import { getErrorMessage } from '../../util/apiAuth';
 import { DisplayErrorAlertDialog } from '../../components/loadError';
-import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
+import { logDebugMessage, getErrorMessage } from '../../util/logging';
 import HomeScreenLinkGrid from './Link';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';

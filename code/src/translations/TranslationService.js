@@ -1,16 +1,16 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { create } from 'apisauce';
 import _ from 'lodash';
 import moment from 'moment';
-import { Box, Button, ButtonText, ButtonIcon, Menu, MenuItem, MenuItemLabel, Pressable } from '@gluestack-ui/themed';
+import { Box, Button, ButtonText, ButtonIcon, Menu, MenuItem, MenuItemLabel } from '@gluestack-ui/themed';
 import React from 'react';
 import { LanguageContext, LibrarySystemContext, ThemeContext } from '../context/initialContext';
 import { saveLanguage } from '../util/api/user';
 
-import { createAuthTokens, decodeHTML, getErrorMessage, getHeaders } from '../util/apiAuth';
+import {decodeHTML } from '../helpers/helpers';
 import { GLOBALS } from '../util/globals';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../util/logging.js';
+import { logDebugMessage, logWarnMessage, logErrorMessage, getErrorMessage } from '../util/logging.js';
+import { createApiClient } from '../util/api/apiFactory';
 
 /** *******************************************************************
  * General
@@ -73,83 +73,83 @@ export const LanguageSwitcher = () => {
 
 /**
  * Returns translation of a single term for the given language
- * @param {string} term
- * @param {string} language
- * @param {string} url
- **/
+ * @param term
+ * @param language
+ * @param url
+ * @returns {Promise<*|unknown[]>}
+ */
 export async function getTranslation(term, language, url) {
-     const api = create({
-          baseURL: url + '/API',
+     const client = createApiClient({
+          url,
           timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
+          language,
      });
-     const response = await api.get('/SystemAPI?method=getTranslation', { term, language });
+
+     const response = await client.get('/SystemAPI?method=getTranslation', { term, language });
      if (response.ok) {
           if (response.data?.success) {
-               if (response?.data?.result[language][term]) {
-                    logDebugMessage("Got translation for term: " + term + " in language: " + language);
-                    logDebugMessage(response?.data?.result[language][term]);
-                    return Object.values(response?.data?.result[language][term]);
+               if (response?.data?.result?.[language]?.[term]) {
+                    logDebugMessage('Got translation for term: ' + term + ' in language: ' + language);
+                    logDebugMessage(response?.data?.result?.[language]?.[term]);
+                    return Object.values(response?.data?.result?.[language]?.[term]);
                }
           }
      }
-     // return the original term as a fallback
      return term;
 }
 
 /**
  * Returns translation of an array of terms for the given language
- * @param {array} terms
- * @param {string} language
- * @param {string} url
- **/
+ * @param terms
+ * @param language
+ * @param url
+ * @returns {Promise<*>}
+ */
 export async function getTranslations(terms, language, url) {
-     const api = create({
-          baseURL: url + '/API',
+     const client = createApiClient({
+          url,
           timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
+          language,
      });
-     const response = await api.get('/SystemAPI?method=getTranslation', {
-          terms: terms,
-          language: language,
+
+     const response = await client.get('/SystemAPI?method=getTranslation', {
+          terms,
+          language,
      });
 
      if (response.ok) {
-          return response.data.result.translations;
-     } else {
-          logWarnMessage("getTranslations failed");
-          logWarnMessage(response);
-          // no data yet
+          return response.data?.result?.translations;
      }
+
+     logWarnMessage('getTranslations failed');
+     logWarnMessage(response);
 }
 
 /**
  * Returns translation of a term with interchangeable values in the given language
  * getTranslationsWithValues('last_updated_on', $value, 'en', $url)
  * getTranslationsWithValues('filter_by_source', [$value1, $value2], 'en', $url)
- *
- * @param {string} key
- * @param {array || string} values
- * @param {string} language
- * @param {string} url
- * @param {boolean} addToDictionary
- **/
+ * @param key
+ * @param values
+ * @param language
+ * @param url
+ * @param addToDictionary
+ * @returns {Promise<unknown[]|string>}
+ */
 export async function getTranslationsWithValues(key, values, language, url, addToDictionary = false) {
-     let defaults = require('../translations/defaults.json');
+     const defaults = require('../translations/defaults.json');
      const term = defaults[key];
 
-     const api = create({
-          baseURL: url + '/API',
+     const client = createApiClient({
+          url,
           timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(),
-          auth: createAuthTokens(),
+          language,
      });
-     const response = await api.get('/SystemAPI?method=getTranslationWithValues', {
+
+     const response = await client.get('/SystemAPI?method=getTranslationWithValues', {
           term,
-          values: values,
-          language: language,
+          values,
+          language,
      });
 
      if (response.ok) {
@@ -171,7 +171,7 @@ export async function getTranslationsWithValues(key, values, language, url, addT
                return Object.values(response.data?.result?.translation);
           }
      }
-     // it didn't work we should return the untranslated term back
+
      return decodeHTML(term);
 }
 
@@ -195,28 +195,35 @@ export let translationsLibrary = {
 
 /**
  * Returns translation of terms used in Aspen LiDA for the given language
- * @param {string} language
- * @param {string} url
- **/
+ * @param language
+ * @param url
+ * @returns {Promise<void>}
+ */
 export async function getTranslatedTerm(language, url) {
-     // Load in the terms used for Aspen LiDA
-     let defaults = require('../translations/defaults.json');
-     const api = create({
-          baseURL: url + '/API',
+     const defaults = require('../translations/defaults.json');
+
+     const client = createApiClient({
+          url,
           timeout: GLOBALS.timeoutFast,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               language,
-          },
+          language,
      });
-     const response = await api.post('/SystemAPI?method=getBulkTranslations', { terms: defaults }, { headers: { 'Content-Type': 'application/json' } });
+
+     const response = await client.post(
+          '/SystemAPI?method=getBulkTranslations',
+          { terms: defaults },
+          {
+               params: { language },
+               headers: { 'Content-Type': 'application/json' },
+          }
+     );
+
      if (response.ok) {
-          const translation = response?.data?.result[language] ?? defaults;
+          const translation = response?.data?.result?.[language] ?? defaults;
           const lastUpdated = {
                lastUpdated: moment(),
           };
           translationsLibrary = _.merge(translationsLibrary, lastUpdated);
+
           if (_.isObject(translation)) {
                const obj = {
                     [language]: translation,
@@ -224,12 +231,11 @@ export async function getTranslatedTerm(language, url) {
                translationsLibrary = _.merge(translationsLibrary, obj);
           }
      } else {
-          // error, just plug in defaults for given language
           const obj = {
                [language]: defaults,
           };
           translationsLibrary = _.merge(translationsLibrary, obj);
-          logDebugMessage("getTranslatedTerm failed");
+          logDebugMessage('getTranslatedTerm failed');
           logDebugMessage(response);
           getErrorMessage(response.code, response.problem);
      }

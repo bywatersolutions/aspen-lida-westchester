@@ -5,10 +5,9 @@ import { Platform } from 'react-native';
 import { HoldsContext, LanguageContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { refreshProfile } from '../../util/api/user';
-import { completeAction } from '../../util/recordActions';
+import { completeAction } from '../../util/api/userHelper';
 import { SelectVolume } from './SelectVolume';
-import { logDebugMessage, logWarnMessage } from '../../util/logging';
-import { getErrorMessage } from '../../util/apiAuth';
+import { logDebugMessage, logWarnMessage, getErrorMessage } from '../../util/logging';
 
 const SelectLinkedAccount = (props) => {
      const { id, action, title, volumeInfo, prevRoute, isEContent, response, setResponse, responseIsOpen, setResponseIsOpen, onResponseClose, cancelResponseRef } = props;

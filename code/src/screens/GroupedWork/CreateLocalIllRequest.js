@@ -4,12 +4,12 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadingSpinner } from '../../components/loadingSpinner';
-import { submitLocalIllRequest } from '../../util/recordActions';
+import { submitLocalIllRequest } from '../../util/api/user';
 import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext, ThemeContext } from '../../context/initialContext';
-import { popAlert, loadError } from '../../components/loadError';
-import { getLocalIllForm } from '../../util/loadLibrary';
-import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../util/logging';
-import { getErrorMessage, stripHTML } from '../../util/apiAuth';
+import { loadError } from '../../components/loadError';
+import { getLocalIllForm } from '../../util/api/system';
+import { logDebugMessage, logErrorMessage, logInfoMessage, getErrorMessage } from '../../util/logging';
+import { stripHTML } from '../../helpers/helpers';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const CreateLocalIllRequest = () => {

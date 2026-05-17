@@ -5,7 +5,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import { Badge, BadgeText, Box, Center, ChevronDownIcon, FlatList, Heading, HStack, Pressable, ScrollView, Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectIcon, SelectInput, SelectItem, SelectPortal, SelectTrigger, Text, VStack, ButtonGroup, Button, ButtonText } from '@gluestack-ui/themed';
 import React from 'react';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // custom components and helper files
 import { loadingSpinner } from '../../../components/loadingSpinner';
@@ -13,10 +13,9 @@ import { DisplaySystemMessage } from '../../../components/Notifications';
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { navigateStack } from '../../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { formatLists, getListDetails, getListGroupDetails, getListGroups, getLists, getListTitles } from '../../../util/api/list';
+import { getListDetails, getListGroupDetails, getListGroups, getLists, getListTitles } from '../../../util/api/list';
 import CreateList from './CreateList';
-import { logDebugMessage, logErrorMessage, logInfoMessage } from '../../../util/logging';
-import { getErrorMessage } from '../../../util/apiAuth';
+import { getErrorMessage, logDebugMessage, logErrorMessage } from '../../../util/logging';
 import CreateListGroup from './CreateListGroup';
 import { Platform } from 'react-native';
 import { EditListGroup } from './EditListGroup';

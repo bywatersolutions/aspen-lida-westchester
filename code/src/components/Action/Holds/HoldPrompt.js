@@ -8,17 +8,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RenderHtml from 'react-native-render-html';
 import { HoldsContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { refreshProfile, updateAlternateLibraryCard } from '../../../util/api/user';
-import { decodeHTML, getErrorMessage } from '../../../util/apiAuth';
-import { completeAction } from '../../../util/recordActions';
+import { decodeHTML } from '../../../helpers/helpers';
+import { completeAction } from '../../../util/api/userHelper';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { getCopies } from '../../../util/api/item';
 import { HoldNotificationPreferences } from './HoldNotificationPreferences';
 import { SelectItemHold } from './SelectItem';
 import { SelectVolume } from './SelectVolume';
 import { SelectNewHoldSublocation } from './SelectNewHoldSublocation';
-import { PATRON } from '../../../util/loadPatron';
+import { PATRON } from '../../../util/globals';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';
+import { logDebugMessage, logInfoMessage, logWarnMessage, getErrorMessage } from '../../../util/logging.js';
 
 export const HoldPrompt = (props) => {
      const queryClient = useQueryClient();

@@ -1,6 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
-import { loadingSpinner } from '../../../components/loadingSpinner';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import {getTermFromDictionary} from "../../../translations/TranslationService";
 import {Platform} from "react-native";
@@ -30,14 +28,13 @@ import {
 	CheckIcon,
 	CheckboxIndicator,
 	CheckboxIcon,
-	SelectScrollView,
 	ButtonSpinner
 } from '@gluestack-ui/themed';
 import {refreshProfile, updateHoldPickupPreferences} from "../../../util/api/user";
-import {PATRON} from "../../../util/loadPatron";
+import {PATRON} from "../../../util/globals";
 import {SelectNewHoldSublocation} from "../../../components/Action/Holds/SelectNewHoldSublocation";
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';
+import { logDebugMessage } from '../../../util/logging.js';
 
 export const Settings_PickupLocations = () => {
 	const [loading, setLoading] = React.useState(false);

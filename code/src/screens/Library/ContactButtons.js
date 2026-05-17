@@ -9,7 +9,7 @@ import { LanguageContext, LibrarySystemContext } from '../../context/initialCont
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
 // custom components and helper files
-import { PATRON } from '../../util/loadPatron';
+import { PATRON } from '../../util/globals';
 import { logDebugMessage, logErrorMessage } from '../../util/logging';
 
 const ContactButtons = (data) => {

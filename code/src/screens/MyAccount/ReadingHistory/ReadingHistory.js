@@ -53,13 +53,14 @@ import { DisplaySystemMessage } from '../../../components/Notifications';
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../../context/initialContext';
 import { getAuthor, getCleanTitle, getDateLastUsed, getFormat, getTitle } from '../../../helpers/item';
 import { navigateStack } from '../../../helpers/RootNavigator';
-import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
-import { deleteAllReadingHistory, deleteSelectedReadingHistory, fetchReadingHistory, formatReadingHistory, optIntoReadingHistory, optOutOfReadingHistory } from '../../../util/api/user';
+import { getTermFromDictionary } from '../../../translations/TranslationService';
+import { deleteAllReadingHistory, deleteSelectedReadingHistory, fetchReadingHistory, optIntoReadingHistory, optOutOfReadingHistory } from '../../../util/api/user';
+import { formatReadingHistory } from '../../../util/api/userHelper';
+
 import AddToList from '../../Search/AddToList';
 import { ActionsheetIcon } from '@gluestack-ui/themed';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../../util/logging.js';
-import { getErrorMessage } from '../../../util/apiAuth';
+import { logDebugMessage, logErrorMessage, getErrorMessage } from '../../../util/logging.js';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 

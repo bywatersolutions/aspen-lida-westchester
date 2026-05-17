@@ -4,12 +4,12 @@ import { CloseIcon, Modal, ModalBackdrop, ModalContent, ModalHeader, ModalCloseB
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 import { refreshProfile, updateAlternateLibraryCard } from '../../util/api/user';
-import { decodeHTML, getErrorMessage } from '../../util/apiAuth';
-import { completeAction } from '../../util/recordActions';
+import { decodeHTML } from '../../helpers/helpers';
+import { completeAction } from '../../util/api/userHelper';
 import { useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { EyeOff, Eye } from 'lucide-react-native';
-import { logDebugMessage, logWarnMessage } from '../../util/logging';
+import { logDebugMessage, logWarnMessage, getErrorMessage } from '../../util/logging';
 
 export const AddAlternateLibraryCard = (props) => {
      const {

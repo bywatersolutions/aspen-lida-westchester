@@ -7,7 +7,7 @@ import { ScrollView } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { LanguageContext, ThemeContext } from '../../../context/initialContext';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
-import { addAppliedFilter } from '../../../util/search';
+import { addAppliedFilter } from '../../../util/api/searchHelper';
 
 // custom components and helper files
 

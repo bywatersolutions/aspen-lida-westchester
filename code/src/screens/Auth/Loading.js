@@ -10,18 +10,21 @@ import { checkVersion } from 'react-native-check-version';
 import { BrowseCategoryContext, LanguageContext, LibraryBranchContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../context/initialContext';
 import { createGlueTheme } from '../../themes/theme';
 import { getLanguageDisplayName, getTermFromDictionary, getTranslatedTermsForUserPreferredLanguage, translationsLibrary } from '../../translations/TranslationService';
-import { getCatalogStatus, getLibraryInfo, getLibraryLanguages, getLibraryLinks, getSystemMessages } from '../../util/api/library';
-import { getLocationInfo, getSelfCheckSettings } from '../../util/api/location';
-import { fetchNotificationHistory, formatLinkedAccounts, formatNotificationHistory, getAppPreferencesForUser, getLinkedAccounts, refreshProfile } from '../../util/api/user';
+import { getCatalogStatus, getLibraryInfo, getLibraryLanguages, getLibraryLinks, getSystemMessages } from '../../util/api/system';
+import { getLocationInfo, getSelfCheckSettings } from '../../util/api/system';
+import { getHomeScreenFeed } from '../../util/api/search';
+import { fetchNotificationHistory, getAppPreferencesForUser, getLinkedAccounts, refreshProfile } from '../../util/api/user';
+import { formatLinkedAccounts, formatNotificationHistory } from '../../util/api/userHelper';
+
 import { GLOBALS } from '../../util/globals';
-import { getHomeScreenFeed, LIBRARY } from '../../util/loadLibrary';
-import { getBrowseCategoryListForUser, PATRON } from '../../util/loadPatron';
+import { LIBRARY, PATRON } from '../../util/globals';
+import { getBrowseCategoryListForUser } from '../../util/api/search';
 import { CatalogOffline } from './CatalogOffline';
 import { ForceLogout } from './ForceLogout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
-import { getErrorMessage, stripHTML } from '../../util/apiAuth';
+import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage, getErrorMessage } from '../../util/logging.js';
+import { stripHTML } from '../../helpers/helpers';
 
 const prefix = Linking.createURL('/');
 
@@ -443,7 +446,7 @@ export const LoadingScreen = () => {
           onSuccess: (data) => {
                if(data.ok) {
                     setProgress(progress + (100 / numSteps));
-                    const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library.barcodeStyle, data.data.result.linkedAccounts);
+                    const linkedAccounts = formatLinkedAccounts(user, cards ?? [], library?.barcodeStyle ?? 'UNKNOWN', data.data.result.linkedAccounts);
                     updateLinkedAccounts(linkedAccounts.accounts);
                     updateLibraryCards(linkedAccounts.cards);
                     setIsReloading(false);

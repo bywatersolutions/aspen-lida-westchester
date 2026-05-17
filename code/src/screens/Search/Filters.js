@@ -29,7 +29,8 @@ import { navigateStack } from '../../helpers/RootNavigator';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
 // custom components and helper files
-import { buildParamsForUrl, SEARCH } from '../../util/search';
+import { SearchGlobal } from '../../util/globals';
+import { buildParamsForUrl } from '../../util/api/searchHelper';
 import { UnsavedChangesExit } from './UnsavedChanges';
 
 export const FiltersScreen = () => {
@@ -43,11 +44,11 @@ export const FiltersScreen = () => {
      const { currentIndex, currentSource, indexes, sources, updateCurrentIndex, updateCurrentSource, updateIndexes } = React.useContext(SearchContext);
      const {theme, textColor, colorMode } = React.useContext(ThemeContext);
      const pendingFiltersFromParams = useNavigationState((state) => state.routes[0]['params']['pendingFilters']);
-     const [searchTerm, setSearchTerm] = React.useState(SEARCH.term ?? '');
+     const [searchTerm, setSearchTerm] = React.useState(SearchGlobal.term ?? '');
      const [searchSourceLabel, setSearchSourceLabel] = React.useState('Library Catalog');
 
-     let facets = SEARCH.availableFacets ? Object.keys(SEARCH.availableFacets) : [];
-     let pendingFilters = SEARCH.pendingFilters ?? [];
+     let facets = SearchGlobal.availableFacets ? Object.keys(SearchGlobal.availableFacets) : [];
+     let pendingFilters = SearchGlobal.pendingFilters ?? [];
 
      if (pendingFilters !== pendingFiltersFromParams) {
           navigation.setOptions({
@@ -75,11 +76,11 @@ export const FiltersScreen = () => {
      };
 
      const appliedFacet = (cluster) => {
-          const facetData = _.filter(SEARCH.availableFacets, ['label', cluster]);
+          const facetData = _.filter(SearchGlobal.availableFacets, ['label', cluster]);
           const pendingFacets = _.filter(pendingFilters, ['field', facetData[0]['field']]);
           let text = '';
-          if (_.isObjectLike(SEARCH.appliedFilters) && !_.isUndefined(SEARCH.appliedFilters[cluster])) {
-               const facet = SEARCH.appliedFilters[cluster];
+          if (_.isObjectLike(SearchGlobal.appliedFilters) && !_.isUndefined(SearchGlobal.appliedFilters[cluster])) {
+               const facet = SearchGlobal.appliedFilters[cluster];
                _.forEach(facet, function (item, key) {
                     if (text.length === 0) {
                          text = text.concat(_.toString(item['display']));
@@ -183,7 +184,7 @@ export const FiltersScreen = () => {
      };
 
      const openCluster = (cluster) => {
-          const obj = SEARCH.availableFacets[cluster];
+          const obj = SearchGlobal.availableFacets[cluster];
           navigation.navigate('Facet', {
                data: cluster,
                defaultValues: [],
@@ -206,45 +207,45 @@ export const FiltersScreen = () => {
 
      const updateSearch = () => {
           const params = buildParamsForUrl();
-          SEARCH.hasPendingChanges = false;
+          SearchGlobal.hasPendingChanges = false;
           navigation.navigate('BrowseTab', {
                screen: 'SearchResults',
                params: {
-                    term: SEARCH.term,
+                    term: SearchGlobal.term,
                     pendingParams: params,
                },
           });
      };
 
      const discardChanges = () => {
-          SEARCH.hasPendingChanges = false;
-          SEARCH.appliedFilters = [];
-          SEARCH.sortMethod = 'relevance';
-          SEARCH.availableFacets = [];
-          SEARCH.pendingFilters = [];
-          SEARCH.appendedParams = '';
+          SearchGlobal.hasPendingChanges = false;
+          SearchGlobal.appliedFilters = [];
+          SearchGlobal.sortMethod = 'relevance';
+          SearchGlobal.availableFacets = [];
+          SearchGlobal.pendingFilters = [];
+          SearchGlobal.appendedParams = '';
 
           navigation.navigate('BrowseTab', {
                screen: 'SearchResults',
                params: {
-                    term: SEARCH.term,
+                    term: SearchGlobal.term,
                     pendingParams: '',
                },
           });
      };
 
      const clearSelections = () => {
-          SEARCH.hasPendingChanges = false;
-          SEARCH.appliedFilters = [];
-          SEARCH.sortMethod = 'relevance';
-          SEARCH.availableFacets = [];
-          SEARCH.pendingFilters = [];
-          SEARCH.appendedParams = '';
+          SearchGlobal.hasPendingChanges = false;
+          SearchGlobal.appliedFilters = [];
+          SearchGlobal.sortMethod = 'relevance';
+          SearchGlobal.availableFacets = [];
+          SearchGlobal.pendingFilters = [];
+          SearchGlobal.appendedParams = '';
 
           navigation.navigate('BrowseTab', {
                screen: 'SearchResults',
                params: {
-                    term: SEARCH.term,
+                    term: SearchGlobal.term,
                     pendingParams: '',
                },
           });

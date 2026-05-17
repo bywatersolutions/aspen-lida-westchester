@@ -1,4 +1,3 @@
-import { create } from 'apisauce';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -7,14 +6,11 @@ import { Alert, CloseIcon, HStack, IconButton, Text, VStack } from 'native-base'
 import React from 'react';
 import { Platform } from 'react-native';
 import { getTermFromDictionary } from '../translations/TranslationService';
-import { dismissSystemMessage } from '../util/api/library';
+import { dismissSystemMessage } from '../util/api/system';
 
 // custom components and helper files
-import { createAuthTokens, getHeaders, postData, problemCodeMap, stripHTML } from '../util/apiAuth';
-import { GLOBALS } from '../util/globals';
-import { popAlert, popToast } from './loadError';
-
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage, logSentryMessage } from '../util/logging.js';
+import { stripHTML } from '../helpers/helpers';
+import { logDebugMessage, logErrorMessage } from '../util/logging.js';
 
 export async function registerForPushNotificationsAsync(url, updateUserDebugMessage) {
      try {
@@ -64,71 +60,6 @@ export async function registerForPushNotificationsAsync(url, updateUserDebugMess
           updateUserDebugMessage(error);
           return false;
      }
-}
-
-export async function savePushToken(url, pushToken, updateUserDebugMessage) {
-     updateUserDebugMessage("Saving Push Token " + pushToken);
-     let postBody = await postData();
-     postBody.append('pushToken', pushToken);
-     postBody.append('deviceModel', Device.modelName);
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-     });
-     const response = await api.post('/UserAPI?method=saveNotificationPushToken', postBody);
-     if(!response.ok) {
-            logErrorMessage("Could not save push token");
-            logDebugMessage(response);
-            updateUserDebugMessage("Could not save push token");
-            updateUserDebugMessage(response);
-     }
-     return response.ok;
-}
-
-export async function getPushToken(libraryUrl) {
-     logDebugMessage("Getting push token");
-     let postBody = await postData();
-     const api = create({
-          baseURL: libraryUrl + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-     });
-     const response = await api.post('/UserAPI?method=getNotificationPushToken', postBody);
-     if (response.ok) {
-          if (response.data.result.success) {
-               logDebugMessage("Got Push Token " + response.data.result.tokens);
-               return response.data.result.tokens;
-          } else {
-               logWarnMessage("No push tokens found");
-               logDebugMessage(response);
-               return [];
-          }
-     } else {
-          logWarnMessage("Could not retrieve push tokens");
-          logWarnMessage(response);
-          return [];
-     }
-}
-
-export async function deletePushToken(libraryUrl, pushToken, shouldAlert = false) {
-     logDebugMessage("Deleting push token");
-     let postBody = await postData();
-     postBody.append('pushToken', pushToken);
-     const api = create({
-          baseURL: libraryUrl + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-     });
-     const response = await api.post('/UserAPI?method=deleteNotificationPushToken', postBody);
-     if(!response.ok) {
-          logErrorMessage("Could not delete push token");
-          logDebugMessage(response);
-     }
-     return response.ok;
 }
 
 async function createNotificationChannelGroup(id, name, description = null) {
@@ -189,83 +120,6 @@ async function getNotificationCategory(category) {
 
 async function deleteNotificationCategory(category) {
      return Notifications.deleteNotificationCategoryAsync(`${category}`);
-}
-
-export async function getNotificationPreferences(libraryUrl, pushToken) {
-     let postBody = await postData();
-     postBody.append('pushToken', pushToken);
-     const api = create({
-          baseURL: libraryUrl + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-     });
-     logDebugMessage("Loading notification preferences " + pushToken);
-     const response = await api.post('/UserAPI?method=getNotificationPreferences', postBody);
-     if (response.ok) {
-          try {
-               await createChannelsAndCategories();
-          } catch (e) {
-               logErrorMessage("Could not create channels and categories");
-               logErrorMessage(e);
-          }
-          return response.data.result;
-     } else {
-          const problem = problemCodeMap(response.problem);
-          popToast(problem.title, problem.message, 'error');
-          logWarnMessage("Could not retrieve notification preferences");
-          logWarnMessage(response);
-          return false;
-     }
-}
-
-export async function getNotificationPreference(url, pushToken, type) {
-     let postBody = await postData();
-     postBody.append('pushToken', pushToken);
-     postBody.append('type', type);
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               type: type,
-          },
-     });
-     logDebugMessage("Getting notification preference for type " + type);
-     const response = await api.post('/UserAPI?method=getNotificationPreference', postBody);
-     if (response.ok) {
-          if (response.data?.result?.success === true) {
-               logDebugMessage(response.data.result);
-               return response.data.result;
-          } else {
-               popAlert(response.data.result.title ?? 'Unknown Error', response.data.result.message, 'error');
-               return false;
-          }
-     } else {
-          const problem = problemCodeMap(response.problem);
-          popToast(problem.title, problem.message, 'error');
-          return false;
-     }
-}
-
-export async function setNotificationPreference(url, pushToken, type, value, showToast = true) {
-     let postBody = await postData();
-     postBody.append('pushToken', pushToken);
-     postBody.append('type', type);
-     postBody.append('value', value);
-     const api = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               type: type,
-               value: value,
-          },
-     });
-     const response = await api.post('/UserAPI?method=setNotificationPreference', postBody);
-     return response.ok;
 }
 
 export async function createChannelsAndCategories() {

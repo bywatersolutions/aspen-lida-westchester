@@ -1,36 +1,25 @@
-import { create } from 'apisauce';
-import { createAuthTokens, getErrorMessage, getHeaders, postData } from '../apiAuth';
 import { GLOBALS } from '../globals';
-import { popToast } from '../../components/loadError';
-import { logErrorMessage } from '../logging';
-
-/** *******************************************************************
- * General
- ******************************************************************* **/
+import { createApiClient } from './apiFactory';
 
 /**
  * Return the user's saved events
  * @param {number} page
  * @param {number} pageSize
  * @param {string} filter
- * @param {string} url
+ * @param {?string} url
  * @param {string} language
+ * @returns {Promise<{events: array, total: number}>}
  **/
-export async function fetchSavedEvents(page = 1, pageSize = 25, filter = 'upcoming', url, language = 'en') {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               page: page,
-               pageSize: pageSize,
-               filter,
-               language,
-          },
-     });
+export async function fetchSavedEvents(page = 1, pageSize = 25, filter = 'upcoming', language = 'en', url = null) {
+     const client = createApiClient({ url, language });
 
-     return await api.post('/EventAPI?method=getSavedEvents', postBody);
+     return await client.post(
+          '/EventAPI?method=getSavedEvents',
+          {},
+          {
+               params: { page, pageSize, filter, language },
+          }
+     );
 }
 
 /**
@@ -38,83 +27,59 @@ export async function fetchSavedEvents(page = 1, pageSize = 25, filter = 'upcomi
  * @param {string} id
  * @param {string} source
  * @param {string} language
- * @param {string} url
+ * @param {?string} url
+ * @returns {Promise<{id: string, source: string, details: object}>}
  **/
-export async function getEventDetails(id, source, language, url) {
-     const postBody = await postData();
-     const api = create({
-          baseURL: url + '/API',
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               id: id,
-               source: source,
-               language,
-          },
-     });
-     return await api.post('/EventAPI?method=getEventDetails', postBody);
+export async function getEventDetails(id, source, language, url = null) {
+     const client = createApiClient({ url, language });
+
+     return await client.post(
+          '/EventAPI?method=getEventDetails',
+          {},
+          {
+               params: { id, source, language },
+          }
+     );
 }
 
 /**
  * Adds the given event to the user's Saved Events
  * @param {string} id
  * @param {string} language
- * @param {string} url
+ * @param {?string} url
+ * @returns {Promise<{success: boolean, message: string}>}
  **/
-export async function saveEvent(id, language, url) {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               id,
-               language,
-          },
-     });
+export async function saveEvent(id, language, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage, language });
 
-     const response = await discovery.post('/EventAPI?method=saveEvent', postBody);
-     if (response.ok) {
-          if (response?.data) {
-               return response.data;
+     const response = await client.post(
+          '/EventAPI?method=saveEvent',
+          {},
+          {
+               params: { id, language },
           }
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return [];
-     }
+     );
+
+     return response.ok ? response.data : [];
 }
 
 /**
  * Removes the given event from the user's Saved Events
  * @param {string} id
  * @param {string} language
- * @param {string} url
+ * @param {?string} url
+ * @returns {Promise<{success: boolean, message: string}>}
  **/
-export async function removeSavedEvent(id, language, url) {
-     const postBody = await postData();
-     const discovery = create({
-          baseURL: url + '/API',
-          timeout: GLOBALS.timeoutAverage,
-          headers: getHeaders(true),
-          auth: createAuthTokens(),
-          params: {
-               id,
-               language,
-          },
-     });
+export async function removeSavedEvent(id, language, url = null) {
+     const client = createApiClient({ url, timeout: GLOBALS.timeoutAverage, language });
 
-     const response = await discovery.post('/EventAPI?method=removeSavedEvent', postBody);
-     if (response.ok) {
-          if (response?.data) {
-               return response.data;
+     const response = await client.post(
+          '/EventAPI?method=removeSavedEvent',
+          {},
+          {
+               params: { id, language },
           }
-     } else {
-          const error = getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          popToast(error.title, error.message, 'error');
-          logErrorMessage(response);
-          return [];
-     }
+     );
+
+     return response.ok ? response.data : [];
 }

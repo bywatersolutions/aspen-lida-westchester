@@ -9,19 +9,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // custom components and helper files
 import { loadingSpinner } from '../../components/loadingSpinner';
-import { confirmHold } from '../../util/api/circulation';
+import { placeHold, confirmHold, refreshProfile } from '../../util/api/user';
 import { getRecords } from '../../util/api/item';
 import { loadError } from '../../components/loadError';
 import { navigate, navigateStack } from '../../helpers/RootNavigator';
-import { refreshProfile } from '../../util/api/user';
-import { getErrorMessage, stripHTML } from '../../util/apiAuth';
-import { placeHold } from '../../util/recordActions';
+import { stripHTML } from '../../helpers/helpers';
 import { getStatusIndicator } from './StatusIndicator';
 import { ActionButton } from '../../components/Action/ActionButton';
 import { LanguageContext, LibrarySystemContext, ThemeContext, UserContext } from '../../context/initialContext';
 import { getTermFromDictionary } from '../../translations/TranslationService';
 
-import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from '../../util/logging.js';
+import { logDebugMessage, logWarnMessage, getErrorMessage } from '../../util/logging.js';
 
 export const Editions = () => {
      const queryClient = useQueryClient();

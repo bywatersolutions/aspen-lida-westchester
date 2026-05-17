@@ -2,13 +2,12 @@ import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Button, ButtonText, Center, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, HStack, Text, Icon, FlatList, Heading} from '@gluestack-ui/themed';
 import {MaterialIcons} from '@expo/vector-icons';
-import {getItemDetails} from '../../util/recordActions';
+import {getItemDetails} from '../../util/api/item';
 import _ from 'lodash';
 import {LanguageContext, LibrarySystemContext} from '../../context/initialContext';
 import {useQueryClient} from '@tanstack/react-query';
 import {getTermFromDictionary} from '../../translations/TranslationService';
-import { logDebugMessage } from '../../util/logging';
-import { getErrorMessage } from '../../util/apiAuth';
+import { logDebugMessage, getErrorMessage } from '../../util/logging';
 import { DisplayErrorAlertDialog } from '../../components/loadError';
 
 /*const CopyDetails = (props) => {

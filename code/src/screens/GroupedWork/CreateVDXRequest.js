@@ -5,10 +5,10 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { loadingSpinner } from '../../components/loadingSpinner';
-import { submitVdxRequest } from '../../util/recordActions';
+import { submitVdxRequest } from '../../util/api/user';
 import { LanguageContext, LibraryBranchContext, LibrarySystemContext, UserContext } from '../../context/initialContext';
 import { loadError } from '../../components/loadError';
-import { getVdxForm } from '../../util/loadLibrary';
+import { getVdxForm } from '../../util/api/system';
 
 export const CreateVDXRequest = () => {
      const route = useRoute();

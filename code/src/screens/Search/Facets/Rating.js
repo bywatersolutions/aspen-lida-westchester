@@ -7,7 +7,7 @@ import Stars from 'react-native-stars';
 
 // custom components and helper files
 import { LoadingSpinner } from '../../../components/loadingSpinner';
-import { addAppliedFilter, removeAppliedFilter } from '../../../util/search';
+import { addAppliedFilter, removeAppliedFilter } from '../../../util/api/searchHelper';
 import { ThemeContext } from '../../../context/initialContext';
 
 export const Facet_Rating = ({ data, category, updater }) => {

@@ -15,10 +15,9 @@ import { DisplaySystemMessage } from '../../../components/Notifications';
 import { LanguageContext, LibrarySystemContext, SystemMessagesContext, UserContext } from '../../../context/initialContext';
 import { getCleanTitle } from '../../../helpers/item';
 import { navigate } from '../../../helpers/RootNavigator';
-import { getTermFromDictionary, getTranslationsWithValues } from '../../../translations/TranslationService';
+import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { fetchSavedEvents, removeSavedEvent } from '../../../util/api/event';
-import { logDebugMessage, logErrorMessage } from '../../../util/logging';
-import { getErrorMessage } from '../../../util/apiAuth';
+import { logDebugMessage, logErrorMessage, getErrorMessage } from '../../../util/logging';
 
 const blurhash = 'MHPZ}tt7*0WC5S-;ayWBofj[K5RjM{ofM_';
 

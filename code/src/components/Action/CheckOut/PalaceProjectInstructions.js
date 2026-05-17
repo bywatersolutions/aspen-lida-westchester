@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, ScrollView } from '@gluestack-ui/themed';
-import { LanguageContext, LibrarySystemContext, ThemeContext } from '../../../context/initialContext';
+import { LibrarySystemContext, ThemeContext } from '../../../context/initialContext';
 import { useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
-import { decodeHTML } from '../../../util/apiAuth';
+import { decodeHTML } from '../../../helpers/helpers';
 
 export const PalaceProjectInstructions = () => {
      const { library } = React.useContext(LibrarySystemContext);
