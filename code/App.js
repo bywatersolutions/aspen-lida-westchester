@@ -63,7 +63,6 @@ export default function AppContainer() {
      const [statusBarColor, setStatusBarColor] = React.useState('light-content');
 
      const [dbReady, setDbReady] = React.useState(false);
-
      React.useEffect(() => {
           let active = true;
 
@@ -83,13 +82,10 @@ export default function AppContainer() {
           };
      }, []);
 
-     if (!dbReady) {
-          return <SplashScreenNative />;
-     }
-
      logDebugMessage("2 Initial setup done");
 
      React.useEffect(() => {
+          console.log('useEffect triggered with colorMode:', colorMode, 'and mode:', mode);
           const setupNativeBaseTheme = async () => {
                logDebugMessage('3 Running setupNativeBaseTheme...');
                try {
@@ -134,7 +130,7 @@ export default function AppContainer() {
           });
      }, [colorMode, mode]);
 
-     if (isLoading) {
+     if (isLoading || !dbReady) {
           logDebugMessage("6 Still loading, showing splash screen");
           return <SplashScreenNative />;
      }else{
