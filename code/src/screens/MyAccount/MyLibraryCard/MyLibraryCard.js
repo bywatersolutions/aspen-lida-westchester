@@ -437,7 +437,9 @@ const CreateLibraryCard = (data) => {
                          </Button>
                     ) : (
                          <VStack alignItems="center" space="sm">
-                              <Box bg={theme['colors']['warmGray']['200']} p="$3" borderRadius="$sm">
+                              <Box bg={theme['colors']['warmGray']['200']} 
+                                   p="$3" 
+                                   borderRadius="$sm">
                                    <Barcode
                                         value={barcodeValue}
                                         format={barcodeStyle}
@@ -674,18 +676,23 @@ const BarcodeModal = ({ card, showModal, closeModal, language }) => {
      };
 
      return (
-          <Modal isOpen={showModal} onClose={closeModal} size="xl">
+          <Modal isOpen={showModal} onClose={closeModal} size="full">
                     <ModalBackdrop sx={{ opacity: 0.85 }} />
                     <ModalContent bgColor="white">
                          <ModalBody style={{margin: 20}} bgColor="white" p="$4">
                               {/* Always render barcode to measure it, but hide if showing warning. */}
                               <Box style={{ opacity: showRotateWarning ? 0 : 1, position: showRotateWarning ? 'absolute' : 'relative' }}>
                                    <Center p="$2">
-                                        <Box onLayout={onBarcodeLayout}>
+                                        <Box 
+                                             bg={theme['colors']['warmGray']['200']} 
+                                             p="$3" 
+                                             borderRadius="$sm" 
+                                             onLayout={onBarcodeLayout}>
                                              <Barcode
                                                   value={barcodeValue}
                                                   format={barcodeStyle}
                                                   onError={handleBarcodeError}
+                                                  background={theme['colors']['warmGray']['200']}
                                              />
                                         </Box>
                                    </Center>
