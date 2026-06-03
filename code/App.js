@@ -18,6 +18,7 @@ import { SplashScreenNative } from './src/screens/Auth/SplashNative';
 import { createTheme, saveTheme } from './src/themes/theme';
 
 import { logDebugMessage, logInfoMessage, logWarnMessage, logErrorMessage } from './src/util/logging.js';
+import { initDatabase } from './src/util/db/sqlite';
 
 logDebugMessage("1 Enabling Screens, react-native-screens");
 enableScreens();
@@ -61,9 +62,30 @@ export default function AppContainer() {
      const { mode, updateColorMode, updateTheme } = React.useContext(ThemeContext);
      const [statusBarColor, setStatusBarColor] = React.useState('light-content');
 
+     const [dbReady, setDbReady] = React.useState(false);
+     React.useEffect(() => {
+          let active = true;
+
+          (async () => {
+               try {
+                    await initDatabase();
+               } catch (error) {
+                    logErrorMessage('Failed to initialize SQLite');
+                    logErrorMessage(error);
+               } finally {
+                    if (active) setDbReady(true);
+               }
+          })();
+
+          return () => {
+               active = false;
+          };
+     }, []);
+
      logDebugMessage("2 Initial setup done");
 
      React.useEffect(() => {
+          console.log('useEffect triggered with colorMode:', colorMode, 'and mode:', mode);
           const setupNativeBaseTheme = async () => {
                logDebugMessage('3 Running setupNativeBaseTheme...');
                try {
@@ -108,7 +130,7 @@ export default function AppContainer() {
           });
      }, [colorMode, mode]);
 
-     if (isLoading) {
+     if (isLoading || !dbReady) {
           logDebugMessage("6 Still loading, showing splash screen");
           return <SplashScreenNative />;
      }else{

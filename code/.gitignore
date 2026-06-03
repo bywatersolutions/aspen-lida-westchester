@@ -151,3 +151,11 @@ web-build/
 dist/
 
 # @end expo-cli
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

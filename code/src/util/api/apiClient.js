@@ -4,6 +4,8 @@ import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
 import base64 from 'react-native-base64';
 import { API_KEY_1, API_KEY_2, API_KEY_3, API_KEY_4, API_KEY_5 } from '@env';
+import * as Sentry from '@sentry/react-native';
+import { insertApiErrorLog } from '../db';
 
 const ERROR_TYPES = {
      TIMEOUT: 'TIMEOUT_ERROR',
@@ -100,13 +102,14 @@ async function createPostData(additionalData = {}) {
 /**
  * HTTP client for Aspen Discovery APIs
  */
-class ApiClient {
+export class ApiClient {
      constructor(config = {}) {
           this.baseURL = config.baseURL || '';
           this.timeout = config.timeout || GLOBALS.timeoutAverage;
           this.language = config.language || 'en';
           this.retryConfig = config.retryConfig || { maxRetries: 1, delay: 1000 };
           this.debugMode = __DEV__;
+          this.logAllAPICalls = true;
      }
 
      buildUrl(endpoint, params = {}) {
@@ -188,20 +191,11 @@ class ApiClient {
           return null;
      }
 
-     logResponse(method, endpoint, response, config = {}) {
-          logDebugMessage(`[API ${method}] ${endpoint}`);
-          logDebugMessage(JSON.stringify(response, null, 2));
-
-          if (!response.ok && config.customErrorMessage) {
-               logErrorMessage(config.customErrorMessage);
-          }
-     }
-
      async request(url, options = {}, config = {}) {
           let timeoutId;
 
           try {
-               logDebugMessage(`[API Request] ${options.method} ${url}`);
+               logInfoMessage(`[API Request] ${options.method} ${url}`);
 
                const { controller, timeoutId: tid } = this.createAbortController();
                timeoutId = tid;
@@ -238,8 +232,17 @@ class ApiClient {
                if (response.ok) {
                     const validation = this.validateAspenResponse(data);
                     if (!validation.valid) {
-                         logWarnMessage(`[API Request]: Validation warning: ${validation.message} for ${url}`);
-                         // some APIs aren't actually setup for wrap in "result"
+                         if(validation.code === "INVALID_RESPONSE_TYPE") {
+                              // We have a response.ok but data is invalid JSON - likely an error from Aspen Discovery surfacing
+                              const error = new Error(validation.message);
+                              error.type = validation.error;
+                              error.code = validation.code;
+                              error.response = result;
+                              logDebugMessage(`[API Request]: Validation error: ${validation.message}`);
+                              throw error;
+                         } else {
+                              logWarnMessage(`[API Request]: Validation warning: ${validation.message} for ${url}`);
+                         }
                     }
 
                     const authError = this.checkAuthError(data);
@@ -252,13 +255,31 @@ class ApiClient {
                          throw error;
                     }
 
-                    if (this.debugMode && data.debug) {
-                         logInfoMessage(`${data.debug}`);
+                    /**
+                     * Log OK API response details for debugging if debug mode is enabled or
+                     * if the response contains debug information.
+                     */
+                    if (this.debugMode || data.debug || data.result?.debug) {
+                         await insertApiErrorLog({
+                              method: options.method,
+                              endpoint: url,
+                              status: response.status || null,
+                              problem: '',
+                              message: response.message || '',
+                              requestUrl: url,
+                              requestParams: options.params || null,
+                              requestBody: options.body || null,
+                              responseBody: response.body || null,
+                         });
                     }
 
                     return result;
                }
 
+               /**
+                * For non-OK responses, throw an error
+                * @type {Error}
+                */
                const error = new Error(`HTTP ${response.status}`);
                error.response = result;
                error.status = response.status;
@@ -267,7 +288,7 @@ class ApiClient {
                if (timeoutId) clearTimeout(timeoutId);
 
                let errorType = ERROR_TYPES.NETWORK;
-               let shouldLogout = error.shouldLogout || false;
+               let shouldLogout = error.shouldLogout || false; // we don't actually use this yet, but will be useful in the future
                let isSentryWorthy = true;
 
                if (error.name === 'AbortError') {
@@ -282,19 +303,40 @@ class ApiClient {
                     shouldLogout = true;
                } else if (error.type) {
                     errorType = error.type;
-                    isSentryWorthy = error.type !== ERROR_TYPES.PIN_CHANGED;
+                    isSentryWorthy = error.type !== ERROR_TYPES.INVALID_CREDENTIALS;
                }
 
-               const errorDetails = getErrorMessage({
-                    statusCode: error.status,
-                    problem: errorType,
-                    sendToSentry: isSentryWorthy,
-               });
+               const errorDetails = {
+                    method: options.method,
+                    endpoint: url,
+                    status: error.status || null,
+                    problem: error.type || 'NETWORK_ERROR',
+                    message: error.message || 'Unknown error',
+                    requestUrl: url,
+                    requestParams: options.params || null,
+                    requestBody: options.body || null,
+                    responseBody: error.response?.data || null,
+               };
+
+               /**
+                * Only log to Sentry if we're in production or
+                * if it's an error we consider important enough to log during dev
+                * (i.e. not invalid credentials)
+                */
+               if (!__DEV__ || isSentryWorthy) {
+                    Sentry.captureException(error, {
+                         level: error.status >= 500 ? 'error' : 'warning',
+                         extra: errorDetails,
+                    });
+               }
+
+               // Log all API errors to the database
+               await insertApiErrorLog(errorDetails);
 
                if (config.customErrorMessage) {
-                    logErrorMessage(config.customErrorMessage);
+                    logDebugMessage(config.customErrorMessage);
                } else {
-                    logErrorMessage(`[API Error] ${errorType}: ${errorDetails.message}${error.status ? ` (${error.status})` : ''}`);
+                    logDebugMessage(`[API Error] ${errorType}: ${errorDetails.message}${error.status ? ` (${error.status})` : ''}`);
                }
 
                return {
@@ -359,5 +401,5 @@ class ApiClient {
 }
 
 export { createAuthTokens, buildHeaders, createPostData, ERROR_TYPES, ASPEN_ERROR_CODES };
-
-export default ApiClient;
+const apiClient = new ApiClient();
+export default apiClient;

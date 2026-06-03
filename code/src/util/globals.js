@@ -1,7 +1,6 @@
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 import { Platform } from 'react-native';
-import { logDebugMessage } from './logging';
 
 const iOSDist = Constants.expoConfig.ios.buildNumber;
 const androidDist = Constants.expoConfig.android.versionCode;
@@ -112,7 +111,7 @@ export function resetSearchGlobals() {
      SearchGlobal.availableFacets = [];
      SearchGlobal.pendingFilters = [];
      SearchGlobal.appendedParams = '';
-     logDebugMessage('Reset global search variables');
+     //logDebugMessage('Reset global search variables'); // this creates a require cycle even though we aren't even using it
 }
 
 export const LIBRARY = {

@@ -1,1 +1,19 @@
-module.exports = function(api) { api.cache(true); return { presets: ['babel-preset-expo'], }; };
+module.exports = function (api) {
+     api.cache(true);
+     return {
+          presets: ['babel-preset-expo'],
+          plugins: [
+               [
+                    'module:react-native-dotenv',
+                    {
+                         envName: 'APP_ENV',
+                         moduleName: '@env',
+                         path: '.env',
+                    },
+               ],
+               ['react-native-reanimated/plugin'],
+               ['transform-inline-environment-variables'],
+               ['@babel/plugin-transform-class-static-block'],
+          ],
+     };
+};

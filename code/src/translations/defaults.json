@@ -683,5 +683,10 @@
   "no_list_group": "No Group",
   "select_new_parent": "Select a List Group",
   "notice_about_item": "Notice About Item",
-  "does_barcode_match_item": "Does this barcode match whats on the item?"
+  "does_barcode_match_item": "Does this barcode match whats on the item?",
+  "open_api_error_log": "Open API Error Log",
+  "api_error_log": "API Error Log (Last 24 Hours)",
+  "clear_api_error_log": "Clear Logs",
+  "api_error_log_empty": "No API errors in the past 24 hours",
+  "total": "Total"
 }

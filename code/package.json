@@ -54,6 +54,7 @@
     "expo-secure-store": "~14.2.3",
     "expo-sharing": "~13.1.5",
     "expo-splash-screen": "~0.30.10",
+    "expo-sqlite": "^55.0.16",
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.10",
     "expo-updates": "~0.28.17",
@@ -90,6 +91,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-class-static-block": "^7.28.6",
     "@react-native-community/cli": "latest",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",

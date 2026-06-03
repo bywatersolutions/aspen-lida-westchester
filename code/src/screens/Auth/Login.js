@@ -106,8 +106,8 @@ export const LoginScreen = () => {
 
                     if (_.includes(GLOBALS.slug, 'aspen-lida') && GLOBALS.slug !== 'aspen-lida-bws') {
                          await fetchAllLibrariesFromGreenhouse().then((response) => {
-                              if(response.ok) {
-                                   const libraries = _.sortBy(response.data.libraries ?? [], ['name', 'librarySystem']);
+                              if(response.success) {
+                                   const libraries = _.sortBy(response.libraries ?? [], ['name', 'librarySystem']);
                                    setAllLibraries(libraries);
                               } else {
                                    setAllLibraries([]);
