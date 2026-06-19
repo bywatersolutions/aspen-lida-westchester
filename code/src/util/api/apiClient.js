@@ -51,7 +51,7 @@ function createAuthTokens() {
 /**
  * Build headers for Aspen Discovery API requests
  */
-function buildHeaders(isPost = false, language = 'en', customHeaders = {}) {
+function buildHeaders(isPost = false, language = 'en', customHeaders = {}, postAsFormData = true) {
      const headers = {
           'User-Agent': `Aspen LiDA ${Device.modelName} ${Device.osName}/${Device.osVersion}`,
           Version: `v${GLOBALS.appVersion} ${GLOBALS.appStage} [b${GLOBALS.appBuild}] p${GLOBALS.appPatch}`,
@@ -379,17 +379,22 @@ export class ApiClient {
      /**
       * POST request
       */
-     async post(endpoint, data = {}, config = {}) {
+     async post(endpoint, data = {}, config = {}, postAsFormData = true) {
           const url = this.buildUrl(endpoint, config.params);
-          const headers = buildHeaders(true, this.language, config.headers);
-          const formData = await createPostData(data);
+          let formData;
+          let headers = buildHeaders(true, this.language, config.headers, postAsFormData);
+          if (postAsFormData) {
+               formData = await createPostData(data);
+          }else{
+               formData = typeof data === 'object' ? JSON.stringify(data) : data;;
+          }
           const options = {
                method: 'POST',
                headers: { ...headers },
                body: formData,
           };
 
-          return this.request(url, options, { ...config, isPost: true });
+          return this.request(url, options, { ...config });
      }
 
      /**

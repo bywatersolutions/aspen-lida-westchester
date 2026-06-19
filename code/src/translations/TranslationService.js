@@ -21,8 +21,10 @@ export const LanguageSwitcher = () => {
      const { language, updateLanguage, languages, updateDictionary, languageDisplayName, updateLanguageDisplayName } = React.useContext(LanguageContext);
      const [label, setLabel] = React.useState(getLanguageDisplayName(language, languages));
 
+     const [isLanguageMenuOpen, setIsLanguageMenuOpen] = React.useState(false);
+
      const changeLanguage = async (val) => {
-          const tmp = val.values().next().value;
+          const tmp = val;
           await saveLanguage(tmp, library.baseUrl).then(async (result) => {
                if (result) {
                     updateLanguage(tmp);
@@ -41,12 +43,14 @@ export const LanguageSwitcher = () => {
                <Box>
                     <Menu
                          bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}
-                         closeOnSelect
+                         isOpen={isLanguageMenuOpen}
+                         onClose={() => setIsLanguageMenuOpen(false)}
+                         onOpen={() => setIsLanguageMenuOpen(true)}
                          placement="top"
-                         selectedKeys={language} selectionMode="single" onSelectionChange={(val) => changeLanguage(val)}
+                         selectedKeys={language} selectionMode="single"
                          trigger={(triggerProps) => {
                               return (
-                                   <Button size="sm" variant="link" {...triggerProps}>
+                                   <Button size="sm" variant="link" {...triggerProps} onPress={() => {setIsLanguageMenuOpen(true)}}>
                                         <ButtonIcon as={MaterialIcons} name="language" color={theme['colors']['secondary']['500']} />
                                         <ButtonText color={theme['colors']['secondary']['500']}>{languageDisplayName}</ButtonText>
                                    </Button>
@@ -56,7 +60,14 @@ export const LanguageSwitcher = () => {
                               <>
                                    {languages.map((language, index) => {
                                         return (
-                                             <MenuItem key={language.code} textValue={language.code}>
+                                             <MenuItem
+                                                  key={language.code}
+                                                  textValue={language.code}
+                                                  onPress={() => {
+                                                       setIsLanguageMenuOpen(false);
+                                                       changeLanguage(language.code);
+                                                  }}
+                                             >
                                                   <MenuItemLabel color={textColor}>{language.displayName}</MenuItemLabel>
                                              </MenuItem>
                                         );
@@ -218,6 +229,13 @@ export async function loadTranslationsFromDiscovery(language, url) {
           return;
      }
 
+     let numDefaultTerms;
+     if (Array.isArray(defaults)) {
+          numDefaultTerms = defaults.length
+     }else{
+          numDefaultTerms = Object.keys(defaults).length;
+     }
+
      if (activeTranslationRequests[language]) {
           logInfoMessage(`[Sync] Request for "${language}" is already loading. Joining existing queue.`);
           return activeTranslationRequests[language];
@@ -231,13 +249,15 @@ export async function loadTranslationsFromDiscovery(language, url) {
                     language,
                });
 
+               logDebugMessage("Loading bulk translations for " + numDefaultTerms + " terms");
                const response = await client.post(
                     '/SystemAPI?method=getBulkTranslations',
                     { terms: defaults },
                     {
                          params: { language },
                          headers: { 'Content-Type': 'application/json' },
-                    }
+                    },
+                    false
                );
 
                if (response.ok) {
